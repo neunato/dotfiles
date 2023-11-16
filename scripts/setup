@@ -1,0 +1,376 @@
+#!/bin/bash
+
+set -e
+
+if [[ $# -ne 1 ]]; then
+   echo "Expected 'setup system|packages'" >&2
+   exit 1
+elif [[ $1 != "system" && $1 != "packages" ]]; then
+   echo "Expected 'setup system|packages'" >&2
+   exit 1
+elif [[ $1 == "system" && $EUID -ne 0 ]]; then
+   echo "'setup system' must be run as root" >&2
+   exit 1
+elif [[ $1 == "packages" && $EUID -eq 0 ]]; then
+   echo "'setup packages' must not be run as root" >&2
+   exit 1
+fi
+
+function setup-system {
+   if ! command -v arch-chroot > /dev/null; then
+      echo "Must be run from an installation medium" >&2
+      exit 1
+   fi
+
+   loadkeys croat
+   setfont latarcyrheb-sun16
+
+   local bitness=$(cat /sys/firmware/efi/fw_platform_size)
+   if [[ "$bitness" -ne 64 ]]; then
+      echo "System must be in 64 bit UEFI mode" >&2
+      exit 1
+   fi
+   if ! dmesg | grep -q "Secure boot disabled"; then
+       echo "Secure Boot must be disabled" >&2
+       exit 1
+   fi
+
+   {
+   lsblk
+   echo "================================================="
+   while [[ -z "$disk" || "$disk" =~ " " ]]; do
+      read -p "Enter disk: " disk
+   done
+   while [[ -z "$root_password" || "$root_password" =~ " " ]]; do
+      read -p "Enter root password: " -s root_password
+      echo ""
+   done
+   while [[ -z "$username" || "$username" =~ " " ]]; do
+      read -p "Enter username: " username
+   done
+   while [[ -z "$password" || "$password" =~ " " ]]; do
+      read -p "Enter password: " -s password
+      echo ""
+   done
+   while [[ -z "$dotfiles_repo" || "$dotfiles_repo" =~ " " ]]; do
+      read -p "Enter dotfiles repository GitHub path: " -i "neunato/dotfiles" -e dotfiles_repo
+   done
+   echo "================================================="
+
+   if df | grep -q "^/dev/${disk}1 "; then
+      echo "Already installed" >&2
+      exit 1
+   fi
+   if [[ -n "$dotfiles_repo" ]] && ! github_repo_exists "$dotfiles_repo"; then
+      echo "Repository github.com/$dotfiles_repo cannot be accessed" >&2
+      exit 1
+   fi
+
+   # disk partitions
+   echo -e "type=uefi, size=512M, bootable\ntype=swap, size=16G\ntype=linux, size=+\n" | sfdisk "/dev/$disk"
+
+   local part_uefi=$(lsblk -l | grep part | head -1 | tail -1 | awk '{print $1;}')
+   local part_swap=$(lsblk -l | grep part | head -2 | tail -1 | awk '{print $1;}')
+   local part_root=$(lsblk -l | grep part | head -3 | tail -1 | awk '{print $1;}')
+
+   partprobe "/dev/$disk"
+   mkfs.ext4 "/dev/$part_root"
+   mkfs.fat -F 32 "/dev/$part_uefi"
+   mkswap "/dev/$part_swap"
+
+   mount "/dev/$part_root" /mnt
+   mount --mkdir "/dev/$part_uefi" /mnt/boot
+   swapon "/dev/$part_swap"
+
+   # essential packages
+   sed -i "s/#ParallelDownloads/ParallelDownloads/" /etc/pacman.conf
+   pacstrap -K /mnt base base-devel linux linux-firmware
+   genfstab -U /mnt >> /mnt/etc/fstab
+
+   as-chroot pacman -Syu
+
+   # localisation
+   as-chroot bash -c "
+      ln -sf /usr/share/zoneinfo/Europe/Zagreb /etc/localtime
+      hwclock --systohc
+
+      sed -i 's/#en_GB/en_GB/g' /etc/locale.gen
+      sed -i 's/#hr_HR/hr_HR/g' /etc/locale.gen
+      locale-gen
+
+      echo 'LANG=en_GB.utf8'         | tee --append /etc/locale.conf > /dev/null
+      echo 'LANGUAGE=en_GB:en_US:en' | tee --append /etc/locale.conf > /dev/null
+      echo 'LC_TIME=hr_HR.utf8'      | tee --append /etc/locale.conf > /dev/null
+
+      echo 'KEYMAP=croat'           | tee --append /etc/vconsole.conf > /dev/null
+      echo 'XKBLAYOUT=hr'           | tee --append /etc/vconsole.conf > /dev/null
+      echo 'FONT=latarcyrheb-sun32' | tee --append /etc/vconsole.conf > /dev/null
+
+      mkdir -p /etc/X11/xorg.conf.d
+      echo 'Section \"InputClass\"'             | tee --append /etc/X11/xorg.conf.d/00-keyboard.conf > /dev/null
+      echo '    Identifier \"system-keyboard\"' | tee --append /etc/X11/xorg.conf.d/00-keyboard.conf > /dev/null
+      echo '    MatchIsKeyboard \"on\"'         | tee --append /etc/X11/xorg.conf.d/00-keyboard.conf > /dev/null
+      echo '    Option \"XkbLayout\" \"hr\"'    | tee --append /etc/X11/xorg.conf.d/00-keyboard.conf > /dev/null
+      echo 'EndSection'                         | tee --append /etc/X11/xorg.conf.d/00-keyboard.conf > /dev/null
+
+      echo 'arch' | tee --append /etc/hostname > /dev/null
+   "
+
+   # user accounts
+   as-chroot bash -c "
+      pacman -S --needed --noconfirm sudo
+
+      useradd -m '$username' -G wheel
+      echo 'root:$root_password' | chpasswd
+      echo '$username:$password' | chpasswd
+      echo '%wheel ALL=(ALL:ALL) ALL' | EDITOR='tee -a' visudo
+   "
+
+   # boot loader
+   as-chroot bash -c "
+      pacman -S --needed --noconfirm grub
+      pacman -S --needed --noconfirm efibootmgr
+      pacman -S --needed --noconfirm intel-ucode
+
+      grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=GRUB
+      sed -i 's/^GRUB_TIMEOUT=.*/GRUB_TIMEOUT=0/'                                                                                             /etc/default/grub
+      sed -i 's/^GRUB_TIMEOUT_STYLE=.*/GRUB_TIMEOUT_STYLE=hidden/'                                                                            /etc/default/grub
+      sed -i 's/^GRUB_CMDLINE_LINUX_DEFAULT=.*/GRUB_CMDLINE_LINUX_DEFAULT=\"quiet loglevel=3 systemd.show_status=auto rd.udev.log_level=3\"/' /etc/default/grub
+      grub-mkconfig -o /boot/grub/grub.cfg
+   "
+
+   # getty
+   as-chroot bash -c "
+      mkdir /etc/systemd/system/getty@tty1.service.d
+      echo '[Service]'                                                                                           | tee --append /etc/systemd/system/getty@tty1.service.d/skip-username.conf > /dev/null
+      echo 'ExecStart='                                                                                          | tee --append /etc/systemd/system/getty@tty1.service.d/skip-username.conf > /dev/null
+      echo 'ExecStart=-/bin/agetty --skip-login --nonewline --noissue --autologin $username --noclear %I \$TERM' | tee --append /etc/systemd/system/getty@tty1.service.d/skip-username.conf > /dev/null
+   "
+
+   # dpms
+   as-chroot bash -c "
+      mkdir -p /etc/X11/xorg.conf.d
+      echo 'Section \"ServerFlags\"'           | tee --append /etc/X11/xorg.conf.d/suspend.conf > /dev/null
+      echo '    Option \"BlankTime\" \"0\"'    | tee --append /etc/X11/xorg.conf.d/suspend.conf > /dev/null
+      echo '    Option \"StandbyTime\" \"15\"' | tee --append /etc/X11/xorg.conf.d/suspend.conf > /dev/null
+      echo '    Option \"SuspendTime\" \"15\"' | tee --append /etc/X11/xorg.conf.d/suspend.conf > /dev/null
+      echo '    Option \"OffTime\" \"0\"'      | tee --append /etc/X11/xorg.conf.d/suspend.conf > /dev/null
+      echo 'EndSection'                        | tee --append /etc/X11/xorg.conf.d/suspend.conf > /dev/null
+   "
+
+   # packages
+   as-chroot install-paru
+   as-chroot setup-packages $username
+
+   # configuration
+   local home_dir="/home/$username"
+   as-chroot bash -c "
+      pacman -S --needed --noconfirm git
+      rm -rf '$home_dir/*' '$home_dir/.*' 2> /dev/null
+      cd '$home_dir'
+      git config --global user.name root
+      git config --global safe.directory '$home_dir'
+      git config --global init.defaultBranch master
+      git init
+      git remote add g $(github_repo_url "$dotfiles_repo")
+      git fetch g
+      git reset --hard g/master
+      git branch -u g/master
+      git config --global --unset user.name
+      git config --global --unset safe.directory
+      git config --global --unset init.defaultBranch
+      chown -R '$username:$username' .
+   "
+
+   cat /tmp/arch_setup.log | as-chroot tee /var/tmp/arch_setup.log > /dev/null
+
+   # reboot
+   reboot
+   } 2>&1 | tee /tmp/arch_setup.log
+}
+
+function setup-packages {
+   local username=$1
+
+   if ! grep -Fxq "[sublime-text]" /etc/pacman.conf; then
+      curl -s -O https://download.sublimetext.com/sublimehq-pub.gpg && pacman-key --add sublimehq-pub.gpg && pacman-key --lsign-key 8A8F901A && rm sublimehq-pub.gpg
+      echo -e "\n[sublime-text]\nServer = https://download.sublimetext.com/arch/dev/x86_64" | tee --append /etc/pacman.conf > /dev/null
+      pacman -Syu
+   fi
+
+   # hardware-related
+   pacman -S --needed --noconfirm networkmanager
+   pacman -S --needed --noconfirm mesa
+   pacman -S --needed --noconfirm intel-media-driver
+   pacman -S --needed --noconfirm fwupd
+   pacman -S --needed --noconfirm alsa-utils
+   pacman -S --needed --noconfirm tlp
+   pacman -S --needed --noconfirm acpid
+   pacman -S --needed --noconfirm polkit
+
+   # x11
+   pacman -S --needed --noconfirm xorg-server
+   pacman -S --needed --noconfirm xorg-xinit
+   pacman -S --needed --noconfirm xorg-xprop
+   pacman -S --needed --noconfirm xorg-xev
+   pacman -S --needed --noconfirm xclip
+   pacman -S --needed --noconfirm xdotool
+   pacman -S --needed --noconfirm picom
+
+   # window manager
+   pacman -S --needed --noconfirm i3-wm
+   pacman -S --needed --noconfirm i3blocks
+   pacman -S --needed --noconfirm i3lock
+   pacman -S --needed --noconfirm xss-lock
+
+   # system utilities
+   pacman -S --needed --noconfirm dunst
+   pacman -S --needed --noconfirm rofi
+   pacman -S --needed --noconfirm feh
+   pacman -S --needed --noconfirm nautilus
+   pacman -S --needed --noconfirm maim
+
+   # ssh, vpn
+   pacman -S --needed --noconfirm openssh
+   pacman -S --needed --noconfirm openvpn
+   pacman -S --needed --noconfirm openconnect
+
+   # developer tooling
+   pacman -S --needed --noconfirm sudo
+   pacman -S --needed --noconfirm man-db
+   pacman -S --needed --noconfirm man-pages
+   pacman -S --needed --noconfirm git
+   pacman -S --needed --noconfirm bat
+   pacman -S --needed --noconfirm jq
+   pacman -S --needed --noconfirm python
+   pacman -S --needed --noconfirm python-pip
+   pacman -S --needed --noconfirm nodejs
+   pacman -S --needed --noconfirm npm
+   pacman -S --needed --noconfirm rust
+   pacman -S --needed --noconfirm go
+   pacman -S --needed --noconfirm docker
+   pacman -S --needed --noconfirm docker-compose
+
+   # applications
+   pacman -S --needed --noconfirm kitty
+   pacman -S --needed --noconfirm firefox
+   pacman -S --needed --noconfirm chromium
+   pacman -S --needed --noconfirm mpv
+   pacman -S --needed --noconfirm calibre
+   pacman -S --needed --noconfirm transmission-gtk
+   pacman -S --needed --noconfirm sublime-text
+   pacman -S --needed --noconfirm sublime-merge
+
+   # virtualisation
+   pacman -S --needed --noconfirm qemu-base
+   pacman -S --needed --noconfirm virt-manager
+   pacman -S --needed --noconfirm dnsmasq
+   pacman -S --needed --noconfirm --ask 4 iptables-nft
+
+   # fonts
+   pacman -S --needed --noconfirm ttf-jetbrains-mono
+   pacman -S --needed --noconfirm ttf-nerd-fonts-symbols-mono
+
+   # aur packages
+   echo "$username ALL=(ALL:ALL) NOPASSWD: ALL" | EDITOR="tee -a" visudo
+
+   sudo --user=$username paru -S --needed --noconfirm lux
+   sudo --user=$username paru -S --needed --noconfirm xsct
+   sudo --user=$username paru -S --needed --noconfirm glances
+   sudo --user=$username paru -S --needed --noconfirm mongodb-bin
+   sudo --user=$username paru -S --needed --noconfirm mongosh-bin
+
+   head -n -1 /etc/sudoers | tee /etc/sudoers > /dev/null
+
+   # groups, services, configuration
+   usermod -aG docker "$username"
+   usermod -aG libvirt "$username"
+
+   systemctl enable NetworkManager
+   systemctl enable tlp.service
+   systemctl enable acpid.service
+   systemctl enable docker.service
+   systemctl enable libvirtd.service
+   systemctl enable mongodb.service
+   systemctl mask systemd-rfkill.service
+   systemctl mask systemd-rfkill.socket
+
+   if [[ "$(stat -c %d:%i /)" == "$(stat -c %d:%i /proc/1/root/.)" ]]; then
+      systemctl start NetworkManager
+      systemctl start tlp.service
+      systemctl start acpid.service
+      systemctl start docker.service
+      systemctl start libvirtd.service
+      systemctl start mongodb.service
+   fi
+
+   sed -i 's/#unix_sock_group/unix_sock_group/g'                /etc/libvirt/libvirtd.conf
+   sed -i 's/#unix_sock_rw_perms/unix_sock_rw_perms/g'          /etc/libvirt/libvirtd.conf
+   sed -i 's/#user = "libvirt-qemu"/user = "'"$username"'"/g'   /etc/libvirt/qemu.conf
+   sed -i 's/#group = "libvirt-qemu"/group = "'"$username"'"/g' /etc/libvirt/qemu.conf
+}
+
+function install-paru {
+   local url="https://aur.archlinux.org/cgit/aur.git/snapshot/paru.tar.gz"
+   local dir="/var/tmp/paru"
+   pacman -S --needed --noconfirm git
+   pacman -S --needed --noconfirm rust
+   mkdir "$dir"
+   chmod 777 "$dir"
+   curl -s -L "$url" | tar xvz -C "$dir" --strip-components 1
+   as-nobody /bin/bash -c "cd $dir && CARGO_HOME=$dir makepkg"
+   pacman -U --needed --noconfirm "$(ls $dir/*.tar.zst)"
+   rm -rf "$dir"
+}
+
+function wrap-f {
+   local args=("$@")
+   local str="set -e; $(declare -f);"
+   for i in "${args[@]}"; do
+       str+=" \"$(echo "$i" | sed 's/"/\\"/g')\""
+   done
+   echo "$str"
+}
+
+function as-sudo {
+   sudo bash -c "$(wrap-f "$@")"
+}
+
+function as-nobody {
+   su nobody -s /bin/bash -c "$(wrap-f "$@")"
+}
+
+function as-chroot {
+   arch-chroot /mnt /bin/bash -c "$(wrap-f "$@")"
+}
+
+function github_repo_exists {
+   local path=$1
+   local token=$2
+   local headers=""
+   if [[ -n "$token" ]]; then
+      headers="Authorization: Bearer $token"
+   fi
+   if curl -s -H "$headers" $(github_api_url "$path") | grep -q "Not Found"; then
+      return 1
+   fi
+}
+
+function github_repo_url {
+   local path=$1
+   local token=$2
+   if [[ -n "$token" ]]; then
+      token="$token@"
+   fi
+   echo "https://${token}github.com/$path.git"
+}
+
+function github_api_url {
+   local path=$1
+   echo "https://api.github.com/repos/$path"
+}
+
+case "$1" in
+   system)   setup-system;;
+   packages) as-sudo setup-packages $(whoami);;
+esac
