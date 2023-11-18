@@ -163,13 +163,14 @@ function setup-system {
    as-chroot setup-packages $username
 
    # configuration
-   local home_dir="/home/$username"
+   local home="/home/$username"
    as-chroot bash -c "
       pacman -S --needed --noconfirm git
-      rm -rf '$home_dir/*' '$home_dir/.*' 2> /dev/null
-      cd '$home_dir'
+
+      rm -rf '$home/*' '$home/.*' 2> /dev/null
+      cd '$home'
       git config --global user.name root
-      git config --global safe.directory '$home_dir'
+      git config --global safe.directory '$home'
       git config --global init.defaultBranch master
       git init
       git remote add g $(github_repo_url "$dotfiles_repo")
@@ -179,6 +180,8 @@ function setup-system {
       git config --global --unset user.name
       git config --global --unset safe.directory
       git config --global --unset init.defaultBranch
+
+      mkdir '$home/dev'
       chown -R '$username:$username' .
    "
 

@@ -6,3 +6,7 @@
 !.bash_profile
 !.bash_logout
 !scripts
+!.config
+.config/*
+!.config/user-dirs.dirs
+!.config/user-dirs.locale
