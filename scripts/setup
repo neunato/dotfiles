@@ -65,6 +65,10 @@ function setup-system {
       echo "Repository github.com/$dotfiles_repo cannot be accessed" >&2
       exit 1
    fi
+   if ! diff -q -b <(cat $0) <(curl -s -L "$(github_repo_file_url "$dotfiles_repo" "scripts/setup")") > /dev/null; then
+      echo "A newer version of this script exists at github.com/$dotfiles_repo" >&2
+      exit 1
+   fi
 
    # disk partitions
    echo -e "type=uefi, size=512M, bootable\ntype=swap, size=16G\ntype=linux, size=+\n" | sfdisk "/dev/$disk"
@@ -360,17 +364,23 @@ function github_repo_exists {
 }
 
 function github_repo_url {
-   local path=$1
+   local repo=$1
    local token=$2
    if [[ -n "$token" ]]; then
       token="$token@"
    fi
-   echo "https://${token}github.com/$path.git"
+   echo "https://${token}github.com/$repo.git"
+}
+
+function github_repo_file_url {
+   local repo=$1
+   local path=$2
+   echo "https://raw.githubusercontent.com/$repo/master/$path"
 }
 
 function github_api_url {
-   local path=$1
-   echo "https://api.github.com/repos/$path"
+   local repo=$1
+   echo "https://api.github.com/repos/$repo"
 }
 
 case "$1" in
