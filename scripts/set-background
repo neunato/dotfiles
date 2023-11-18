@@ -1,0 +1,8 @@
+#!/bin/bash
+
+filename=$1
+if [[ -z $filename ]]; then
+   filename="default.jpg"
+fi
+
+feh --no-fehbg --bg-fill "$HOME/pictures/backgrounds/$filename"

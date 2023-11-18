@@ -6,6 +6,9 @@
 !.bash_profile
 !.bash_logout
 !scripts
+!pictures
+pictures/*
+!pictures/backgrounds
 !.config
 .config/*
 !.config/user-dirs.dirs
