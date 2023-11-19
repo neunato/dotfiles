@@ -73,9 +73,9 @@ function setup-system {
    # disk partitions
    echo -e "type=uefi, size=512M, bootable\ntype=swap, size=16G\ntype=linux, size=+\n" | sfdisk "/dev/$disk"
 
-   local part_uefi=$(lsblk -l | grep part | head -1 | tail -1 | awk '{print $1;}')
-   local part_swap=$(lsblk -l | grep part | head -2 | tail -1 | awk '{print $1;}')
-   local part_root=$(lsblk -l | grep part | head -3 | tail -1 | awk '{print $1;}')
+   local part_uefi=$(lsblk -l | grep part | grep "$disk" | head -1 | tail -1 | awk '{print $1;}')
+   local part_swap=$(lsblk -l | grep part | grep "$disk" | head -2 | tail -1 | awk '{print $1;}')
+   local part_root=$(lsblk -l | grep part | grep "$disk" | head -3 | tail -1 | awk '{print $1;}')
 
    partprobe "/dev/$disk"
    mkfs.ext4 "/dev/$part_root"
