@@ -41,6 +41,10 @@ function setup-system {
    while [[ -z $disk || $disk =~ " " ]]; do
       read -p "Enter disk: " disk
    done
+   while [[ -z $disk_password || $disk_password =~ " " ]]; do
+      read -p "Enter disk encryption password: " -s disk_password
+      echo ""
+   done
    while [[ -z $root_password || $root_password =~ " " ]]; do
       read -p "Enter root password: " -s root_password
       echo ""
@@ -71,27 +75,34 @@ function setup-system {
    fi
 
    # disk partitions
-   echo -e "type=uefi, size=512M, bootable\ntype=swap, size=16G\ntype=linux, size=+\n" | sfdisk "/dev/$disk"
+   echo -e "type=uefi, size=512M, bootable\ntype=linux, size=+\n" | sfdisk "/dev/$disk"
 
-   local part_uefi=$(lsblk -l | grep part | grep "$disk" | head -1 | tail -1 | awk '{print $1;}')
-   local part_swap=$(lsblk -l | grep part | grep "$disk" | head -2 | tail -1 | awk '{print $1;}')
-   local part_root=$(lsblk -l | grep part | grep "$disk" | head -3 | tail -1 | awk '{print $1;}')
+   local part_boot=$(lsblk -l | grep part | grep "$disk" | head -1 | tail -1 | awk '{print $1;}')
+   local part_root=$(lsblk -l | grep part | grep "$disk" | head -2 | tail -1 | awk '{print $1;}')
 
-   partprobe "/dev/$disk"
-   mkfs.ext4 "/dev/$part_root"
-   mkfs.fat -F 32 "/dev/$part_uefi"
-   mkswap "/dev/$part_swap"
+   echo -n "$disk_password" | cryptsetup -v luksFormat "/dev/$part_root" -
+   echo -n "$disk_password" | cryptsetup open "/dev/$part_root" root -
+   mkfs.ext4 /dev/mapper/root
+   mount /dev/mapper/root /mnt
 
-   mount "/dev/$part_root" /mnt
-   mount --mkdir "/dev/$part_uefi" /mnt/boot
-   swapon "/dev/$part_swap"
+   fallocate -l 16G /mnt/swapfile
+   chmod 600 /mnt/swapfile
+   mkswap -U clear /mnt/swapfile
+   swapon /mnt/swapfile
+
+   mkfs.fat -F 32 "/dev/$part_boot"
+   mount --mkdir "/dev/$part_boot" /mnt/boot
 
    # essential packages
    sed -i "s/#ParallelDownloads/ParallelDownloads/" /etc/pacman.conf
    pacstrap -K /mnt base base-devel linux linux-firmware
    genfstab -U /mnt >> /mnt/etc/fstab
-
    as-chroot pacman -Syu
+
+   as-chroot bash -c "
+      sed -i 's/^HOOKS=.*/HOOKS=(base udev autodetect modconf kms keyboard keymap consolefont block encrypt filesystems fsck)/' /etc/mkinitcpio.conf
+      mkinitcpio -P
+   "
 
    # localisation
    as-chroot bash -c "
@@ -131,15 +142,16 @@ function setup-system {
    "
 
    # boot loader
+   local part_root_uuid=$(blkid -s UUID -o value "/dev/$part_root")
    as-chroot bash -c "
       pacman -S --needed --noconfirm grub
       pacman -S --needed --noconfirm efibootmgr
       pacman -S --needed --noconfirm intel-ucode
 
       grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=GRUB
-      sed -i 's/^GRUB_TIMEOUT=.*/GRUB_TIMEOUT=0/'                                                                                             /etc/default/grub
-      sed -i 's/^GRUB_TIMEOUT_STYLE=.*/GRUB_TIMEOUT_STYLE=hidden/'                                                                            /etc/default/grub
-      sed -i 's/^GRUB_CMDLINE_LINUX_DEFAULT=.*/GRUB_CMDLINE_LINUX_DEFAULT=\"quiet loglevel=3 systemd.show_status=auto rd.udev.log_level=3\"/' /etc/default/grub
+      sed -i 's/^GRUB_TIMEOUT=.*/GRUB_TIMEOUT=0/'                                                                                                                                                            /etc/default/grub
+      sed -i 's/^GRUB_TIMEOUT_STYLE=.*/GRUB_TIMEOUT_STYLE=hidden/'                                                                                                                                           /etc/default/grub
+      sed -i 's/^GRUB_CMDLINE_LINUX_DEFAULT=.*/GRUB_CMDLINE_LINUX_DEFAULT=\"quiet loglevel=3 systemd.show_status=auto rd.udev.log_level=3 cryptdevice=UUID=$part_root_uuid:root root=\/dev\/mapper\/root\"/' /etc/default/grub
       grub-mkconfig -o /boot/grub/grub.cfg
    "
 
