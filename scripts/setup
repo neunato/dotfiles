@@ -23,10 +23,10 @@ function setup-system {
    fi
 
    loadkeys croat
-   setfont latarcyrheb-sun16
+   setfont latarcyrheb-sun32
 
    local bitness=$(cat /sys/firmware/efi/fw_platform_size)
-   if [[ "$bitness" -ne 64 ]]; then
+   if [[ $bitness -ne 64 ]]; then
       echo "System must be in 64 bit UEFI mode" >&2
       exit 1
    fi
@@ -38,21 +38,21 @@ function setup-system {
    {
    lsblk
    echo "================================================="
-   while [[ -z "$disk" || "$disk" =~ " " ]]; do
+   while [[ -z $disk || $disk =~ " " ]]; do
       read -p "Enter disk: " disk
    done
-   while [[ -z "$root_password" || "$root_password" =~ " " ]]; do
+   while [[ -z $root_password || $root_password =~ " " ]]; do
       read -p "Enter root password: " -s root_password
       echo ""
    done
-   while [[ -z "$username" || "$username" =~ " " ]]; do
+   while [[ -z $username || $username =~ " " ]]; do
       read -p "Enter username: " username
    done
-   while [[ -z "$password" || "$password" =~ " " ]]; do
+   while [[ -z $password || $password =~ " " ]]; do
       read -p "Enter password: " -s password
       echo ""
    done
-   while [[ -z "$dotfiles_repo" || "$dotfiles_repo" =~ " " ]]; do
+   while [[ -z $dotfiles_repo || $dotfiles_repo =~ " " ]]; do
       read -p "Enter dotfiles repository GitHub path: " -i "neunato/dotfiles" -e dotfiles_repo
    done
    echo "================================================="
@@ -61,7 +61,7 @@ function setup-system {
       echo "Already installed" >&2
       exit 1
    fi
-   if [[ -n "$dotfiles_repo" ]] && ! github_repo_exists "$dotfiles_repo"; then
+   if [[ -n $dotfiles_repo ]] && ! github_repo_exists "$dotfiles_repo"; then
       echo "Repository github.com/$dotfiles_repo cannot be accessed" >&2
       exit 1
    fi
@@ -127,7 +127,7 @@ function setup-system {
       useradd -m '$username' -G wheel
       echo 'root:$root_password' | chpasswd
       echo '$username:$password' | chpasswd
-      echo '%wheel ALL=(ALL:ALL) ALL' | EDITOR='tee -a' visudo
+      echo '%wheel ALL=(ALL:ALL) ALL' | EDITOR='tee --append' visudo > /dev/null
    "
 
    # boot loader
@@ -283,7 +283,7 @@ function setup-packages {
    pacman -S --needed --noconfirm ttf-nerd-fonts-symbols-mono
 
    # aur packages
-   echo "$username ALL=(ALL:ALL) NOPASSWD: ALL" | EDITOR="tee -a" visudo
+   echo "$username ALL=(ALL:ALL) NOPASSWD: ALL" | EDITOR="tee --append" visudo > /dev/null
 
    as-user $username paru -S --needed --noconfirm lux
    as-user $username paru -S --needed --noconfirm xsct
@@ -306,7 +306,7 @@ function setup-packages {
    systemctl mask systemd-rfkill.service
    systemctl mask systemd-rfkill.socket
 
-   if [[ "$(stat -c %d:%i /)" == "$(stat -c %d:%i /proc/1/root/.)" ]]; then
+   if [[ $(stat -c %d:%i /) == $(stat -c %d:%i /proc/1/root/.) ]]; then
       systemctl start NetworkManager
       systemctl start tlp.service
       systemctl start acpid.service
@@ -365,7 +365,7 @@ function github_repo_exists {
    local path=$1
    local token=$2
    local headers=""
-   if [[ -n "$token" ]]; then
+   if [[ -n $token ]]; then
       headers="Authorization: Bearer $token"
    fi
    if curl -s -H "$headers" $(github_api_url "$path") | grep -q "Not Found"; then
@@ -376,7 +376,7 @@ function github_repo_exists {
 function github_repo_url {
    local repo=$1
    local token=$2
-   if [[ -n "$token" ]]; then
+   if [[ -n $token ]]; then
       token="$token@"
    fi
    echo "https://${token}github.com/$repo.git"
