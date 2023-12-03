@@ -1,0 +1,129 @@
+#!/bin/bash
+
+# i3-switch-windows daemon - mark next and prev windows when focused window changes
+# i3-switch-windows next   - preview next window
+# i3-switch-windows prev   - preview prev window
+# i3-switch-windows touch  - move current window to end of queue
+
+action=$1
+
+# preview next window in queue
+if [[ $action == "next" ]]; then
+   i3-msg '[con_mark=_sw_next] mark --add _sw_skip'
+   i3-msg '[con_mark=_sw_next] mark --add _sw_focus'
+   exit
+fi
+
+# preview previous window in queue
+if [[ $action == "prev" ]]; then
+   i3-msg '[con_mark=_sw_prev] mark --add _sw_skip'
+   i3-msg '[con_mark=_sw_prev] mark --add _sw_focus'
+   exit
+fi
+
+# move current window to end of queue
+if [[ $action == "touch" ]]; then
+   i3-msg 'unmark _sw_skip'
+   i3-msg 'mark --add _sw_focus'
+   exit
+fi
+
+# setup daemon that keeps track of focused windows
+if [[ $action != "daemon" ]]; then
+   exit
+fi
+
+# kill other instances of daemon
+pids="$(pgrep -f 'i3-switch-windows daemon')"
+pids=${pids[@]/$$}
+if [[ ${#pids} -gt 1 ]]; then
+   kill ${pids[@]/$$}
+fi
+
+function find_index {
+   local value=$1
+   local i=0
+   for item in "${queue[@]}"; do
+      if [[ $item == $value ]]; then
+         echo $i
+         return 0
+      fi
+      ((i++))
+   done
+   echo "-1"
+   return 0
+}
+
+function remove_from_queue {
+   local value=$1
+   local new_array=()
+   for item in "${queue[@]}"; do
+      if [[ $item != $value ]]; then
+         new_array+=($item)
+      fi
+   done
+   queue=("${new_array[@]}")
+}
+
+queue=()
+
+i3-msg "unmark _sw_focus"
+i3-msg "unmark _sw_skip"
+i3-msg "unmark _sw_next"
+i3-msg "unmark _sw_prev"
+
+i3-msg -t subscribe -m '["window"]' |
+while read -r json; do
+   tmp=$(echo $json | pcregrep --om-separator=" " -o1 -o2 -o3 -o4 '^\{"change":"([^"]*)"(?:.*"container":\{"id":([0-9]+),)(?:.*"marks":(\[[^\]]*\]),"focused":(true|false))')
+   tmp=($tmp)
+
+   event=${tmp[0]}
+   window=${tmp[1]}
+   marks=${tmp[2]}
+   focused=${tmp[3]}
+
+   # remove window from queue on close
+   if [[ $event == "close" ]]; then
+      remove_from_queue "$window"
+      continue
+   fi
+
+   # mark window with _sw_focus on focus
+   if [[ $event == "mark" && $marks == *"_sw_focus"* && $focused == "false" ]]; then
+      i3-msg "[con_id=$window] focus"
+      continue
+   fi
+
+   if [[ $event == "focus" && $marks != *"_sw_focus"* ]]; then
+      i3-msg "[con_id=$window] mark --add _sw_focus"
+      continue
+   fi
+
+   # handle _sw_focus mark (assigned on real focus or manually when releasing keys)
+   if [[ $event == "focus" || ($event == "mark" && $marks == *"_sw_focus"*) ]]; then
+      i3-msg "unmark _sw_focus"
+      i3-msg "unmark _sw_skip"
+      if [[ $marks != *"_sw_skip"* ]]; then
+         remove_from_queue "$window"
+         queue+=($window)
+      fi
+
+      index=$(find_index "$window")
+      if [[ $index -eq -1 ]]; then
+         continue
+      fi
+
+      index_next=$((($index - 1 + ${#queue[@]}) % ${#queue[@]}))
+      index_prev=$((($index + 1) % ${#queue[@]}))
+
+      i3-msg "unmark _sw_next"
+      i3-msg "unmark _sw_prev"
+
+      if [[ -n ${queue[$index_next]} ]]; then
+         i3-msg "[con_id=${queue[$index_next]}] mark --add _sw_next"
+      fi
+      if [[ -n ${queue[$index_prev]} ]]; then
+         i3-msg "[con_id=${queue[$index_prev]}] mark --add _sw_prev"
+      fi
+   fi
+done
