@@ -234,6 +234,7 @@ function setup-packages {
    # x11
    pacman -S --needed --noconfirm xorg-server
    pacman -S --needed --noconfirm xorg-xinit
+   pacman -S --needed --noconfirm xorg-xrandr
    pacman -S --needed --noconfirm xorg-xprop
    pacman -S --needed --noconfirm xorg-xev
    pacman -S --needed --noconfirm xclip
@@ -252,6 +253,7 @@ function setup-packages {
    pacman -S --needed --noconfirm feh
    pacman -S --needed --noconfirm nautilus
    pacman -S --needed --noconfirm maim
+   pacman -S --needed --noconfirm ffmpeg
 
    # ssh, vpn
    pacman -S --needed --noconfirm openssh

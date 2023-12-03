@@ -1,0 +1,65 @@
+#!/bin/bash
+
+# screen-capture                - take a screenshot of the entire window and save it to $XDG_PICTURES_DIR/screenshots
+# screen-capture --selection    - take a screenshot of a selection and save it to $XDG_PICTURES_DIR/screenshots
+# screen-capture --record       - start or stop a screen recording and save it to $XDG_VIDEOS_DIR/screencasts
+# screen-capture --is-recording - check if screen is being recorded
+
+while [[ $# -gt 0 ]]; do
+   case "$1" in
+      --selection)    selection=true;    shift ;;
+      --record)       record=true;       shift ;;
+      --is-recording) is_recording=true; shift ;;
+      *)                                 shift ;;
+   esac
+done
+
+if [[ $record == "true" && $selection == "true" ]]; then
+   echo "--record and --selection are exclusive" >&2
+   exit 1
+fi
+
+if [[ $is_recording == "true" && ($record == "true" || $selection == "true") ]]; then
+   echo "--is-recording can't be combined with other options" >&2
+   exit 1
+fi
+
+set -o errexit
+set -o pipefail
+
+pidfile="$XDG_RUNTIME_DIR/screen-capture.pid"
+filename="$(date +'%F %T:%N' | cut -c 1-25)"
+
+# check if screen recording is on
+if [[ $is_recording == "true" ]]; then
+   if [[ -s $pidfile && -d /proc/$(cat $pidfile) ]]; then
+      exit 0
+   else
+      exit 1
+   fi
+fi
+
+# take screenshot of selection
+if [[ $selection == "true" ]]; then
+   mkdir -p "$XDG_PICTURES_DIR/screenshots"
+   exec maim -s | tee "$XDG_PICTURES_DIR/screenshots/$filename.png" | xclip -selection clipboard -t image/png
+   exit 0
+fi
+
+# take screenshot of entire window
+if [[ $record != "true" ]]; then
+   mkdir -p "$XDG_PICTURES_DIR/screenshots"
+   exec maim | tee "$XDG_PICTURES_DIR/screenshots/$filename.png" | xclip -selection clipboard -t image/png
+   exit 0
+fi
+
+# start/stop recording
+if ! [[ -s $pidfile && -d /proc/$(cat $pidfile) ]]; then
+   RESOLUTION=$(xrandr -q --current | grep '*' | awk '{print$1}')
+   echo "$$" > "$pidfile"
+   mkdir -p "$XDG_VIDEOS_DIR/screencasts"
+   exec ffmpeg -f x11grab -video_size "$RESOLUTION" -framerate 25 -i "$DISPLAY" -f alsa -i default -c:v libx264 -preset ultrafast -c:a aac -loglevel quiet "$XDG_VIDEOS_DIR/screencasts/$filename.mkv"
+else
+   kill "$(cat $pidfile)"
+   rm "$pidfile"
+fi
