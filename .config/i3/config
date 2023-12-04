@@ -1,0 +1,133 @@
+set $mod Mod4
+set $resize " resizing"
+set $ws_terminal 1:<span size="147.5%"></span>
+set $ws_sublime  2:<span size="141%"></span>
+set $ws_merge    3:<span size="141%"></span>
+set $ws_firefox  4:<span size="147.5%"></span>
+set $ws_email    5:<span size="147.5%">󰇮</span>
+set $ws_files    6:<span size="147.5%">󰉋</span>
+set $ws_video    7:<span size="147.5%"></span>
+set $ws_torrent  8:<span size="141%"></span>
+set $ws_other_1  9:<span size="147.5%">󰯬</span>
+set $ws_other_2 10:<span size="147.5%">󰯯</span>
+set $ws_other_3 11:<span size="147.5%">󰯲</span>
+set $ws_other_4 12:<span size="147.5%">󰯵</span>
+
+focus_follows_mouse no
+workspace_auto_back_and_forth no
+focus_on_window_activation focus
+force_display_urgency_hint 0 ms
+tiling_drag modifier titlebar
+floating_modifier ctrl+shift
+floating_minimum_size 300x150
+default_border pixel 0
+gaps inner 6
+gaps bottom -6
+font pango:JetBrains Mono 15
+
+bar {
+   i3bar_command i3bar --transparency
+   status_command i3status
+   tray_output none
+   strip_workspace_numbers yes
+   workspace_min_width 70
+   padding 5 0 5 6
+
+   colors {
+      background #00000000
+      focused_workspace #00000000 #00000000 #ffffff
+      inactive_workspace #00000000 #00000000 #ffffff42
+      urgent_workspace #00000000 #00000000 #ff515d
+      binding_mode #00000000 #00000000 #ff515d
+   }
+
+   bindsym button4 exec --no-startup-id volume up
+   bindsym button5 exec --no-startup-id volume down
+}
+
+bindsym $mod+Left               focus left
+bindsym $mod+Down               focus down
+bindsym $mod+Up                 focus up
+bindsym $mod+Right              focus right
+bindsym $mod+Shift+Left         move left 50px
+bindsym $mod+Shift+Down         move down 50px
+bindsym $mod+Shift+Up           move up 50px
+bindsym $mod+Shift+Right        move right 50px
+bindsym Control+q               kill
+bindsym $mod+q                  kill
+bindsym $mod+w                  fullscreen toggle
+bindsym $mod+e                  floating toggle
+bindsym $mod+r                  mode $resize; exec --no-startup-id set-background "resize.jpg"
+
+mode $resize {
+   bindsym Right       resize grow right 50px or 10ppt
+   bindsym Left        resize shrink right 50px or 10ppt
+   bindsym Down        resize grow down 50px or 10ppt
+   bindsym Up          resize shrink down 50px or 10ppt
+   bindsym Shift+Right resize shrink left 50px or 10ppt
+   bindsym Shift+Left  resize grow left 50px or 10ppt
+   bindsym Shift+Down  resize shrink up 50px or 10ppt
+   bindsym Shift+Up    resize grow up 50px or 10ppt
+   bindsym Return      mode "default"; exec --no-startup-id set-background
+   bindsym Escape      mode "default"; exec --no-startup-id set-background
+   bindsym r           mode "default"; exec --no-startup-id set-background
+   bindsym $mod+r      mode "default"; exec --no-startup-id set-background
+}
+
+bindsym $mod+1                  workspace $ws_other_1
+bindsym $mod+2                  workspace $ws_other_2
+bindsym $mod+3                  workspace $ws_other_3
+bindsym $mod+4                  workspace $ws_other_4
+bindsym $mod+Return             exec --no-startup-id kitty
+bindsym $mod+Control+a          exec --no-startup-id kitty
+bindsym $mod+Control+s          exec --no-startup-id subl --new-window
+bindsym $mod+Control+d          exec --no-startup-id smerge --new-window
+bindsym $mod+Control+f          exec --no-startup-id firefox
+bindsym $mod+Control+g          exec --no-startup-id thunderbird
+bindsym $mod+Control+y          exec --no-startup-id nautilus --new-window
+bindsym $mod+Control+v          exec --no-startup-id mpv --force-window --idle
+bindsym $mod+Control+t          exec --no-startup-id transmission-gtk
+bindsym $mod+a                  exec --no-startup-id i3-focus-or-open --workspace '$ws_terminal' --class 'kitty' 'kitty'
+bindsym $mod+s                  exec --no-startup-id i3-focus-or-open --workspace '$ws_sublime'  --class 'Sublime_text' 'subl --launch-or-new-window'
+bindsym $mod+d                  exec --no-startup-id i3-focus-or-open --workspace '$ws_merge'    --class 'Sublime_merge' 'smerge --launch-or-new-window'
+bindsym $mod+f                  exec --no-startup-id i3-focus-or-open --workspace '$ws_firefox'  --class 'firefox' 'firefox'
+bindsym $mod+g                  exec --no-startup-id i3-focus-or-open --workspace '$ws_email'    --class 'thunderbird' 'thunderbird'
+bindsym $mod+y                  exec --no-startup-id i3-focus-or-open --workspace '$ws_files'    --class 'nautilus' 'nautilus'
+bindsym $mod+v                  exec --no-startup-id i3-focus-or-open --workspace '$ws_video'    --class 'mpv' 'mpv --force-window --idle'
+bindsym $mod+t                  exec --no-startup-id i3-focus-or-open --workspace '$ws_torrent'  --class 'transmission-gtk' 'transmission-gtk'
+bindsym $mod+Shift+a            move container to workspace $ws_terminal; workspace $ws_terminal
+bindsym $mod+Shift+s            move container to workspace $ws_sublime;  workspace $ws_sublime
+bindsym $mod+Shift+d            move container to workspace $ws_merge;    workspace $ws_merge
+bindsym $mod+Shift+f            move container to workspace $ws_firefox;  workspace $ws_firefox
+bindsym $mod+Shift+g            move container to workspace $ws_email;    workspace $ws_email
+bindsym $mod+Shift+y            move container to workspace $ws_files;    workspace $ws_files
+bindsym $mod+Shift+v            move container to workspace $ws_video;    workspace $ws_video
+bindsym $mod+Shift+t            move container to workspace $ws_torrent;  workspace $ws_torrent
+bindsym $mod+Shift+1            move container to workspace $ws_other_1;  workspace $ws_other_1
+bindsym $mod+Shift+2            move container to workspace $ws_other_2;  workspace $ws_other_2
+bindsym $mod+Shift+3            move container to workspace $ws_other_3;  workspace $ws_other_3
+bindsym $mod+Shift+4            move container to workspace $ws_other_4;  workspace $ws_other_4
+
+bindsym grave                   exec --no-startup-id rofi -show drun -modes drun -show-icons -no-custom; exec --no-startup-id xdotool keyup --clearmodifiers 49
+bindsym --release Super_L       exec --no-startup-id i3-switch-windows touch
+bindsym --release Shift+Super_L exec --no-startup-id i3-switch-windows touch
+bindsym $mod+Tab                exec --no-startup-id i3-switch-windows next; exec --no-startup-id xdotool keydown --clearmodifiers $mod
+bindsym $mod+Shift+Tab          exec --no-startup-id i3-switch-windows prev; exec --no-startup-id xdotool keydown --clearmodifiers $mod+shift
+bindsym XF86MonBrightnessUp     exec --no-startup-id brightness up
+bindsym XF86MonBrightnessDown   exec --no-startup-id brightness down
+bindsym XF86AudioRaiseVolume    exec --no-startup-id volume up
+bindsym XF86AudioLowerVolume    exec --no-startup-id volume down
+bindsym XF86AudioMute           exec --no-startup-id volume mute
+bindsym Print                   exec --no-startup-id screen-capture
+bindsym Control+Print           exec --no-startup-id screen-capture --selection
+bindsym Shift+Print             exec --no-startup-id screen-capture --record
+bindsym Prior                   nop
+bindsym Next                    nop
+bindsym $mod+Escape             exec --no-startup-id systemctl suspend
+bindsym $mod+Shift+r            restart
+
+exec --no-startup-id dunst
+exec --no-startup-id picom --config ~/.config/picom/picom.conf
+exec --no-startup-id xss-lock --transfer-sleep-lock -- i3lock --nofork -u -c ff1e2e
+exec_always --no-startup-id i3-switch-windows daemon
+exec --no-startup-id i3-msg 'workspace $ws_terminal'
