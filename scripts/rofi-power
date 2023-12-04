@@ -1,0 +1,67 @@
+#!/bin/bash
+
+if [[ -z $ROFI_RETV ]]; then
+   rofi -show powermenu -modes powermenu:"$0"
+   exit
+fi
+
+echo -e "\0prompt\x1fpower"
+echo -e "\0no-custom\x1ftrue"
+echo -e "\0keep-selection\x1ffalse"
+
+schedule=" Shutdown timer"
+shutdown=" Shutdown"
+restart=" Restart"
+logout=" Logout"
+suspend=" Suspend"
+
+if [[ -z $1 ]]; then
+   echo "$schedule"
+   echo "$shutdown"
+   echo "$restart"
+   echo "$logout"
+   echo "$suspend"
+   exit 1
+fi
+
+case "$1" in
+   $suspend)
+      systemctl suspend
+   ;;
+   $logout)
+      systemctl soft-reboot
+   ;;
+   $restart)
+      systemctl reboot
+   ;;
+   $shutdown)
+      systemctl poweroff
+   ;;
+   $schedule)
+      echo "in 60 minutes"
+      echo "in 90 minutes"
+      echo "in 120 minutes"
+      echo "at 00:00"
+      echo "at 01:00"
+      echo "at 02:00"
+      echo "at 03:00"
+      echo "at 04:00"
+      echo "at 05:00"
+   ;;
+   "in 60 minutes") ;&
+   "in 90 minutes") ;&
+   "in 120 minutes")
+      minutes=${1:3:-8}
+      shutdown --poweroff +$minutes
+      notify-send "Shutdown scheduled for $(date -d '+'$minutes' minutes' '+%0l:%M')"
+   ;;
+   "at 00:00") ;&
+   "at 01:00") ;&
+   "at 02:00") ;&
+   "at 03:00") ;&
+   "at 04:00") ;&
+   "at 05:00")
+      time=${1:3}
+      shutdown --poweroff $time
+      notify-send "Shutdown scheduled for $time"
+esac
