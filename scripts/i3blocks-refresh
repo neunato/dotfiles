@@ -1,0 +1,12 @@
+#!/bin/bash
+
+if [[ $# -ne 1 ]]; then
+   echo "Expected exactly one argument" >&2
+   exit 1
+fi
+
+case "$1" in
+   capture)    pkill -SIGRTMIN+1 i3blocks;;
+   sound)      pkill -SIGRTMIN+2 i3blocks;;
+   brightness) pkill -SIGRTMIN+3 i3blocks;;
+esac

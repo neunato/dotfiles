@@ -1,0 +1,21 @@
+#!/bin/bash
+
+if [[ $button -eq 1 ]]; then
+   night-light
+elif [[ $button -eq 4 ]]; then
+   brightness up
+elif [[ $button -eq 5 ]]; then
+   brightness down
+fi
+
+percent=$(brightness)
+percent=$(((percent + 5) / 10 * 10))
+percent=$(printf "%4s" "$percent%")
+
+if night-light --enabled; then
+   echo "$icon_nightlight $percent"
+   echo "$icon_nightlight $percent"
+   echo "$color_yellow"
+else
+   echo "$icon $percent"
+fi

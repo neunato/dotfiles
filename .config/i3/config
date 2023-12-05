@@ -27,7 +27,7 @@ font pango:JetBrains Mono 15
 
 bar {
    i3bar_command i3bar --transparency
-   status_command i3status
+   status_command i3blocks
    tray_output none
    strip_workspace_numbers yes
    workspace_min_width 70
@@ -41,8 +41,8 @@ bar {
       binding_mode #00000000 #00000000 #ff515d
    }
 
-   bindsym button4 exec --no-startup-id volume up
-   bindsym button5 exec --no-startup-id volume down
+   bindsym button4 exec --no-startup-id volume up && i3blocks-refresh sound
+   bindsym button5 exec --no-startup-id volume down && i3blocks-refresh sound
 }
 
 bindsym $mod+Left               focus left
@@ -113,14 +113,14 @@ bindsym --release Super_L       exec --no-startup-id i3-switch-windows touch
 bindsym --release Shift+Super_L exec --no-startup-id i3-switch-windows touch
 bindsym $mod+Tab                exec --no-startup-id i3-switch-windows next; exec --no-startup-id xdotool keydown --clearmodifiers $mod
 bindsym $mod+Shift+Tab          exec --no-startup-id i3-switch-windows prev; exec --no-startup-id xdotool keydown --clearmodifiers $mod+shift
-bindsym XF86MonBrightnessUp     exec --no-startup-id brightness up
-bindsym XF86MonBrightnessDown   exec --no-startup-id brightness down
-bindsym XF86AudioRaiseVolume    exec --no-startup-id volume up
-bindsym XF86AudioLowerVolume    exec --no-startup-id volume down
-bindsym XF86AudioMute           exec --no-startup-id volume mute
+bindsym XF86MonBrightnessUp     exec --no-startup-id brightness up && i3blocks-refresh brightness
+bindsym XF86MonBrightnessDown   exec --no-startup-id brightness down && i3blocks-refresh brightness
+bindsym XF86AudioRaiseVolume    exec --no-startup-id volume up && i3blocks-refresh sound
+bindsym XF86AudioLowerVolume    exec --no-startup-id volume down && i3blocks-refresh sound
+bindsym XF86AudioMute           exec --no-startup-id volume mute && i3blocks-refresh sound
 bindsym Print                   exec --no-startup-id screen-capture
 bindsym Control+Print           exec --no-startup-id screen-capture --selection
-bindsym Shift+Print             exec --no-startup-id screen-capture --record
+bindsym Shift+Print             exec --no-startup-id screen-capture --record; exec --no-startup-id i3blocks-refresh capture
 bindsym Prior                   nop
 bindsym Next                    nop
 bindsym $mod+Escape             exec --no-startup-id systemctl suspend

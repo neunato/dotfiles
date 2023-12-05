@@ -1,0 +1,5 @@
+#!/bin/bash
+
+if [[ $button -eq 1 ]]; then
+   rofi-power
+fi

@@ -19,7 +19,7 @@ if [[ "$1" == "up" ]]; then
    lux -S "$brightness%" > /dev/null
 elif [[ "$1" == "down" ]]; then
    brightness=$(((brightness - step + 5) / 10 * 10))
-   brightness=$((brightness > 10 ? brightness : 10))
+   brightness=$((brightness > 1 ? brightness : 1))
    lux -S "$brightness%" > /dev/null
 else
    echo "Expected 'brightness [up|down]'" >&2

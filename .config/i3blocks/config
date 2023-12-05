@@ -1,0 +1,55 @@
+separator=false
+separator_block_width=40
+markup=pango
+color="#ffffffbf"
+color_red="#ff515dcc"
+color_yellow="#FFcc00bf"
+
+[capture]
+icon="<span size='small' rise='-15pt' color='#ff515d'>      </span>"
+command=bash screen-capture --is-recording && echo "$icon"
+interval=once
+signal=1
+
+[sound]
+command=bash i3blocks-sound
+interval=once
+signal=2
+icon=󰕾
+icon_muted=󰖁
+icon_headphones=󰋋
+
+[brightness]
+command=bash i3blocks-brightness
+interval=once
+signal=3
+icon=󰃠
+icon_nightlight=󰃝
+
+[network]
+command=bash i3blocks-network
+interval=5
+icon_wired=󱘖
+icon_wifi_missing=󰢿
+icon_wifi_weak=󰢼
+icon_wifi_medium=󰢽
+icon_wifi_strong=󰢾
+icon_vpn=󱠾
+
+[battery]
+command=bash i3blocks-battery
+interval=5
+icon_0=
+icon_25=
+icon_50=
+icon_75=
+icon_100=
+icon_charging=
+
+[power]
+full_text="<span rise='-15pt' size='small'> 󰐥 </span>"
+command=bash i3blocks-power
+
+[time]
+command=date +"%d.%m.%Y. %H:%M "
+interval=60

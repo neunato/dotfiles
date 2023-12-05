@@ -1,0 +1,33 @@
+#!/bin/bash
+
+rssi=$(iw dev wlp2s0 link | awk '/signal/ { print $2 }')
+
+if [[ -z $rssi ]]; then
+   echo "$icon_wifi_missing 0%"
+   echo "$icon_wifi_missing 0%"
+   echo "$color_red"
+   exit 0
+fi
+
+perfect_rssi=-20
+worst_rssi=-80
+nominal_rssi=$((perfect_rssi - worst_rssi))
+strength=$(((100 * nominal_rssi**2 - (perfect_rssi - rssi) * (15 * nominal_rssi + 62 * (perfect_rssi - rssi))) / (nominal_rssi**2)))
+strength=$((strength > 0 ? strength : 0))
+strength=$((strength < 100 ? strength : 100))
+vpn=$(pgrep openvpn || pgrep openconnect)
+
+if [[ -n $vpn ]]; then
+   icon=$icon_vpn
+elif [[ $strength -gt 75 ]]; then
+   icon=$icon_wifi_strong
+elif [[ $strength -gt 50 ]]; then
+   icon=$icon_wifi_medium
+elif [[ $strength -gt 25 ]]; then
+   icon=$icon_wifi_weak
+else
+   icon=$icon_wifi_missing
+fi
+
+strength=$(printf "%4s" "$strength%")
+echo "$icon $strength"
