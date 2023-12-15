@@ -97,12 +97,6 @@ function setup-system {
    sed -i "s/#ParallelDownloads/ParallelDownloads/" /etc/pacman.conf
    pacstrap -K /mnt base base-devel linux linux-firmware
    genfstab -U /mnt >> /mnt/etc/fstab
-   as-chroot pacman -Syu
-
-   as-chroot bash -c "
-      sed -i 's/^HOOKS=.*/HOOKS=(base udev autodetect modconf kms keyboard keymap consolefont block encrypt filesystems fsck)/' /etc/mkinitcpio.conf
-      mkinitcpio -P
-   "
 
    # localisation
    as-chroot bash -c "
@@ -148,10 +142,13 @@ function setup-system {
       pacman -S --needed --noconfirm efibootmgr
       pacman -S --needed --noconfirm intel-ucode
 
+      sed -i 's/^HOOKS=.*/HOOKS=(systemd autodetect modconf kms keyboard sd-vconsole block sd-encrypt filesystems fsck)/' /etc/mkinitcpio.conf
+      mkinitcpio -P
+
       grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=GRUB
-      sed -i 's/^GRUB_TIMEOUT=.*/GRUB_TIMEOUT=0/'                                                                                                                                                            /etc/default/grub
-      sed -i 's/^GRUB_TIMEOUT_STYLE=.*/GRUB_TIMEOUT_STYLE=hidden/'                                                                                                                                           /etc/default/grub
-      sed -i 's/^GRUB_CMDLINE_LINUX_DEFAULT=.*/GRUB_CMDLINE_LINUX_DEFAULT=\"quiet loglevel=3 systemd.show_status=auto rd.udev.log_level=3 cryptdevice=UUID=$part_root_uuid:root root=\/dev\/mapper\/root\"/' /etc/default/grub
+      sed -i 's/^GRUB_TIMEOUT=.*/GRUB_TIMEOUT=0/'                  /etc/default/grub
+      sed -i 's/^GRUB_TIMEOUT_STYLE=.*/GRUB_TIMEOUT_STYLE=hidden/' /etc/default/grub
+      sed -i 's/^GRUB_CMDLINE_LINUX_DEFAULT=.*/GRUB_CMDLINE_LINUX_DEFAULT=\"quiet loglevel=3 systemd.show_status=auto rd.udev.log_level=3 vt.global_cursor_default=0 rd.luks.name=$part_root_uuid=root rd.luks.options=$part_root_uuid=timeout=0,tries=0,password-echo=no rootflags=x-systemd.device-timeout=0\"/' /etc/default/grub
       grub-mkconfig -o /boot/grub/grub.cfg
    "
 
