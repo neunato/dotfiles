@@ -107,22 +107,22 @@ function setup-system {
       sed -i 's/#hr_HR/hr_HR/g' /etc/locale.gen
       locale-gen
 
-      echo 'LANG=en_GB.utf8'         | tee --append /etc/locale.conf > /dev/null
+      echo 'LANG=en_GB.utf8'         | tee          /etc/locale.conf > /dev/null
       echo 'LANGUAGE=en_GB:en_US:en' | tee --append /etc/locale.conf > /dev/null
       echo 'LC_TIME=hr_HR.utf8'      | tee --append /etc/locale.conf > /dev/null
 
-      echo 'KEYMAP=croat'           | tee --append /etc/vconsole.conf > /dev/null
+      echo 'KEYMAP=croat'           | tee          /etc/vconsole.conf > /dev/null
       echo 'XKBLAYOUT=hr'           | tee --append /etc/vconsole.conf > /dev/null
       echo 'FONT=latarcyrheb-sun32' | tee --append /etc/vconsole.conf > /dev/null
 
       mkdir -p /etc/X11/xorg.conf.d
-      echo 'Section \"InputClass\"'             | tee --append /etc/X11/xorg.conf.d/00-keyboard.conf > /dev/null
+      echo 'Section \"InputClass\"'             | tee          /etc/X11/xorg.conf.d/00-keyboard.conf > /dev/null
       echo '    Identifier \"system-keyboard\"' | tee --append /etc/X11/xorg.conf.d/00-keyboard.conf > /dev/null
       echo '    MatchIsKeyboard \"on\"'         | tee --append /etc/X11/xorg.conf.d/00-keyboard.conf > /dev/null
       echo '    Option \"XkbLayout\" \"hr\"'    | tee --append /etc/X11/xorg.conf.d/00-keyboard.conf > /dev/null
       echo 'EndSection'                         | tee --append /etc/X11/xorg.conf.d/00-keyboard.conf > /dev/null
 
-      echo 'arch' | tee --append /etc/hostname > /dev/null
+      echo 'arch' | tee /etc/hostname > /dev/null
    "
 
    # user accounts
@@ -159,17 +159,17 @@ function setup-system {
       echo 'kernel.printk = 3 3 3 3' | tee /etc/sysctl.d/20-quiet-printk.conf
 
       mkdir -p /etc/systemd/system/systemd-fsck-root.service.d
-      echo '[Service]'                     | tee --append /etc/systemd/system/systemd-fsck-root.service.d/silent-boot > /dev/null
+      echo '[Service]'                     | tee          /etc/systemd/system/systemd-fsck-root.service.d/silent-boot > /dev/null
       echo 'StandardOutput=null'           | tee --append /etc/systemd/system/systemd-fsck-root.service.d/silent-boot > /dev/null
       echo 'StandardError=journal+console' | tee --append /etc/systemd/system/systemd-fsck-root.service.d/silent-boot > /dev/null
 
       mkdir -p /etc/systemd/system/systemd-fsck@.service.d
-      echo '[Service]'                     | tee --append /etc/systemd/system/systemd-fsck@.service.d/silent-boot > /dev/null
+      echo '[Service]'                     | tee          /etc/systemd/system/systemd-fsck@.service.d/silent-boot > /dev/null
       echo 'StandardOutput=null'           | tee --append /etc/systemd/system/systemd-fsck@.service.d/silent-boot > /dev/null
       echo 'StandardError=journal+console' | tee --append /etc/systemd/system/systemd-fsck@.service.d/silent-boot > /dev/null
 
       mkdir -p /etc/systemd/system/getty@tty1.service.d
-      echo '[Service]'                                                                                           | tee --append /etc/systemd/system/getty@tty1.service.d/skip-username.conf > /dev/null
+      echo '[Service]'                                                                                           | tee          /etc/systemd/system/getty@tty1.service.d/skip-username.conf > /dev/null
       echo 'ExecStart='                                                                                          | tee --append /etc/systemd/system/getty@tty1.service.d/skip-username.conf > /dev/null
       echo 'ExecStart=-/bin/agetty --skip-login --nonewline --noissue --autologin $username --noclear %I \$TERM' | tee --append /etc/systemd/system/getty@tty1.service.d/skip-username.conf > /dev/null
    "
@@ -177,7 +177,7 @@ function setup-system {
    # dpms
    as-chroot bash -c "
       mkdir -p /etc/X11/xorg.conf.d
-      echo 'Section \"ServerFlags\"'           | tee --append /etc/X11/xorg.conf.d/suspend.conf > /dev/null
+      echo 'Section \"ServerFlags\"'           | tee          /etc/X11/xorg.conf.d/suspend.conf > /dev/null
       echo '    Option \"BlankTime\" \"0\"'    | tee --append /etc/X11/xorg.conf.d/suspend.conf > /dev/null
       echo '    Option \"StandbyTime\" \"15\"' | tee --append /etc/X11/xorg.conf.d/suspend.conf > /dev/null
       echo '    Option \"SuspendTime\" \"15\"' | tee --append /etc/X11/xorg.conf.d/suspend.conf > /dev/null
