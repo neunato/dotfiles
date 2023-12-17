@@ -3,17 +3,24 @@
 set -e
 
 if [[ $# -ne 1 ]]; then
-   echo "Expected 'setup system|packages'" >&2
+   echo "Expected 'setup system|system-config|packages'" >&2
    exit 1
-elif [[ $1 != "system" && $1 != "packages" ]]; then
-   echo "Expected 'setup system|packages'" >&2
+elif [[ $1 != "system" && $1 != "system-config" && $1 != "packages" ]]; then
+   echo "Expected 'setup system|system-config|packages'" >&2
    exit 1
 elif [[ $1 == "system" && $EUID -ne 0 ]]; then
    echo "'setup system' must be run as root" >&2
    exit 1
+elif [[ $1 == "system-config" && $EUID -eq 0 ]]; then
+   echo "'setup system-config' must not be run as root" >&2
+   exit 1
 elif [[ $1 == "packages" && $EUID -eq 0 ]]; then
    echo "'setup packages' must not be run as root" >&2
    exit 1
+elif [[ $1 == "system-config" || $1 == "packages" ]]; then
+   while [[ $continue != "y" && $continue != "yes" ]]; do
+      read -p "Running as $(whoami), continue? " -i "yes" -e continue
+   done
 fi
 
 function setup-system {
@@ -98,33 +105,6 @@ function setup-system {
    pacstrap -K /mnt base base-devel linux linux-firmware
    genfstab -U /mnt >> /mnt/etc/fstab
 
-   # localisation
-   as-chroot bash -c "
-      ln -sf /usr/share/zoneinfo/Europe/Zagreb /etc/localtime
-      hwclock --systohc
-
-      sed -i 's/#en_GB/en_GB/g' /etc/locale.gen
-      sed -i 's/#hr_HR/hr_HR/g' /etc/locale.gen
-      locale-gen
-
-      echo 'LANG=en_GB.utf8'         | tee          /etc/locale.conf > /dev/null
-      echo 'LANGUAGE=en_GB:en_US:en' | tee --append /etc/locale.conf > /dev/null
-      echo 'LC_TIME=hr_HR.utf8'      | tee --append /etc/locale.conf > /dev/null
-
-      echo 'KEYMAP=croat'           | tee          /etc/vconsole.conf > /dev/null
-      echo 'XKBLAYOUT=hr'           | tee --append /etc/vconsole.conf > /dev/null
-      echo 'FONT=latarcyrheb-sun32' | tee --append /etc/vconsole.conf > /dev/null
-
-      mkdir -p /etc/X11/xorg.conf.d
-      echo 'Section \"InputClass\"'             | tee          /etc/X11/xorg.conf.d/00-keyboard.conf > /dev/null
-      echo '    Identifier \"system-keyboard\"' | tee --append /etc/X11/xorg.conf.d/00-keyboard.conf > /dev/null
-      echo '    MatchIsKeyboard \"on\"'         | tee --append /etc/X11/xorg.conf.d/00-keyboard.conf > /dev/null
-      echo '    Option \"XkbLayout\" \"hr\"'    | tee --append /etc/X11/xorg.conf.d/00-keyboard.conf > /dev/null
-      echo 'EndSection'                         | tee --append /etc/X11/xorg.conf.d/00-keyboard.conf > /dev/null
-
-      echo 'arch' | tee /etc/hostname > /dev/null
-   "
-
    # user accounts
    as-chroot bash -c "
       pacman -S --needed --noconfirm sudo
@@ -135,66 +115,13 @@ function setup-system {
       echo '%wheel ALL=(ALL:ALL) ALL' | EDITOR='tee --append' visudo > /dev/null
    "
 
-   # boot loader
-   local part_root_uuid=$(blkid -s UUID -o value "/dev/$part_root")
-   as-chroot bash -c "
-      pacman -S --needed --noconfirm grub
-      pacman -S --needed --noconfirm efibootmgr
-      pacman -S --needed --noconfirm intel-ucode
-
-      cat /dev/null > /etc/mkinitcpio.conf
-      echo 'PRESETS=(\"default\")'                                                                                        | tee          /etc/mkinitcpio.d/linux.preset > /dev/null
-      echo 'default_kver=\"/boot/vmlinuz-linux\"'                                                                         | tee --append /etc/mkinitcpio.d/linux.preset > /dev/null
-      echo 'default_image=\"/boot/initramfs-linux.img\"'                                                                  | tee --append /etc/mkinitcpio.d/linux.preset > /dev/null
-      echo 'default_microcode=\"/boot/intel-ucode.img\"'                                                                  | tee --append /etc/mkinitcpio.d/linux.preset > /dev/null
-      echo 'default_config=\"/etc/mkinitcpio.conf\"'                                                                      | tee --append /etc/mkinitcpio.d/linux.preset > /dev/null
-      echo 'default_options=\"-A systemd,autodetect,modconf,kms,keyboard,sd-vconsole,block,sd-encrypt,filesystems,fsck\"' | tee --append /etc/mkinitcpio.d/linux.preset > /dev/null
-      mkinitcpio -P
-
-      grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=GRUB
-      sed -i 's/^GRUB_DEFAULT=.*/GRUB_DEFAULT=0/'                  /etc/default/grub
-      sed -i 's/^GRUB_TIMEOUT=.*/GRUB_TIMEOUT=0/'                  /etc/default/grub
-      sed -i 's/^GRUB_TIMEOUT_STYLE=.*/GRUB_TIMEOUT_STYLE=hidden/' /etc/default/grub
-      sed -i 's/^GRUB_CMDLINE_LINUX_DEFAULT=.*/GRUB_CMDLINE_LINUX_DEFAULT=\"quiet loglevel=3 systemd.show_status=error rd.udev.log_level=3 rd.luks.name=$part_root_uuid=root rd.luks.options=$part_root_uuid=timeout=0,tries=0,password-echo=no rootflags=x-systemd.device-timeout=0\"/' /etc/default/grub
-      grub-mkconfig -o /boot/grub/grub.cfg
-      sed -i 's/echo\t/#echo\t/g' /boot/grub/grub.cfg
-   "
-
-   # silent boot
-   as-chroot bash -c "
-      echo 'kernel.printk = 3 3 3 3' | tee /etc/sysctl.d/20-quiet-printk.conf
-
-      mkdir -p /etc/systemd/system/systemd-fsck-root.service.d
-      echo '[Service]'                     | tee          /etc/systemd/system/systemd-fsck-root.service.d/silent-boot > /dev/null
-      echo 'StandardOutput=null'           | tee --append /etc/systemd/system/systemd-fsck-root.service.d/silent-boot > /dev/null
-      echo 'StandardError=journal+console' | tee --append /etc/systemd/system/systemd-fsck-root.service.d/silent-boot > /dev/null
-
-      mkdir -p /etc/systemd/system/systemd-fsck@.service.d
-      echo '[Service]'                     | tee          /etc/systemd/system/systemd-fsck@.service.d/silent-boot > /dev/null
-      echo 'StandardOutput=null'           | tee --append /etc/systemd/system/systemd-fsck@.service.d/silent-boot > /dev/null
-      echo 'StandardError=journal+console' | tee --append /etc/systemd/system/systemd-fsck@.service.d/silent-boot > /dev/null
-
-      mkdir -p /etc/systemd/system/getty@tty1.service.d
-      echo '[Service]'                                                                                           | tee          /etc/systemd/system/getty@tty1.service.d/skip-username.conf > /dev/null
-      echo 'ExecStart='                                                                                          | tee --append /etc/systemd/system/getty@tty1.service.d/skip-username.conf > /dev/null
-      echo 'ExecStart=-/bin/agetty --skip-login --nonewline --noissue --autologin $username --noclear %I \$TERM' | tee --append /etc/systemd/system/getty@tty1.service.d/skip-username.conf > /dev/null
-   "
-
-   # dpms
-   as-chroot bash -c "
-      mkdir -p /etc/X11/xorg.conf.d
-      echo 'Section \"ServerFlags\"'           | tee          /etc/X11/xorg.conf.d/suspend.conf > /dev/null
-      echo '    Option \"BlankTime\" \"0\"'    | tee --append /etc/X11/xorg.conf.d/suspend.conf > /dev/null
-      echo '    Option \"StandbyTime\" \"15\"' | tee --append /etc/X11/xorg.conf.d/suspend.conf > /dev/null
-      echo '    Option \"SuspendTime\" \"15\"' | tee --append /etc/X11/xorg.conf.d/suspend.conf > /dev/null
-      echo '    Option \"OffTime\" \"0\"'      | tee --append /etc/X11/xorg.conf.d/suspend.conf > /dev/null
-      echo 'EndSection'                        | tee --append /etc/X11/xorg.conf.d/suspend.conf > /dev/null
-   "
+   # system configuration
+   as-chroot setup-system-config "$username"
 
    # packages
-   as-chroot setup-packages $username
+   as-chroot setup-packages "$username"
 
-   # configuration
+   # user configuration
    local home="/home/$username"
    as-chroot bash -c "
       pacman -S --needed --noconfirm git
@@ -222,6 +149,92 @@ function setup-system {
    # reboot
    reboot
    } 2>&1 | tee /tmp/arch_setup.log
+}
+
+function setup-system-config {
+   local username=$1
+   local part_root_uuid=$(dmsetup info -c --noheadings -o uuid /dev/mapper/root 2> /dev/null)
+   if [[ ! $part_root_uuid =~ ^CRYPT-LUKS2-(.{8})(.{4})(.{4})(.{4})(.{12})-root$ ]]; then
+      echo "Root partition not found" >&2
+      exit 1
+   fi
+   part_root_uuid="${BASH_REMATCH[1]}-${BASH_REMATCH[2]}-${BASH_REMATCH[3]}-${BASH_REMATCH[4]}-${BASH_REMATCH[5]}"
+
+   sed -i "s/#ParallelDownloads/ParallelDownloads/" /etc/pacman.conf
+
+   # localisation
+   ln -sf /usr/share/zoneinfo/Europe/Zagreb /etc/localtime
+   hwclock --systohc
+
+   sed -i 's/#en_GB/en_GB/g' /etc/locale.gen
+   sed -i 's/#hr_HR/hr_HR/g' /etc/locale.gen
+   locale-gen
+
+   echo 'LANG=en_GB.utf8'         | tee          /etc/locale.conf > /dev/null
+   echo 'LANGUAGE=en_GB:en_US:en' | tee --append /etc/locale.conf > /dev/null
+   echo 'LC_TIME=hr_HR.utf8'      | tee --append /etc/locale.conf > /dev/null
+
+   echo 'KEYMAP=croat'           | tee          /etc/vconsole.conf > /dev/null
+   echo 'XKBLAYOUT=hr'           | tee --append /etc/vconsole.conf > /dev/null
+   echo 'FONT=latarcyrheb-sun32' | tee --append /etc/vconsole.conf > /dev/null
+
+   mkdir -p /etc/X11/xorg.conf.d
+   echo 'Section "InputClass"'             | tee          /etc/X11/xorg.conf.d/00-keyboard.conf > /dev/null
+   echo '    Identifier "system-keyboard"' | tee --append /etc/X11/xorg.conf.d/00-keyboard.conf > /dev/null
+   echo '    MatchIsKeyboard "on"'         | tee --append /etc/X11/xorg.conf.d/00-keyboard.conf > /dev/null
+   echo '    Option "XkbLayout" "hr"'      | tee --append /etc/X11/xorg.conf.d/00-keyboard.conf > /dev/null
+   echo 'EndSection'                       | tee --append /etc/X11/xorg.conf.d/00-keyboard.conf > /dev/null
+
+   echo 'arch' | tee /etc/hostname > /dev/null
+
+   # boot loader
+   pacman -S --needed --noconfirm grub
+   pacman -S --needed --noconfirm efibootmgr
+   pacman -S --needed --noconfirm intel-ucode
+
+   cat /dev/null > /etc/mkinitcpio.conf
+   echo 'PRESETS=("default")'                                                                                        | tee          /etc/mkinitcpio.d/linux.preset > /dev/null
+   echo 'default_kver="/boot/vmlinuz-linux"'                                                                         | tee --append /etc/mkinitcpio.d/linux.preset > /dev/null
+   echo 'default_image="/boot/initramfs-linux.img"'                                                                  | tee --append /etc/mkinitcpio.d/linux.preset > /dev/null
+   echo 'default_microcode="/boot/intel-ucode.img"'                                                                  | tee --append /etc/mkinitcpio.d/linux.preset > /dev/null
+   echo 'default_config="/etc/mkinitcpio.conf"'                                                                      | tee --append /etc/mkinitcpio.d/linux.preset > /dev/null
+   echo 'default_options="-A systemd,autodetect,modconf,kms,keyboard,sd-vconsole,block,sd-encrypt,filesystems,fsck"' | tee --append /etc/mkinitcpio.d/linux.preset > /dev/null
+   mkinitcpio -P
+
+   grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=GRUB
+   sed -i 's/^GRUB_DEFAULT=.*/GRUB_DEFAULT=0/'                  /etc/default/grub
+   sed -i 's/^GRUB_TIMEOUT=.*/GRUB_TIMEOUT=0/'                  /etc/default/grub
+   sed -i 's/^GRUB_TIMEOUT_STYLE=.*/GRUB_TIMEOUT_STYLE=hidden/' /etc/default/grub
+   sed -i "s/^GRUB_CMDLINE_LINUX_DEFAULT=.*/GRUB_CMDLINE_LINUX_DEFAULT=\"quiet loglevel=3 systemd.show_status=error rd.udev.log_level=3 rd.luks.name=$part_root_uuid=root rd.luks.options=$part_root_uuid=timeout=0,tries=0,password-echo=no rootflags=x-systemd.device-timeout=0\"/" /etc/default/grub
+   grub-mkconfig -o /boot/grub/grub.cfg
+   sed -i 's/echo\t/#echo\t/g' /boot/grub/grub.cfg
+
+   # silent boot
+   echo 'kernel.printk = 3 3 3 3' | tee /etc/sysctl.d/20-quiet-printk.conf > /dev/null
+
+   mkdir -p /etc/systemd/system/systemd-fsck-root.service.d
+   echo '[Service]'                     | tee          /etc/systemd/system/systemd-fsck-root.service.d/silent-boot > /dev/null
+   echo 'StandardOutput=null'           | tee --append /etc/systemd/system/systemd-fsck-root.service.d/silent-boot > /dev/null
+   echo 'StandardError=journal+console' | tee --append /etc/systemd/system/systemd-fsck-root.service.d/silent-boot > /dev/null
+
+   mkdir -p /etc/systemd/system/systemd-fsck@.service.d
+   echo '[Service]'                     | tee          /etc/systemd/system/systemd-fsck@.service.d/silent-boot > /dev/null
+   echo 'StandardOutput=null'           | tee --append /etc/systemd/system/systemd-fsck@.service.d/silent-boot > /dev/null
+   echo 'StandardError=journal+console' | tee --append /etc/systemd/system/systemd-fsck@.service.d/silent-boot > /dev/null
+
+   mkdir -p /etc/systemd/system/getty@tty1.service.d
+   echo '[Service]'                                                                                           | tee          /etc/systemd/system/getty@tty1.service.d/skip-username.conf > /dev/null
+   echo 'ExecStart='                                                                                          | tee --append /etc/systemd/system/getty@tty1.service.d/skip-username.conf > /dev/null
+   echo "ExecStart=-/bin/agetty --skip-login --nonewline --noissue --autologin $username --noclear %I \$TERM" | tee --append /etc/systemd/system/getty@tty1.service.d/skip-username.conf > /dev/null
+
+   # dpms
+   mkdir -p /etc/X11/xorg.conf.d
+   echo 'Section "ServerFlags"'         | tee          /etc/X11/xorg.conf.d/suspend.conf > /dev/null
+   echo '    Option "BlankTime" "0"'    | tee --append /etc/X11/xorg.conf.d/suspend.conf > /dev/null
+   echo '    Option "StandbyTime" "15"' | tee --append /etc/X11/xorg.conf.d/suspend.conf > /dev/null
+   echo '    Option "SuspendTime" "15"' | tee --append /etc/X11/xorg.conf.d/suspend.conf > /dev/null
+   echo '    Option "OffTime" "0"'      | tee --append /etc/X11/xorg.conf.d/suspend.conf > /dev/null
+   echo 'EndSection'                    | tee --append /etc/X11/xorg.conf.d/suspend.conf > /dev/null
 }
 
 function setup-packages {
@@ -425,6 +438,7 @@ function github_api_url {
 }
 
 case "$1" in
-   system)   setup-system;;
-   packages) as-sudo setup-packages $(whoami);;
+   system)        setup-system;;
+   system-config) as-sudo setup-system-config $(whoami);;
+   packages)      as-sudo setup-packages $(whoami);;
 esac
