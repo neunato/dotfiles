@@ -1,7 +1,12 @@
 #!/bin/bash
 
-rssi=$(iw dev wlp2s0 link | awk '/signal/ { print $2 }')
+ethernet=$(cat /sys/class/net/en*/operstate 2> /dev/null)
+if [[ $ethernet == "up" ]]; then
+   echo "$icon_wired wire"
+   exit
+fi
 
+rssi=$(iw dev wlp2s0 link | awk '/signal/ { print $2 }')
 if [[ -z $rssi ]]; then
    echo "$icon_wifi_missing 0%"
    echo "$icon_wifi_missing 0%"

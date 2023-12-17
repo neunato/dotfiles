@@ -29,7 +29,7 @@ icon_nightlight=󰃝
 [network]
 command=bash i3blocks-network
 interval=5
-icon_wired=󱘖
+icon_wired=󰈀
 icon_wifi_missing=󰢿
 icon_wifi_weak=󰢼
 icon_wifi_medium=󰢽
