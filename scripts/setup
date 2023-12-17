@@ -249,7 +249,7 @@ function setup-packages {
       echo -e "\n[sublime-text]\nServer = https://download.sublimetext.com/arch/dev/x86_64" | tee --append /etc/pacman.conf > /dev/null
    fi
 
-   pacman -Syu
+   pacman -Syu --noconfirm
 
    # hardware-related
    pacman -S --needed --noconfirm networkmanager
@@ -279,6 +279,7 @@ function setup-packages {
 
    # system utilities
    pacman -S --needed --noconfirm dunst
+   pacman -S --needed --noconfirm libnotify
    pacman -S --needed --noconfirm rofi
    pacman -S --needed --noconfirm feh
    pacman -S --needed --noconfirm nautilus
@@ -297,6 +298,7 @@ function setup-packages {
    pacman -S --needed --noconfirm git
    pacman -S --needed --noconfirm bat
    pacman -S --needed --noconfirm jq
+   pacman -S --needed --noconfirm wgetpaste
    pacman -S --needed --noconfirm python
    pacman -S --needed --noconfirm python-pip
    pacman -S --needed --noconfirm nodejs
@@ -308,6 +310,7 @@ function setup-packages {
 
    # applications
    pacman -S --needed --noconfirm kitty
+   pacman -S --needed --noconfirm nano
    pacman -S --needed --noconfirm firefox
    pacman -S --needed --noconfirm chromium
    pacman -S --needed --noconfirm mpv
