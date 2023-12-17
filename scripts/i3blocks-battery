@@ -1,7 +1,11 @@
 #!/bin/bash
 
-capacity=$(cat /sys/class/power_supply/BAT0/capacity)
-status=$(cat /sys/class/power_supply/BAT0/status)
+capacity=$(cat /sys/class/power_supply/BAT0/capacity 2> /dev/null)
+status=$(cat /sys/class/power_supply/BAT0/status 2> /dev/null)
+
+if [[ -z $capacity ]]; then
+   exit
+fi
 
 if [[ $status != "Discharging" ]]; then
    icon=$icon_charging
