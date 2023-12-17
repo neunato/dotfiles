@@ -142,7 +142,13 @@ function setup-system {
       pacman -S --needed --noconfirm efibootmgr
       pacman -S --needed --noconfirm intel-ucode
 
-      sed -i 's/^HOOKS=.*/HOOKS=(systemd autodetect modconf kms keyboard sd-vconsole block sd-encrypt filesystems fsck)/' /etc/mkinitcpio.conf
+      cat /dev/null > /etc/mkinitcpio.conf
+      echo 'PRESETS=(\"default\")'                                                                                        | tee          /etc/mkinitcpio.d/linux.preset > /dev/null
+      echo 'default_kver=\"/boot/vmlinuz-linux\"'                                                                         | tee --append /etc/mkinitcpio.d/linux.preset > /dev/null
+      echo 'default_image=\"/boot/initramfs-linux.img\"'                                                                  | tee --append /etc/mkinitcpio.d/linux.preset > /dev/null
+      echo 'default_microcode=\"/boot/intel-ucode.img\"'                                                                  | tee --append /etc/mkinitcpio.d/linux.preset > /dev/null
+      echo 'default_config=\"/etc/mkinitcpio.conf\"'                                                                      | tee --append /etc/mkinitcpio.d/linux.preset > /dev/null
+      echo 'default_options=\"-A systemd,autodetect,modconf,kms,keyboard,sd-vconsole,block,sd-encrypt,filesystems,fsck\"' | tee --append /etc/mkinitcpio.d/linux.preset > /dev/null
       mkinitcpio -P
 
       grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=GRUB
