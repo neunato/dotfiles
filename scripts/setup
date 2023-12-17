@@ -141,6 +141,11 @@ function setup-system {
       git config --global --unset init.defaultBranch
 
       mkdir '$home/dev'
+      mkdir '$home/download'
+      mkdir '$home/music'
+      mkdir '$home/pictures'
+      mkdir '$home/videos'
+
       chown -R '$username:$username' .
    "
 
