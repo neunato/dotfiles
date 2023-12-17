@@ -12,22 +12,31 @@ volume=${volume:0:-1}
 
 if [[ -z "$1" ]]; then
    echo "$volume"
-   exit 0
+   exit
 fi
 
 if [[ "$1" == "up" ]]; then
    volume=$(((volume + step + 5) / 10 * 10))
    volume=$((volume < 100 ? volume : 100))
    amixer -M sset Master "$volume%" > /dev/null
-elif [[ "$1" == "down" ]]; then
+   exit
+fi
+
+if [[ "$1" == "down" ]]; then
    volume=$(((volume - step + 5) / 10 * 10))
    volume=$((volume > 0 ? volume : 0))
    amixer -M sset Master "$volume%" > /dev/null
-elif [[ "$1" == "mute" ]]; then
-   amixer -M sset Master toggle > /dev/null
-elif [[ "$1" == "muted" ]]; then
-   exit $(amixer -M sget Master | grep -q '\[off\]')
-else
-   echo "Expected 'volume [up|down|mute|muted]'" >&2
-   exit 1
+   exit
 fi
+
+if [[ "$1" == "mute" ]]; then
+   amixer -M sset Master toggle > /dev/null
+   exit
+fi
+
+if [[ "$1" == "muted" ]]; then
+   exit $(amixer -M sget Master | grep -q '\[off\]')
+fi
+
+echo "Expected 'volume [up|down|mute|muted]'" >&2
+exit 1

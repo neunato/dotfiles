@@ -43,14 +43,14 @@ fi
 if [[ $selection == "true" ]]; then
    mkdir -p "$XDG_PICTURES_DIR/screenshots"
    exec maim -s | tee "$XDG_PICTURES_DIR/screenshots/$filename.png" | xclip -selection clipboard -t image/png
-   exit 0
+   exit
 fi
 
 # take screenshot of entire window
 if [[ $record != "true" ]]; then
    mkdir -p "$XDG_PICTURES_DIR/screenshots"
    exec maim | tee "$XDG_PICTURES_DIR/screenshots/$filename.png" | xclip -selection clipboard -t image/png
-   exit 0
+   exit
 fi
 
 # start/stop recording

@@ -27,5 +27,5 @@ echo "$icon $vol"
 
 if [[ $muted == true ]]; then
    echo "$icon $vol"
-   echo "$color_yellow"
+   echo "$color_red"
 fi

@@ -6,7 +6,7 @@ if [[ -z $rssi ]]; then
    echo "$icon_wifi_missing 0%"
    echo "$icon_wifi_missing 0%"
    echo "$color_red"
-   exit 0
+   exit
 fi
 
 perfect_rssi=-20

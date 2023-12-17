@@ -10,18 +10,22 @@ brightness=${brightness:0:-1}
 
 if [[ -z "$1" ]]; then
    echo "$brightness"
-   exit 0
+   exit
 fi
 
 if [[ "$1" == "up" ]]; then
    brightness=$(((brightness + step + 5) / 10 * 10))
    brightness=$((brightness < 100 ? brightness : 100))
    lux -S "$brightness%" > /dev/null
-elif [[ "$1" == "down" ]]; then
+   exit
+fi
+
+if [[ "$1" == "down" ]]; then
    brightness=$(((brightness - step + 5) / 10 * 10))
    brightness=$((brightness > 1 ? brightness : 1))
    lux -S "$brightness%" > /dev/null
-else
-   echo "Expected 'brightness [up|down]'" >&2
-   exit 1
+   exit
 fi
+
+echo "Expected 'brightness [up|down]'" >&2
+exit 1
