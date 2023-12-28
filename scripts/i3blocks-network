@@ -6,7 +6,8 @@ if [[ $ethernet == "up" ]]; then
    exit
 fi
 
-rssi=$(iw dev wlp2s0 link | awk '/signal/ { print $2 }')
+interface=$(iw dev | awk '$1=="Interface" { print $2 }')
+rssi=$(iw dev "$interface" link | awk '/signal/ { print $2 }')
 if [[ -z $rssi ]]; then
    echo "$icon_wifi_missing 0%"
    echo "$icon_wifi_missing 0%"
