@@ -346,6 +346,8 @@ function setup-packages {
    head -n -1 /etc/sudoers | tee /etc/sudoers > /dev/null
 
    # groups, services, configuration
+   lux
+
    usermod -aG docker "$username"
    usermod -aG libvirt "$username"
 
