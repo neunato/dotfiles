@@ -261,7 +261,14 @@ function setup-packages {
    pacman -S --needed --noconfirm mesa
    pacman -S --needed --noconfirm intel-media-driver
    pacman -S --needed --noconfirm fwupd
-   pacman -S --needed --noconfirm alsa-utils
+   pacman -S --needed --noconfirm alsa-firmware
+   pacman -S --needed --noconfirm sof-firmware
+   pacman -S --needed --noconfirm pipewire
+   pacman -S --needed --noconfirm wireplumber
+   pacman -S --needed --noconfirm pipewire-audio
+   pacman -S --needed --noconfirm pipewire-alsa
+   pacman -S --needed --noconfirm pipewire-pulse
+   pacman -S --needed --noconfirm pipewire-jack
    pacman -S --needed --noconfirm tlp
    pacman -S --needed --noconfirm acpid
    pacman -S --needed --noconfirm polkit
@@ -351,6 +358,7 @@ function setup-packages {
    usermod -aG docker "$username"
    usermod -aG libvirt "$username"
 
+   systemctl --user --machine="$username@" enable pipewire-pulse.service
    systemctl enable NetworkManager
    systemctl enable tlp.service
    systemctl enable acpid.service
@@ -361,6 +369,7 @@ function setup-packages {
    systemctl mask systemd-rfkill.socket
 
    if [[ $(stat -c %d:%i /) == $(stat -c %d:%i /proc/1/root/.) ]]; then
+      systemctl --user --machine="$username@" start pipewire-pulse.service
       systemctl start NetworkManager
       systemctl start tlp.service
       systemctl start acpid.service
