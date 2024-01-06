@@ -3,16 +3,19 @@
 set -e
 
 if [[ $# -ne 1 ]]; then
-   echo "Expected 'setup system|system-config|packages'" >&2
+   echo "Expected 'setup system|system-config|firmware|packages'" >&2
    exit 1
-elif [[ $1 != "system" && $1 != "system-config" && $1 != "packages" ]]; then
-   echo "Expected 'setup system|system-config|packages'" >&2
+elif [[ $1 != "system" && $1 != "system-config" && $1 != "firmware" && $1 != "packages" ]]; then
+   echo "Expected 'setup system|system-config|firmware|packages'" >&2
    exit 1
 elif [[ $1 == "system" && $EUID -ne 0 ]]; then
    echo "'setup system' must be run as root" >&2
    exit 1
 elif [[ $1 == "system-config" && $EUID -eq 0 ]]; then
    echo "'setup system-config' must not be run as root" >&2
+   exit 1
+elif [[ $1 == "firmware" && $EUID -ne 0 ]]; then
+   echo "'setup firmware' must be run as root" >&2
    exit 1
 elif [[ $1 == "packages" && $EUID -eq 0 ]]; then
    echo "'setup packages' must not be run as root" >&2
@@ -385,6 +388,12 @@ function setup-packages {
    sed -i 's/#group = "libvirt-qemu"/group = "'"$username"'"/g' /etc/libvirt/qemu.conf
 }
 
+function setup-firmware {
+   pacman -S --needed --noconfirm fwupd
+   fwupdmgr --no-reboot-check refresh
+   fwupdmgr --no-reboot-check update
+}
+
 function install-paru {
    local url="https://aur.archlinux.org/cgit/aur.git/snapshot/paru.tar.gz"
    local dir="/var/tmp/paru"
@@ -460,5 +469,6 @@ function github_api_url {
 case "$1" in
    system)        setup-system;;
    system-config) as-sudo setup-system-config $(whoami);;
+   firmware)      setup-firmware;;
    packages)      as-sudo setup-packages $(whoami);;
 esac
