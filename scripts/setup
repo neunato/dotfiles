@@ -257,10 +257,10 @@ function setup-packages {
    pacman -Syu --noconfirm
 
    # hardware-related
+   pacman -S --needed --noconfirm fwupd
    pacman -S --needed --noconfirm networkmanager
    pacman -S --needed --noconfirm mesa
    pacman -S --needed --noconfirm intel-media-driver
-   pacman -S --needed --noconfirm fwupd
    pacman -S --needed --noconfirm alsa-firmware
    pacman -S --needed --noconfirm sof-firmware
    pacman -S --needed --noconfirm pipewire
@@ -289,15 +289,20 @@ function setup-packages {
    pacman -S --needed --noconfirm i3lock
    pacman -S --needed --noconfirm xss-lock
 
-   # system utilities
+   # utilities
+   pacman -S --needed --noconfirm sudo
+   pacman -S --needed --noconfirm nano
+   pacman -S --needed --noconfirm bat
+   pacman -S --needed --noconfirm jq
+   pacman -S --needed --noconfirm wgetpaste
    pacman -S --needed --noconfirm dunst
    pacman -S --needed --noconfirm libnotify
    pacman -S --needed --noconfirm rofi
-   pacman -S --needed --noconfirm feh
-   pacman -S --needed --noconfirm nautilus
    pacman -S --needed --noconfirm maim
    pacman -S --needed --noconfirm ffmpeg
    pacman -S --needed --noconfirm id3v2
+   pacman -S --needed --noconfirm man-db
+   pacman -S --needed --noconfirm man-pages
 
    # ssh, vpn
    pacman -S --needed --noconfirm openssh
@@ -305,13 +310,7 @@ function setup-packages {
    pacman -S --needed --noconfirm openconnect
 
    # developer tooling
-   pacman -S --needed --noconfirm sudo
-   pacman -S --needed --noconfirm man-db
-   pacman -S --needed --noconfirm man-pages
    pacman -S --needed --noconfirm git
-   pacman -S --needed --noconfirm bat
-   pacman -S --needed --noconfirm jq
-   pacman -S --needed --noconfirm wgetpaste
    pacman -S --needed --noconfirm python
    pacman -S --needed --noconfirm python-pip
    pacman -S --needed --noconfirm nodejs
@@ -321,12 +320,13 @@ function setup-packages {
    pacman -S --needed --noconfirm docker
    pacman -S --needed --noconfirm docker-compose
 
-   # applications
+   # gui applications
    pacman -S --needed --noconfirm kitty
-   pacman -S --needed --noconfirm nano
+   pacman -S --needed --noconfirm nautilus
+   pacman -S --needed --noconfirm feh
+   pacman -S --needed --noconfirm mpv
    pacman -S --needed --noconfirm firefox
    pacman -S --needed --noconfirm chromium
-   pacman -S --needed --noconfirm mpv
    pacman -S --needed --noconfirm calibre
    pacman -S --needed --noconfirm transmission-gtk
    pacman -S --needed --noconfirm sublime-text
@@ -354,7 +354,7 @@ function setup-packages {
    head -n -1 /etc/sudoers | tee /etc/sudoers > /dev/null
 
    # groups, services, configuration
-   lux
+   lux > /dev/null
 
    usermod -aG docker "$username"
    usermod -aG libvirt "$username"
