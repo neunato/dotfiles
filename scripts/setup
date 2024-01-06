@@ -297,6 +297,7 @@ function setup-packages {
    pacman -S --needed --noconfirm nautilus
    pacman -S --needed --noconfirm maim
    pacman -S --needed --noconfirm ffmpeg
+   pacman -S --needed --noconfirm id3v2
 
    # ssh, vpn
    pacman -S --needed --noconfirm openssh
