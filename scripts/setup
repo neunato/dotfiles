@@ -105,6 +105,7 @@ function setup-system {
 
    # essential packages
    sed -i "s/#ParallelDownloads/ParallelDownloads/" /etc/pacman.conf
+   pacman -Sy --needed --noconfirm archlinux-keyring
    pacstrap -K /mnt base base-devel linux linux-firmware
    genfstab -U /mnt >> /mnt/etc/fstab
 
