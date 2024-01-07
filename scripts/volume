@@ -7,7 +7,7 @@
 # volume muted - check if currently muted
 
 step=10
-volume=$(amixer -M sget Master | awk -F"[][]" '/dB/ { print $2 }')
+volume=$(amixer -M sget Master | awk -F"[][]" '/(Left|dB):/ { print $2 }')
 volume=${volume:0:-1}
 
 if [[ -z "$1" ]]; then
