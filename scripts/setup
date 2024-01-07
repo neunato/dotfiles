@@ -351,6 +351,7 @@ function setup-packages {
 
    as-user $username paru -S --needed --noconfirm lux
    as-user $username paru -S --needed --noconfirm xsct
+   as-user $username paru -S --needed --noconfirm openvpn-update-systemd-resolved
    as-user $username paru -S --needed --noconfirm glances
    as-user $username paru -S --needed --noconfirm mongodb-bin
    as-user $username paru -S --needed --noconfirm mongosh-bin
@@ -367,6 +368,7 @@ function setup-packages {
    systemctl enable NetworkManager
    systemctl enable tlp.service
    systemctl enable acpid.service
+   systemctl enable systemd-resolved
    systemctl enable docker.service
    systemctl enable libvirtd.service
    systemctl enable mongodb.service
@@ -378,6 +380,7 @@ function setup-packages {
       systemctl start NetworkManager
       systemctl start tlp.service
       systemctl start acpid.service
+      systemctl start systemd-resolved
       systemctl start docker.service
       systemctl start libvirtd.service
       systemctl start mongodb.service
