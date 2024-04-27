@@ -1,0 +1,483 @@
+#!/bin/bash
+
+# screen-layout [--mode join|mirror|single] [--primary <output>] [--scale <output1>:<scale1>[,<output2>:<scale2>...]] [--dpi <output1>:<dpi1>[,<output2>:<dpi2>...]] [--dry-run] [--] [<output1> [<output2>...]]
+
+# screen-layout <output1> <output2>                                - enable monitors, disabling others
+# screen-layout --mode join                                        - join connected monitors (primary scale applied, other outputs scaled to match height)
+# screen-layout --mode mirror                                      - mirror connected monitors (primary scale applied, other outputs scaled to fit and centered)
+# screen-layout --mode single <output>                             - use one monitor, defaulting to a connected primary or first connected monitor
+# screen-layout --primary <output>                                 - set primary monitor
+# screen-layout --restore                                          - restore mode, primary, scale and dpi
+# screen-layout --scale <output1>:<scale1>[,<output2>:<scale2>...] - set scale for specified monitors (applied scale depends on mode)
+# screen-layout --dpi <output1>:<dpi1>[,<output2>:<dpi2>...]       - set dpi for specified monitors (applying primary/highest/96 globally regardless of mode)
+# screen-layout --dry-run                                          - output the xrandr command instead of executing it and don't save settings
+# screen-layout --list-outputs                                     - list connected monitors
+
+# TODO: uniquely identify monitors (EDID?)
+# TODO: store and restore outputs when explicitly specified
+
+targets=()
+while [[ $# -gt 0 ]]; do
+   case "$1" in
+      --mode)         mode=$2;         shift; shift;;
+      --primary)      primary=$2;      shift; shift;;
+      --scale)        scale=$2;        shift; shift;;
+      --dpi)          dpi=$2;          shift; shift;;
+      --restore)      restore=true;           shift;;
+      --dry-run)      dry_run=true;           shift;;
+      --list-outputs) list=true;              shift;;
+      --*)                                    shift;;
+      *)              targets+=("$1");        shift;;
+   esac
+done
+
+if [[ -z $list && -z $restore && -z $mode && -z $primary && -z $scale && -z $dpi && ${#targets[@]} -eq 0 ]]; then
+   echo "Invalid arguments" >&2
+   exit 1
+fi
+if [[ -n $restore && ! (-z $list && -z $mode && -z $primary && -z $scale && -z $dpi && ${#targets[@]} -eq 0) ]]; then
+   echo "Invalid arguments" >&2
+   exit 1
+fi
+if [[ -n $list && ! (-z $restore && -z $mode && -z $primary && -z $scale && -z $dpi && ${#targets[@]} -eq 0) ]]; then
+   echo "Invalid arguments" >&2
+   exit 1
+fi
+if [[ $mode == "single" && ${#targets[@]} -gt 1 ]]; then
+   echo "Invalid arguments" >&2
+   exit 1
+fi
+if [[ -n $scale && ! $scale =~ ^[a-zA-Z0-9-]+:[0-9].[0-9]{1,4}(,[a-zA-Z0-9-]+:[0-9].[0-9]{1,4})*$ ]]; then
+   echo "Invalid arguments" >&2
+   exit 1
+fi
+if [[ -n $dpi && ! $dpi =~ ^[a-zA-Z0-9-]+:[0-9]{2,3}(,[a-zA-Z0-9-]+:[0-9]{2,3})*$ ]]; then
+   echo "Invalid arguments" >&2
+   exit 1
+fi
+if [[ -n $mode && $mode != "join" && $mode != "mirror" && $mode != "single" ]]; then
+   echo "Expected '--mode join|mirror|single'" >&2
+   exit 1
+fi
+
+
+function join_displays {
+   local screen_width=0
+   local screen_height=0
+   local index_map=()
+
+   for i in "${!targets[@]}"; do
+      local display=${targets[$i]}
+      local height=${heights[$i]}
+      for j in "${!displays[@]}"; do
+         if [[ ${displays[$j]} == $display ]]; then
+            index_map+=($j)
+            break
+         fi
+      done
+      if [[ $display == $primary ]]; then
+         local scale=${scales[$j]}
+         screen_height="$(ceil "$height * $scale")"
+      fi
+   done
+
+   command=""
+   for i in "${!targets[@]}"; do
+      local j=${index_map[$i]}
+      local display=${targets[$i]}
+      local resolution=${resolutions[$j]}
+      local width=${widths[$j]}
+      local height=${heights[$j]}
+      local scale=${scales[$j]}
+      if [[ $display != $primary ]]; then
+         scale=$(float "$screen_height / $height")
+      fi
+      width="$(ceil "$width * $scale")"
+      scale=$(format_scale "$scale")
+
+      command+=" --output $display"
+      command+=" --mode ${resolution}"
+      command+=" --pos ${screen_width}x0"
+      command+=" --transform $scale,0,0,0,$scale,0,0,0,1"
+      if [[ $display == $primary ]]; then
+         command+=" --primary"
+      fi
+
+      screen_width=$((screen_width + width))
+   done
+
+   for display in "${displays[@]}"; do
+      if ! [[ " ${targets[*]} " =~ " $display " ]]; then
+         command+=" --output $display --off"
+         continue
+      fi
+   done
+
+   command="xrandr --verbose --fb ${screen_width}x${screen_height} --dpi ${dpi} $command"
+   if [[ $dry_run == "true" ]]; then
+      echo "$command"
+   else
+      eval $command
+   fi
+}
+
+function mirror_displays {
+   local screen_width=0
+   local screen_height=0
+   local screen_ratio
+
+   for i in "${!displays[@]}"; do
+      local display=${displays[$i]}
+      if [[ $display != $primary ]]; then
+         continue
+      fi
+      local width=${widths[$i]}
+      local height=${heights[$i]}
+      local scale=${scales[$i]}
+      screen_width="$(ceil "$width * $scale")"
+      screen_height="$(ceil "$height * $scale")"
+      screen_ratio=$(float "$width / $height")
+      break
+   done
+
+   command=""
+   for i in "${!displays[@]}"; do
+      local display=${displays[$i]}
+      if ! [[ " ${targets[*]} " =~ " $display " ]]; then
+         command+=" --output $display --off"
+         continue
+      fi
+      local resolution=${resolutions[$i]}
+      local width=${widths[$i]}
+      local height=${heights[$i]}
+      local ratio=$(float "$width / $height")
+      local offset_x=0
+      local offset_y=0
+      local scale
+      if [[ $display == $primary ]]; then
+         scale=${scales[$i]}
+      elif is_true "$ratio < $screen_ratio"; then
+         scale=$(float "$screen_width / $width")
+         offset_y=$(round "($height * $scale - $screen_height) * -0.5")
+      else
+         scale=$(float "$screen_height / $height")
+         offset_x=$(round "($width * $scale - $screen_width) * -0.5")
+      fi
+      scale=$(format_scale "$scale")
+
+      command+=" --output $display"
+      command+=" --mode $resolution"
+      command+=" --pos 0x0"
+      command+=" --transform $scale,0,$offset_x,0,$scale,$offset_y,0,0,1"
+      if [[ $display == $primary ]]; then
+         command+=" --primary"
+      fi
+   done
+
+   command="xrandr --verbose --fb ${screen_width}x${screen_height} --dpi ${dpi} $command"
+   if [[ $dry_run == "true" ]]; then
+      echo "$command"
+   else
+      eval $command
+   fi
+}
+
+function list_displays {
+   for i in "${!displays[@]}"; do
+      echo "${displays[$i]} (${resolutions[$i]} ${refresh_rates[$i]}Hz)"
+   done
+}
+
+function load_settings {
+   if [[ -f $settings_path ]]; then
+      mapfile -t settings < "$settings_path"
+   else
+      local settings=()
+   fi
+
+   saved_mode="${settings[0]}"
+   saved_primaries=(${settings[1]})
+
+   local scales=(${settings[2]})
+   for entry in "${scales[@]}"; do
+      local display=$(echo "$entry" | sed -r 's/^([^:]+):[^:]+$/\1/')
+      local scale=$(echo "$entry" | sed -r 's/^[^:]+:([^:]+)$/\1/')
+      saved_scales["$display"]="$scale"
+   done
+
+   local dpis=(${settings[3]})
+   for entry in "${dpis[@]}"; do
+      local display=$(echo "$entry" | sed -r 's/^([^:]+):[^:]+$/\1/')
+      local dpi=$(echo "$entry" | sed -r 's/^[^:]+:([^:]+)$/\1/')
+      saved_dpis["$display"]="$dpi"
+   done
+}
+
+function save_settings {
+   if [[ $settings_changed != "true" ]]; then
+      return
+   fi
+   echo "$saved_mode"            > "$settings_path"
+   echo "${saved_primaries[@]}" >> "$settings_path"
+
+   local scales=""
+   for display in ${!saved_scales[@]}; do
+      local scale="${saved_scales["$display"]}"
+      if [[ $scale != "1.0" ]]; then
+         scales+="${display}:${saved_scales["$display"]} "
+      fi
+   done
+   echo "$scales" | xargs >> "$settings_path"
+
+   local dpis=""
+   for display in ${!saved_dpis[@]}; do
+      local dpi="${saved_dpis["$display"]}"
+      if [[ $dpi != "96" ]]; then
+         dpis+="${display}:${saved_dpis["$display"]} "
+      fi
+   done
+   echo "$dpis" | xargs >> "$settings_path"
+}
+
+function set_setting {
+   local key=$1
+   local value=$2
+
+   settings_changed=true
+
+   if [[ $key == "mode" ]]; then
+      saved_mode="$value"
+      return
+   fi
+
+   if [[ $key == "primary" ]]; then
+      primaries=("${saved_primaries[@]}")
+      saved_primaries=()
+      for display in "${primaries[@]}"; do
+         if [[ $display != $value ]]; then
+            saved_primaries+=($display)
+         fi
+      done
+      saved_primaries+=($value)
+      return
+   fi
+
+   if [[ $key == "scale" ]]; then
+      local scales=(${value//,/ })
+      for scale in "${scales[@]}"; do
+         local display=$(echo "$scale" | sed -r 's/^([^:]+):[^:]+$/\1/')
+         local scale=$(echo "$scale" | sed -r 's/^[^:]+:([^:]+)$/\1/')
+         saved_scales["$display"]="$scale"
+      done
+      return
+   fi
+
+   if [[ $key == "dpi" ]]; then
+      local dpis=(${value//,/ })
+      for dpi in "${dpis[@]}"; do
+         local display=$(echo "$dpi" | sed -r 's/^([^:]+):[^:]+$/\1/')
+         local dpi=$(echo "$dpi" | sed -r 's/^[^:]+:([^:]+)$/\1/')
+         saved_dpis["$display"]="$dpi"
+      done
+      return
+   fi
+}
+
+function resolve_setting {
+   local key=$1
+
+   if [[ $key == "mode" ]]; then
+      if [[ -n $saved_mode ]]; then
+         echo "$saved_mode"
+      else
+         echo "join"
+      fi
+      return
+   fi
+
+   if [[ $key == "primary" ]]; then
+      if [[ ${#targets[@]} -ne 0 ]]; then
+         # check if any saved primary is enabled
+         for (( i=${#saved_primaries[@]}-1; i>=0; i-- )); do
+            local display=${saved_primaries[$i]}
+            if [[ " ${targets[*]} " =~ " $display " ]]; then
+               echo "$display"
+               return
+            fi
+         done
+         echo "${targets[0]}"
+      else
+         # check if any saved primary is connected
+         for (( i=${#saved_primaries[@]}-1; i>=0; i-- )); do
+            local display=${saved_primaries[$i]}
+            if [[ " ${displays[*]} " =~ " $display " ]]; then
+               echo "$display"
+               return
+            fi
+         done
+         echo "${displays[0]}"
+      fi
+      return
+   fi
+
+   if [[ $key == "dpi" ]]; then
+      local max_dpi=96
+      local primary_dpi
+
+      for i in "${!displays[@]}"; do
+         local display=${displays[$i]}
+         if ! [[ " ${targets[*]} " =~ " $display " ]]; then
+            continue
+         fi
+         local size=${sizes[$i]}
+         local width=${widths[$i]}
+         local dpi=${saved_dpis[$display]}
+         local width_mm=$(echo "$size" | sed -r 's/^([0-9]+)x[0-9]+$/\1/')
+         if [[ -z $dpi && -n $width_mm ]]; then
+            dpi=$(round "$width / ($width_mm / 25.4)")
+            if [[ $dpi -gt $max_dpi ]]; then
+               max_dpi="$dpi"
+            fi
+         fi
+         if [[ $display == $primary ]]; then
+            primary_dpi="$dpi"
+         fi
+      done
+
+      if [[ -n $primary_dpi ]]; then
+         echo "$primary_dpi"
+      else
+         echo "$max_dpi"
+      fi
+   fi
+}
+
+function format_scale {
+   local scale=$1
+   scale=$(round "$scale" 4)
+   if [[ $scale == "1.0000" ]]; then
+      scale="0.9999"
+   fi
+   echo $scale
+}
+
+function is_true {
+   if [[ $(echo "$1" | bc -l) == "0" ]]; then
+      return 1
+   else
+      return 0
+   fi
+}
+
+function float {
+   echo "$1" | bc -l
+}
+
+function round {
+   printf "%.$2f" $(echo "$1" | bc -l)
+}
+
+function ceil {
+   echo "if ($1 % 1) $1 / 1 + 1 else $1 / 1" | bc
+}
+
+
+saved_mode=""
+saved_primaries=""
+declare -A saved_scales
+declare -A saved_dpis
+
+settings_path="$HOME/.local/share/screen-layout"
+result=$(xrandr)
+displays=($(echo "$result" | grep -e ' connected' | awk '{print $1}'))
+resolutions=($(echo "$result" | grep '^ ' | grep '[* ]+ ' | awk '{print $1}'))
+refresh_rates=($(echo "$result" | grep '^ ' | grep '[* ]+ ' | grep -oP '[0-9.]+[* ]\+' | sed -r 's/[+*]//g'))
+sizes=($(echo "$result" | grep -e ' connected' | sed -r 's/^.* axis\)//' | sed -r 's/[ m]//g'))
+scales=()
+widths=()
+heights=()
+for i in "${!resolutions[@]}"; do
+   resolution=${resolutions[$i]}
+   width=$(echo "$resolution" | sed -r 's/^([0-9]+)x[0-9]+$/\1/')
+   height=$(echo "$resolution" | sed -r 's/^[0-9]+x([0-9]+)$/\1/')
+   widths+=("$width")
+   heights+=("$height")
+done
+
+if [[ ${#displays[@]} -eq 0 ]]; then
+   echo "No displays found" >&2
+   exit 1
+fi
+if [[ ${#displays[@]} -ne ${#resolutions[@]} || ${#displays[@]} -ne ${#refresh_rates[@]} ]]; then
+   echo "Unexpected error" >&2
+   exit 1
+fi
+
+if [[ $list == "true" ]]; then
+   list_displays
+   exit 0
+fi
+
+load_settings
+
+if [[ ${#targets[@]} -eq 0 ]]; then
+   if [[ $mode != "single" ]]; then
+      targets=("${displays[@]}")
+   elif [[ -n $primary ]]; then
+      targets=("$primary")
+   else
+      targets=($(resolve_setting "primary"))
+   fi
+fi
+
+if [[ -n $mode ]]; then
+   set_setting "mode" $mode
+else
+   mode="$(resolve_setting "mode")"
+fi
+
+if [[ -n $primary ]]; then
+   set_setting "primary" $primary
+else
+   primary="$(resolve_setting "primary")"
+fi
+
+if [[ -n $scale ]]; then
+   set_setting "scale" $scale
+fi
+
+if [[ -n $dpi ]]; then
+   set_setting "dpi" $dpi
+fi
+
+dpi="$(resolve_setting "dpi")"
+
+for target in "${targets[@]}"; do
+   if ! [[ " ${displays[*]} " =~ " $target " ]]; then
+      echo "Output $target not found" >&2
+      exit 1
+   fi
+done
+
+if [[ -n $primary && ! " ${targets[*]} " =~ " $primary " ]]; then
+   echo "Primary not found" >&2
+   exit 1
+fi
+
+for display in "${displays[@]}"; do
+   scale=${saved_scales[$display]}
+   if [[ -z $scale ]]; then
+      scale="1.0"
+   fi
+   scales+=($scale)
+done
+
+if [[ $dry_run != "true" ]]; then
+   save_settings
+fi
+
+if [[ $mode == "join" || $mode == "single" ]]; then
+   join_displays
+elif [[ $mode == "mirror" ]]; then
+   mirror_displays
+fi

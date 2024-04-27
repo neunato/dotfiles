@@ -317,6 +317,7 @@ function setup-packages {
    pacman -S --needed --noconfirm nano
    pacman -S --needed --noconfirm bat
    pacman -S --needed --noconfirm jq
+   pacman -S --needed --noconfirm bc
    pacman -S --needed --noconfirm wgetpaste
    pacman -S --needed --noconfirm dunst
    pacman -S --needed --noconfirm libnotify
