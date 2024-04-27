@@ -24,9 +24,7 @@ fi
 
 command=$1
 criteria=""
-if [[ -n $workspace ]]; then
-   criteria+="workspace=^$(echo "$workspace" | cut -d: -f1) "
-fi
+
 if [[ -n $class ]]; then
    criteria+="class=^$class$"
 fi
@@ -34,10 +32,8 @@ if [[ -n $criteria ]]; then
    criteria="[$criteria]"
 fi
 
-if [[ -n $workspace ]]; then
-   i3-msg workspace "$workspace"
-fi
 exists=$(i3-msg "$criteria focus" 2>/dev/null | jq ".[].success")
 if [[ $exists == "false" ]]; then
+   i3-msg workspace "$workspace"
    i3-msg exec "$command"
 fi
