@@ -427,7 +427,7 @@ function install-paru {
    chmod 777 "$dir"
    curl -s -L "$url" | tar xvz -C "$dir" --strip-components 1
    as-nobody /bin/bash -c "cd $dir && CARGO_HOME=$dir makepkg"
-   pacman -U --needed --noconfirm "$(ls $dir/*.tar.zst)"
+   pacman -U --needed --noconfirm "$(ls $dir/*.tar.zst | grep -v debug)"
    rm -rf "$dir"
 }
 
