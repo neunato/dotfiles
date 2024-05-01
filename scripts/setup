@@ -379,6 +379,10 @@ function setup-packages {
 
    head -n -1 /etc/sudoers | tee /etc/sudoers > /dev/null
 
+   # clean up unused packages
+   pacman -Qdtq | pacman -Rns -
+   pacman -Qqd | pacman -Rsu -
+
    # groups, services, configuration
    lux > /dev/null
 
