@@ -370,7 +370,6 @@ function setup-packages {
    # aur packages
    echo "$username ALL=(ALL:ALL) NOPASSWD: ALL" | EDITOR="tee --append" visudo > /dev/null
 
-   as-user $username paru -S --needed --noconfirm lux
    as-user $username paru -S --needed --noconfirm xsct
    as-user $username paru -S --needed --noconfirm openvpn-update-systemd-resolved
    as-user $username paru -S --needed --noconfirm glances
@@ -384,8 +383,6 @@ function setup-packages {
    pacman -Qqd | pacman -Rsu -
 
    # groups, services, configuration
-   lux > /dev/null
-
    usermod -aG docker "$username"
    usermod -aG libvirt "$username"
 

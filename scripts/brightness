@@ -4,9 +4,11 @@
 # brightness up    - turn up brightness by 10%
 # brightness down  - turn down brightness by 10%
 
+path="/sys/class/backlight/intel_backlight"
+max=$(cat "$path/max_brightness")
+brightness=$(cat "$path/brightness")
+brightness=$((((brightness * 100 + max - 1) / max)))
 step=10
-brightness=$(lux -G)
-brightness=${brightness:0:-1}
 
 if [[ -z "$1" ]]; then
    echo "$brightness"
@@ -16,14 +18,16 @@ fi
 if [[ "$1" == "up" ]]; then
    brightness=$(((brightness + step + 5) / 10 * 10))
    brightness=$((brightness < 100 ? brightness : 100))
-   lux -S "$brightness%" > /dev/null
+   brightness=$(((brightness * max) / 100))
+   echo "$brightness" > "$path/brightness"
    exit
 fi
 
 if [[ "$1" == "down" ]]; then
    brightness=$(((brightness - step + 5) / 10 * 10))
    brightness=$((brightness > 1 ? brightness : 1))
-   lux -S "$brightness%" > /dev/null
+   brightness=$(((brightness * max) / 100))
+   echo "$brightness" > "$path/brightness"
    exit
 fi
 
