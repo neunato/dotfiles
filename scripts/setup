@@ -208,6 +208,9 @@ function setup-system-config {
    echo '    MatchDriver "nvidia-drm"'           | tee --append /etc/X11/xorg.conf > /dev/null
    echo '    Driver "nvidia"'                    | tee --append /etc/X11/xorg.conf > /dev/null
    echo '    Option "PrimaryGPU" "true"'         | tee --append /etc/X11/xorg.conf > /dev/null
+   # echo '    Option "ForceFullCompositionPipeline" "on"'         | tee --append /etc/X11/xorg.conf > /dev/null
+   # echo '    Option "AllowIndirectGLXProtocol" "off"'         | tee --append /etc/X11/xorg.conf > /dev/null
+   # echo '    Option "TripleBuffer" "on"'         | tee --append /etc/X11/xorg.conf > /dev/null
    echo '    ModulePath "/usr/lib/nvidia/xorg"'  | tee --append /etc/X11/xorg.conf > /dev/null
    echo '    ModulePath "/usr/lib/xorg/modules"' | tee --append /etc/X11/xorg.conf > /dev/null
    echo 'EndSection'                             | tee --append /etc/X11/xorg.conf > /dev/null

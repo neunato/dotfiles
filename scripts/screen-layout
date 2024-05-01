@@ -481,3 +481,19 @@ if [[ $mode == "join" || $mode == "single" ]]; then
 elif [[ $mode == "mirror" ]]; then
    mirror_displays
 fi
+
+# shit is broken on nvidia
+# these options https://download.nvidia.com/XFree86/Linux-x86_64/550.67/README/xconfigoptions.html
+# cannot be applied in xorg's dynamic rules (i think), but a hard-coded screen/device/etc rules are
+# needed. that shit is nasty though and not sure how it would work with a non-nvidia system
+# basically, the options https://download.nvidia.com/XFree86/Linux-x86_64/550.67/README/xconfigoptions.html
+# should be applied to "Screen"/"Device" sections or so it says? 
+# oh, good stuff mentioned here https://wiki.archlinux.org/title/NVIDIA/Troubleshooting#Avoid_screen_tearing
+# about the other pairs of settings, and also about using nvidia-settings for multi-monitor setup, which
+# is exactly what we're trying to avoid
+
+s="$(nvidia-settings -q CurrentMetaMode -t)"
+if [[ $s != "" ]]; then
+  s="${s#*" :: "}"
+  nvidia-settings -a CurrentMetaMode="${s//\}/, ForceCompositionPipeline=On\}}"
+fi
