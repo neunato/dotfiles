@@ -287,11 +287,12 @@ function setup-packages {
    pacman -S --needed --noconfirm alsa-firmware
    pacman -S --needed --noconfirm sof-firmware
    pacman -S --needed --noconfirm pipewire
-   pacman -S --needed --noconfirm wireplumber
    pacman -S --needed --noconfirm pipewire-audio
    pacman -S --needed --noconfirm pipewire-alsa
    pacman -S --needed --noconfirm pipewire-pulse
    pacman -S --needed --noconfirm pipewire-jack
+   pacman -S --needed --noconfirm wireplumber
+   pacman -S --needed --noconfirm alsa-utils
    pacman -S --needed --noconfirm tlp
    pacman -S --needed --noconfirm acpid
    pacman -S --needed --noconfirm polkit
