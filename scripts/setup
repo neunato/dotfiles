@@ -113,7 +113,7 @@ function setup-system {
    as-chroot bash -c "
       pacman -S --needed --noconfirm sudo
 
-      useradd -m '$username' -G wheel
+      useradd -m '$username' -G wheel,video
       echo 'root:$root_password' | chpasswd
       echo '$username:$password' | chpasswd
       echo '%wheel ALL=(ALL:ALL) ALL' | EDITOR='tee --append' visudo > /dev/null
