@@ -377,7 +377,7 @@ function setup-packages {
    as-user $username paru -S --needed --noconfirm mongodb-bin
    as-user $username paru -S --needed --noconfirm mongosh-bin
 
-   head -n -1 /etc/sudoers | tee /etc/sudoers > /dev/null
+   head -n -1 /etc/sudoers | EDITOR="tee" visudo > /dev/null
 
    # clean up unused packages
    pacman -Qdtq | pacman -Rns -
