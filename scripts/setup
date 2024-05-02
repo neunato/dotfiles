@@ -168,6 +168,8 @@ function setup-system-config {
       exit 1
    fi
    part_root_uuid="${BASH_REMATCH[1]}-${BASH_REMATCH[2]}-${BASH_REMATCH[3]}-${BASH_REMATCH[4]}-${BASH_REMATCH[5]}"
+   swapfile_uuid="$(findmnt -no UUID -T /swapfile)"
+   swapfile_offset="$(filefrag -v /swapfile | awk '$1=="0:" {print substr($4, 1, length($4)-2)}')"
 
    sed -i "s/#ParallelDownloads/ParallelDownloads/" /etc/pacman.conf
 
@@ -237,7 +239,7 @@ function setup-system-config {
    sed -i 's/^GRUB_DEFAULT=.*/GRUB_DEFAULT=0/'                  /etc/default/grub
    sed -i 's/^GRUB_TIMEOUT=.*/GRUB_TIMEOUT=0/'                  /etc/default/grub
    sed -i 's/^GRUB_TIMEOUT_STYLE=.*/GRUB_TIMEOUT_STYLE=hidden/' /etc/default/grub
-   sed -i "s/^GRUB_CMDLINE_LINUX_DEFAULT=.*/GRUB_CMDLINE_LINUX_DEFAULT=\"quiet loglevel=3 systemd.show_status=error rd.udev.log_level=3 rd.luks.name=$part_root_uuid=root rd.luks.options=$part_root_uuid=timeout=0,tries=0,password-echo=no rootflags=x-systemd.device-timeout=0 nvidia_drm.modeset=1\"/" /etc/default/grub
+   sed -i "s/^GRUB_CMDLINE_LINUX_DEFAULT=.*/GRUB_CMDLINE_LINUX_DEFAULT=\"quiet loglevel=3 systemd.show_status=error rd.udev.log_level=3 rd.luks.name=$part_root_uuid=root rd.luks.options=$part_root_uuid=timeout=0,tries=0,password-echo=no resume=UUID=$swapfile_uuid resume_offset=$swapfile_offset rootflags=x-systemd.device-timeout=0 nvidia_drm.modeset=1\"/" /etc/default/grub
    grub-mkconfig -o /boot/grub/grub.cfg
    sed -i 's/echo\t/#echo\t/g' /boot/grub/grub.cfg
 
