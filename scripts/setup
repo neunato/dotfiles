@@ -350,6 +350,9 @@ function setup-packages {
 
    # gui applications
    pacman -S --needed --noconfirm kitty
+   pacman -S --needed --noconfirm zed
+   pacman -S --needed --noconfirm sublime-text
+   pacman -S --needed --noconfirm sublime-merge
    pacman -S --needed --noconfirm nautilus
    pacman -S --needed --noconfirm feh
    pacman -S --needed --noconfirm mpv
@@ -357,8 +360,6 @@ function setup-packages {
    pacman -S --needed --noconfirm chromium
    pacman -S --needed --noconfirm calibre
    pacman -S --needed --noconfirm transmission-gtk
-   pacman -S --needed --noconfirm sublime-text
-   pacman -S --needed --noconfirm sublime-merge
 
    # virtualisation
    pacman -S --needed --noconfirm qemu-base
