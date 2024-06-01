@@ -328,6 +328,7 @@ function setup-packages {
    pacman -S --needed --noconfirm maim
    pacman -S --needed --noconfirm ffmpeg
    pacman -S --needed --noconfirm id3v2
+   pacman -S --needed --noconfirm moreutils
    pacman -S --needed --noconfirm man-db
    pacman -S --needed --noconfirm man-pages
 
@@ -383,7 +384,7 @@ function setup-packages {
    head -n -1 /etc/sudoers | EDITOR="tee" visudo > /dev/null
 
    # clean up unused packages
-   pacman -Qdtq | pacman -Rns -
+   pacman -Qdtq | ifne pacman -Rns -
    pacman -Qqd | pacman -Rsu -
 
    # groups, services, configuration
