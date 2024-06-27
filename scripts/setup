@@ -197,7 +197,6 @@ function setup-system-config {
    echo '   Option "XkbLayout" "hr"'               | tee --append /etc/X11/xorg.conf > /dev/null
    echo 'EndSection'                               | tee --append /etc/X11/xorg.conf > /dev/null
    echo ''                                         | tee --append /etc/X11/xorg.conf > /dev/null
-
    echo 'Section "InputClass"'                     | tee --append /etc/X11/xorg.conf > /dev/null
    echo '   Identifier "touchpad"'                 | tee --append /etc/X11/xorg.conf > /dev/null
    echo '   MatchIsTouchpad "true"'                | tee --append /etc/X11/xorg.conf > /dev/null
@@ -213,27 +212,28 @@ function setup-system-config {
    echo ''                                         | tee --append /etc/X11/xorg.conf > /dev/null
 
    # xorg config
-   echo 'Section "OutputClass"'                  | tee --append /etc/X11/xorg.conf > /dev/null
-   echo '    Identifier "intel"'                 | tee --append /etc/X11/xorg.conf > /dev/null
-   echo '    MatchDriver "i915"'                 | tee --append /etc/X11/xorg.conf > /dev/null
-   echo '    Driver "modesetting"'               | tee --append /etc/X11/xorg.conf > /dev/null
-   echo 'EndSection'                             | tee --append /etc/X11/xorg.conf > /dev/null
-   echo ''                                       | tee --append /etc/X11/xorg.conf > /dev/null
-   echo 'Section "OutputClass"'                  | tee --append /etc/X11/xorg.conf > /dev/null
-   echo '    Identifier "nvidia"'                | tee --append /etc/X11/xorg.conf > /dev/null
-   echo '    MatchDriver "nvidia-drm"'           | tee --append /etc/X11/xorg.conf > /dev/null
-   echo '    Driver "nvidia"'                    | tee --append /etc/X11/xorg.conf > /dev/null
-   echo '    Option "PrimaryGPU" "true"'         | tee --append /etc/X11/xorg.conf > /dev/null
-   echo '    ModulePath "/usr/lib/nvidia/xorg"'  | tee --append /etc/X11/xorg.conf > /dev/null
-   echo '    ModulePath "/usr/lib/xorg/modules"' | tee --append /etc/X11/xorg.conf > /dev/null
-   echo 'EndSection'                             | tee --append /etc/X11/xorg.conf > /dev/null
-   echo ''                                       | tee --append /etc/X11/xorg.conf > /dev/null
-   echo 'Section "ServerFlags"'                  | tee --append /etc/X11/xorg.conf > /dev/null
-   echo '    Option "BlankTime" "0"'             | tee --append /etc/X11/xorg.conf > /dev/null
-   echo '    Option "StandbyTime" "15"'          | tee --append /etc/X11/xorg.conf > /dev/null
-   echo '    Option "SuspendTime" "15"'          | tee --append /etc/X11/xorg.conf > /dev/null
-   echo '    Option "OffTime" "0"'               | tee --append /etc/X11/xorg.conf > /dev/null
-   echo 'EndSection'                             | tee --append /etc/X11/xorg.conf > /dev/null
+   echo 'Section "OutputClass"'                    | tee --append /etc/X11/xorg.conf > /dev/null
+   echo '   Identifier "intel"'                    | tee --append /etc/X11/xorg.conf > /dev/null
+   echo '   MatchDriver "i915"'                    | tee --append /etc/X11/xorg.conf > /dev/null
+   echo '   Driver "modesetting"'                  | tee --append /etc/X11/xorg.conf > /dev/null
+   echo 'EndSection'                               | tee --append /etc/X11/xorg.conf > /dev/null
+   echo ''                                         | tee --append /etc/X11/xorg.conf > /dev/null
+   echo 'Section "OutputClass"'                    | tee --append /etc/X11/xorg.conf > /dev/null
+   echo '   Identifier "nvidia"'                   | tee --append /etc/X11/xorg.conf > /dev/null
+   echo '   MatchDriver "nvidia-drm"'              | tee --append /etc/X11/xorg.conf > /dev/null
+   echo '   Driver "nvidia"'                       | tee --append /etc/X11/xorg.conf > /dev/null
+   echo '   Option "PrimaryGPU" "true"'            | tee --append /etc/X11/xorg.conf > /dev/null
+   echo '   ModulePath "/usr/lib/nvidia/xorg"'     | tee --append /etc/X11/xorg.conf > /dev/null
+   echo '   ModulePath "/usr/lib/xorg/modules"'    | tee --append /etc/X11/xorg.conf > /dev/null
+   echo 'EndSection'                               | tee --append /etc/X11/xorg.conf > /dev/null
+   echo ''                                         | tee --append /etc/X11/xorg.conf > /dev/null
+
+   echo 'Section "ServerFlags"'                    | tee --append /etc/X11/xorg.conf > /dev/null
+   echo '   Option "BlankTime" "0"'                | tee --append /etc/X11/xorg.conf > /dev/null
+   echo '   Option "StandbyTime" "15"'             | tee --append /etc/X11/xorg.conf > /dev/null
+   echo '   Option "SuspendTime" "15"'             | tee --append /etc/X11/xorg.conf > /dev/null
+   echo '   Option "OffTime" "0"'                  | tee --append /etc/X11/xorg.conf > /dev/null
+   echo 'EndSection'                               | tee --append /etc/X11/xorg.conf > /dev/null
 
    # boot loader
    pacman -S --needed --noconfirm grub
