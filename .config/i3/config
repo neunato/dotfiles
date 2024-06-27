@@ -190,6 +190,6 @@ bindsym $mod+Shift+r            restart
 
 $exec dunst
 $exec picom --config ~/.config/picom/picom.conf
-$exec xss-lock --transfer-sleep-lock -- i3lock --nofork -u -c ff1e2e
+$exec xss-lock --transfer-sleep-lock -- slock
 $exec_always i3-switch-windows daemon
 $exec i3-msg 'workspace $ws_terminal'
