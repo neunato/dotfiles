@@ -191,12 +191,26 @@ function setup-system-config {
    echo 'XKBLAYOUT=hr'           | tee --append /etc/vconsole.conf > /dev/null
    echo 'FONT=latarcyrheb-sun32' | tee --append /etc/vconsole.conf > /dev/null
 
-   echo 'Section "InputClass"'                   | tee          /etc/X11/xorg.conf > /dev/null
-   echo '    Identifier "system-keyboard"'       | tee --append /etc/X11/xorg.conf > /dev/null
-   echo '    MatchIsKeyboard "true"'             | tee --append /etc/X11/xorg.conf > /dev/null
-   echo '    Option "XkbLayout" "hr"'            | tee --append /etc/X11/xorg.conf > /dev/null
-   echo 'EndSection'                             | tee --append /etc/X11/xorg.conf > /dev/null
-   echo ''                                       | tee --append /etc/X11/xorg.conf > /dev/null
+   echo 'Section "InputClass"'                     | tee          /etc/X11/xorg.conf > /dev/null
+   echo '   Identifier "keyboard"'                 | tee --append /etc/X11/xorg.conf > /dev/null
+   echo '   MatchIsKeyboard "true"'                | tee --append /etc/X11/xorg.conf > /dev/null
+   echo '   Option "XkbLayout" "hr"'               | tee --append /etc/X11/xorg.conf > /dev/null
+   echo 'EndSection'                               | tee --append /etc/X11/xorg.conf > /dev/null
+   echo ''                                         | tee --append /etc/X11/xorg.conf > /dev/null
+
+   echo 'Section "InputClass"'                     | tee --append /etc/X11/xorg.conf > /dev/null
+   echo '   Identifier "touchpad"'                 | tee --append /etc/X11/xorg.conf > /dev/null
+   echo '   MatchIsTouchpad "true"'                | tee --append /etc/X11/xorg.conf > /dev/null
+   echo '   Option "ClickMethod" "clickfinger"'    | tee --append /etc/X11/xorg.conf > /dev/null
+   echo '   Option "NaturalScrolling" "true"'      | tee --append /etc/X11/xorg.conf > /dev/null
+   echo '   Option "AccelerationProfile" "7"'      | tee --append /etc/X11/xorg.conf > /dev/null
+   echo '   Option "AccelerationNumerator" "25"'   | tee --append /etc/X11/xorg.conf > /dev/null
+   echo '   Option "AccelerationDenominator" "10"' | tee --append /etc/X11/xorg.conf > /dev/null
+   echo '   Option "AccelerationThreshold" "40"'   | tee --append /etc/X11/xorg.conf > /dev/null
+   echo '   Option "ConstantDeceleration" "2"'     | tee --append /etc/X11/xorg.conf > /dev/null
+   echo '   Option "VelocityScale" "15"'           | tee --append /etc/X11/xorg.conf > /dev/null
+   echo 'EndSection'                               | tee --append /etc/X11/xorg.conf > /dev/null
+   echo ''                                         | tee --append /etc/X11/xorg.conf > /dev/null
 
    # xorg config
    echo 'Section "OutputClass"'                  | tee --append /etc/X11/xorg.conf > /dev/null
