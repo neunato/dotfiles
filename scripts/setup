@@ -116,7 +116,7 @@ function setup-system {
       useradd -m '$username' -G wheel,video
       echo 'root:$root_password' | chpasswd
       echo '$username:$password' | chpasswd
-      echo '%wheel ALL=(ALL:ALL) ALL' | EDITOR='tee --append' visudo > /dev/null
+      echo '%wheel ALL=(ALL:ALL) ALL' | EDITOR='tee' visudo > /dev/null
    "
 
    # system configuration
@@ -260,19 +260,19 @@ function setup-system-config {
    echo 'kernel.printk = 3 3 3 3' | tee /etc/sysctl.d/20-quiet-printk.conf > /dev/null
 
    mkdir -p /etc/systemd/system/systemd-fsck-root.service.d
-   echo '[Service]'                     | tee          /etc/systemd/system/systemd-fsck-root.service.d/silent-boot > /dev/null
-   echo 'StandardOutput=null'           | tee --append /etc/systemd/system/systemd-fsck-root.service.d/silent-boot > /dev/null
-   echo 'StandardError=journal+console' | tee --append /etc/systemd/system/systemd-fsck-root.service.d/silent-boot > /dev/null
+   echo '[Service]'                     | tee          /etc/systemd/system/systemd-fsck-root.service.d/silent-boot.conf > /dev/null
+   echo 'StandardOutput=null'           | tee --append /etc/systemd/system/systemd-fsck-root.service.d/silent-boot.conf > /dev/null
+   echo 'StandardError=journal+console' | tee --append /etc/systemd/system/systemd-fsck-root.service.d/silent-boot.conf > /dev/null
 
    mkdir -p /etc/systemd/system/systemd-fsck@.service.d
-   echo '[Service]'                     | tee          /etc/systemd/system/systemd-fsck@.service.d/silent-boot > /dev/null
-   echo 'StandardOutput=null'           | tee --append /etc/systemd/system/systemd-fsck@.service.d/silent-boot > /dev/null
-   echo 'StandardError=journal+console' | tee --append /etc/systemd/system/systemd-fsck@.service.d/silent-boot > /dev/null
+   echo '[Service]'                     | tee          /etc/systemd/system/systemd-fsck@.service.d/silent-boot.conf > /dev/null
+   echo 'StandardOutput=null'           | tee --append /etc/systemd/system/systemd-fsck@.service.d/silent-boot.conf > /dev/null
+   echo 'StandardError=journal+console' | tee --append /etc/systemd/system/systemd-fsck@.service.d/silent-boot.conf > /dev/null
 
    mkdir -p /etc/systemd/system/getty@tty1.service.d
-   echo '[Service]'                                                                                           | tee          /etc/systemd/system/getty@tty1.service.d/skip-username.conf > /dev/null
-   echo 'ExecStart='                                                                                          | tee --append /etc/systemd/system/getty@tty1.service.d/skip-username.conf > /dev/null
-   echo "ExecStart=-/bin/agetty --skip-login --nonewline --noissue --autologin $username --noclear %I \$TERM" | tee --append /etc/systemd/system/getty@tty1.service.d/skip-username.conf > /dev/null
+   echo '[Service]'                                                                                           | tee          /etc/systemd/system/getty@tty1.service.d/skip-prompt.conf > /dev/null
+   echo 'ExecStart='                                                                                          | tee --append /etc/systemd/system/getty@tty1.service.d/skip-prompt.conf > /dev/null
+   echo "ExecStart=-/bin/agetty --skip-login --nonewline --noissue --autologin $username --noclear %I \$TERM" | tee --append /etc/systemd/system/getty@tty1.service.d/skip-prompt.conf > /dev/null
 }
 
 function setup-packages {
@@ -395,8 +395,8 @@ function setup-packages {
    head -n -1 /etc/sudoers | EDITOR="tee" visudo > /dev/null
 
    # clean up unused packages
-   pacman -Qdtq | ifne pacman -Rns -
-   pacman -Qqd | pacman -Rsu -
+   pacman -Qdtq | ifne pacman -Rns --noconfirm -
+   pacman -Qqd | pacman -Rsu --noconfirm -
 
    # groups, services, configuration
    usermod -aG docker "$username"
