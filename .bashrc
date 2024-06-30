@@ -22,8 +22,3 @@ PROMPT_COMMAND='
    unset command
 '
 alias bash='echo && bash'
-
-# start x
-if [[ -z "$DISPLAY" && "$XDG_VTNR" -eq 1 ]]; then
-   exec startx &> /dev/null
-fi

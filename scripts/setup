@@ -386,6 +386,7 @@ function setup-packages {
    echo "$username ALL=(ALL:ALL) NOPASSWD: ALL" | EDITOR="tee --append" visudo > /dev/null
 
    as-user $username paru -Syu --noconfirm
+   as-user $username paru -S --needed --noconfirm xlogin
    as-user $username paru -S --needed --noconfirm xsct
    as-user $username paru -S --needed --noconfirm slock-git
    as-user $username paru -S --needed --noconfirm openvpn-update-systemd-resolved
@@ -405,6 +406,7 @@ function setup-packages {
 
    systemctl --user --machine="$username@" enable pipewire-pulse.service
    systemctl enable NetworkManager
+   systemctl enable "xlogin@$username"
    systemctl enable tlp.service
    systemctl enable acpid.service
    systemctl enable systemd-resolved
