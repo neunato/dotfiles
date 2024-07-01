@@ -168,8 +168,8 @@ function setup-system-config {
       exit 1
    fi
    part_root_uuid="${BASH_REMATCH[1]}-${BASH_REMATCH[2]}-${BASH_REMATCH[3]}-${BASH_REMATCH[4]}-${BASH_REMATCH[5]}"
-   swapfile_uuid="$(findmnt -no UUID -T /swapfile)"
-   swapfile_offset="$(filefrag -v /swapfile | awk '$1=="0:" {print substr($4, 1, length($4)-2)}')"
+   local swapfile_uuid="$(findmnt -no UUID -T /swapfile)"
+   local swapfile_offset="$(filefrag -v /swapfile | awk '$1=="0:" {print substr($4, 1, length($4)-2)}')"
 
    sed -i "s/#ParallelDownloads/ParallelDownloads/" /etc/pacman.conf
 
@@ -235,24 +235,31 @@ function setup-system-config {
    echo '   Option "OffTime" "0"'                  | tee --append /etc/X11/xorg.conf > /dev/null
    echo 'EndSection'                               | tee --append /etc/X11/xorg.conf > /dev/null
 
-   # boot loader
+   # boot process
    pacman -S --needed --noconfirm grub
    pacman -S --needed --noconfirm efibootmgr
    pacman -S --needed --noconfirm intel-ucode
+   pacman -S --needed --noconfirm plymouth
+
+   local url=$(github_repo_archive_url "neunato/plymouth-theme-silence" "master")
+   local dir="/usr/share/plymouth/themes/silence"
+   extract-tarball "$url" "$dir"
+   chmod 644 "$dir/"*
+   plymouth-set-default-theme silence
 
    cat /dev/null > /etc/mkinitcpio.conf
    echo 'PRESETS=("default")'                                                                                                  | tee          /etc/mkinitcpio.d/linux.preset > /dev/null
    echo 'default_kver="/boot/vmlinuz-linux"'                                                                                   | tee --append /etc/mkinitcpio.d/linux.preset > /dev/null
    echo 'default_image="/boot/initramfs-linux.img"'                                                                            | tee --append /etc/mkinitcpio.d/linux.preset > /dev/null
    echo 'default_config="/etc/mkinitcpio.conf"'                                                                                | tee --append /etc/mkinitcpio.d/linux.preset > /dev/null
-   echo 'default_options="-A systemd,autodetect,microcode,modconf,kms,keyboard,sd-vconsole,block,sd-encrypt,filesystems,fsck"' | tee --append /etc/mkinitcpio.d/linux.preset > /dev/null
+   echo 'default_options="-A systemd,plymouth,autodetect,microcode,modconf,kms,keyboard,sd-vconsole,block,sd-encrypt,filesystems,fsck"' | tee --append /etc/mkinitcpio.d/linux.preset > /dev/null
    mkinitcpio -P
 
    grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=GRUB
    sed -i 's/^GRUB_DEFAULT=.*/GRUB_DEFAULT=0/'                  /etc/default/grub
    sed -i 's/^GRUB_TIMEOUT=.*/GRUB_TIMEOUT=0/'                  /etc/default/grub
    sed -i 's/^GRUB_TIMEOUT_STYLE=.*/GRUB_TIMEOUT_STYLE=hidden/' /etc/default/grub
-   sed -i "s/^GRUB_CMDLINE_LINUX_DEFAULT=.*/GRUB_CMDLINE_LINUX_DEFAULT=\"quiet loglevel=3 systemd.show_status=error rd.udev.log_level=3 rd.luks.name=$part_root_uuid=root rd.luks.options=$part_root_uuid=timeout=0,tries=0,password-echo=no resume=UUID=$swapfile_uuid resume_offset=$swapfile_offset rootflags=x-systemd.device-timeout=0 nvidia_drm.modeset=1\"/" /etc/default/grub
+   sed -i "s/^GRUB_CMDLINE_LINUX_DEFAULT=.*/GRUB_CMDLINE_LINUX_DEFAULT=\"quiet splash loglevel=3 systemd.show_status=error rd.udev.log_level=3 rd.luks.name=$part_root_uuid=root rd.luks.options=$part_root_uuid=timeout=0,tries=0,password-echo=no resume=UUID=$swapfile_uuid resume_offset=$swapfile_offset rootflags=x-systemd.device-timeout=0 nvidia_drm.modeset=1\"/" /etc/default/grub
    grub-mkconfig -o /boot/grub/grub.cfg
    sed -i 's/echo\t/#echo\t/g' /boot/grub/grub.cfg
 
@@ -444,12 +451,19 @@ function install-paru {
    local dir="/var/tmp/paru"
    pacman -S --needed --noconfirm git
    pacman -S --needed --noconfirm rust
-   mkdir "$dir"
+   extract-tarball "$url" "$dir"
    chmod 777 "$dir"
-   curl -s -L "$url" | tar xvz -C "$dir" --strip-components 1
    as-nobody /bin/bash -c "cd $dir && CARGO_HOME=$dir makepkg"
    pacman -U --needed --noconfirm "$(ls $dir/*.tar.zst | grep -v debug)"
    rm -rf "$dir"
+}
+
+function extract-tarball {
+   local url="$1"
+   local dir="$2"
+   mkdir -p "$dir"
+   rm -rf "$dir/"*
+   curl -s -L "$url" | tar xz -C "$dir" --strip-components 1
 }
 
 function wrap-f {
@@ -498,6 +512,12 @@ function github_repo_url {
       token="$token@"
    fi
    echo "https://${token}github.com/$repo.git"
+}
+
+function github_repo_archive_url {
+   local repo=$1
+   local branch=$2
+   echo "https://github.com/$repo/archive/refs/heads/$branch.tar.gz"
 }
 
 function github_repo_file_url {
