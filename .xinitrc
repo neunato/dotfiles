@@ -11,3 +11,5 @@ fi
 
 set-background
 exec i3
+
+screen-layout --mode join
