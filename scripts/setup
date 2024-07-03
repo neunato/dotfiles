@@ -26,7 +26,7 @@ elif [[ $1 == "system-config" || $1 == "packages" ]]; then
    done
 fi
 
-function setup-system {
+function setup_system {
    if ! command -v arch-chroot > /dev/null; then
       echo "Must be run from an installation medium" >&2
       exit 1
@@ -110,7 +110,7 @@ function setup-system {
    genfstab -U /mnt >> /mnt/etc/fstab
 
    # user accounts
-   as-chroot bash -c "
+   as_chroot bash -c "
       pacman -S --needed --noconfirm sudo
 
       useradd -m '$username' -G wheel,video
@@ -120,14 +120,14 @@ function setup-system {
    "
 
    # system configuration
-   as-chroot setup-system-config "$username"
+   as_chroot setup_system_config "$username"
 
    # packages
-   as-chroot setup-packages "$username"
+   as_chroot setup_packages "$username"
 
    # user configuration
    local home="/home/$username"
-   as-chroot bash -c "
+   as_chroot bash -c "
       pacman -S --needed --noconfirm git
 
       rm -rf '$home/*' '$home/.*' 2> /dev/null
@@ -153,14 +153,14 @@ function setup-system {
       chown -R '$username:$username' .
    "
 
-   cat /tmp/arch_setup.log | as-chroot tee /var/tmp/arch_setup.log > /dev/null
+   cat /tmp/arch_setup.log | as_chroot tee /var/tmp/arch_setup.log > /dev/null
 
    # reboot
    reboot
    } 2>&1 | tee /tmp/arch_setup.log
 }
 
-function setup-system-config {
+function setup_system_config {
    local username=$1
    local part_root_uuid=$(dmsetup info -c --noheadings -o uuid /dev/mapper/root 2> /dev/null)
    if [[ ! $part_root_uuid =~ ^CRYPT-LUKS2-(.{8})(.{4})(.{4})(.{4})(.{12})-root$ ]]; then
@@ -243,7 +243,7 @@ function setup-system-config {
 
    local url=$(github_repo_archive_url "neunato/plymouth-theme-silence" "master")
    local dir="/usr/share/plymouth/themes/silence"
-   extract-tarball "$url" "$dir"
+   extract_tarball "$url" "$dir"
    chmod 644 "$dir/"*
    plymouth-set-default-theme silence
 
@@ -282,11 +282,11 @@ function setup-system-config {
    echo "ExecStart=-/bin/agetty --skip-login --nonewline --noissue --autologin $username --noclear %I \$TERM" | tee --append /etc/systemd/system/getty@tty1.service.d/skip-prompt.conf > /dev/null
 }
 
-function setup-packages {
+function setup_packages {
    local username=$1
 
    if [[ ! -x $(command -v paru) ]]; then
-      install-paru
+      install_paru
    fi
 
    if ! grep -Fxq "[sublime-text]" /etc/pacman.conf; then
@@ -392,14 +392,14 @@ function setup-packages {
    # aur packages
    echo "$username ALL=(ALL:ALL) NOPASSWD: ALL" | EDITOR="tee --append" visudo > /dev/null
 
-   as-user $username paru -Syu --noconfirm
-   as-user $username paru -S --needed --noconfirm xlogin
-   as-user $username paru -S --needed --noconfirm xsct
-   as-user $username paru -S --needed --noconfirm slock-git
-   as-user $username paru -S --needed --noconfirm openvpn-update-systemd-resolved
-   as-user $username paru -S --needed --noconfirm glances
-   as-user $username paru -S --needed --noconfirm mongodb-bin
-   as-user $username paru -S --needed --noconfirm mongosh-bin
+   as_user $username paru -Syu --noconfirm
+   as_user $username paru -S --needed --noconfirm xlogin
+   as_user $username paru -S --needed --noconfirm xsct
+   as_user $username paru -S --needed --noconfirm slock-git
+   as_user $username paru -S --needed --noconfirm openvpn-update-systemd-resolved
+   as_user $username paru -S --needed --noconfirm glances
+   as_user $username paru -S --needed --noconfirm mongodb-bin
+   as_user $username paru -S --needed --noconfirm mongosh-bin
 
    head -n -1 /etc/sudoers | EDITOR="tee" visudo > /dev/null
 
@@ -440,25 +440,25 @@ function setup-packages {
    sed -i 's/#group = "libvirt-qemu"/group = "'"$username"'"/g' /etc/libvirt/qemu.conf
 }
 
-function setup-firmware {
+function setup_firmware {
    pacman -S --needed --noconfirm fwupd
    fwupdmgr --no-reboot-check refresh
    fwupdmgr --no-reboot-check update
 }
 
-function install-paru {
+function install_paru {
    local url="https://aur.archlinux.org/cgit/aur.git/snapshot/paru.tar.gz"
    local dir="/var/tmp/paru"
    pacman -S --needed --noconfirm git
    pacman -S --needed --noconfirm rust
-   extract-tarball "$url" "$dir"
+   extract_tarball "$url" "$dir"
    chmod 777 "$dir"
-   as-nobody /bin/bash -c "cd $dir && CARGO_HOME=$dir makepkg"
+   as_nobody /bin/bash -c "cd $dir && CARGO_HOME=$dir makepkg"
    pacman -U --needed --noconfirm "$(ls $dir/*.tar.zst | grep -v debug)"
    rm -rf "$dir"
 }
 
-function extract-tarball {
+function extract_tarball {
    local url="$1"
    local dir="$2"
    mkdir -p "$dir"
@@ -466,7 +466,7 @@ function extract-tarball {
    curl -s -L "$url" | tar xz -C "$dir" --strip-components 1
 }
 
-function wrap-f {
+function wrap_f {
    local args=("$@")
    local str="set -e; $(declare -f);"
    for i in "${args[@]}"; do
@@ -475,22 +475,22 @@ function wrap-f {
    echo "$str"
 }
 
-function as-sudo {
-   sudo bash -c "$(wrap-f "$@")"
+function as_sudo {
+   sudo bash -c "$(wrap_f "$@")"
 }
 
-function as-nobody {
-   su nobody -s /bin/bash -c "$(wrap-f "$@")"
+function as_nobody {
+   su nobody -s /bin/bash -c "$(wrap_f "$@")"
 }
 
-function as-user {
+function as_user {
    local user=$1
    shift
-   su "$user" -s /bin/bash -c "$(wrap-f "$@")"
+   su "$user" -s /bin/bash -c "$(wrap_f "$@")"
 }
 
-function as-chroot {
-   arch-chroot /mnt /bin/bash -c "$(wrap-f "$@")"
+function as_chroot {
+   arch-chroot /mnt /bin/bash -c "$(wrap_f "$@")"
 }
 
 function github_repo_exists {
@@ -532,8 +532,8 @@ function github_api_url {
 }
 
 case "$1" in
-   system)        setup-system;;
-   system-config) as-sudo setup-system-config $(whoami);;
-   firmware)      setup-firmware;;
-   packages)      as-sudo setup-packages $(whoami);;
+   system)        setup_system;;
+   system-config) as_sudo setup_system_config $(whoami);;
+   firmware)      setup_firmware;;
+   packages)      as_sudo setup_packages $(whoami);;
 esac
