@@ -3,13 +3,13 @@
 source "$HOME/.profile"
 
 if [[ -d /etc/X11/xinit/xinitrc.d ]]; then
-   for f in /etc/X11/xinit/xinitrc.d/?*.sh; do
-      [[ -x "$f" ]] && . "$f"
+   for file in /etc/X11/xinit/xinitrc.d/?*.sh; do
+      if [[ -x "$file" ]]; then
+         source "$file"
+      fi
    done
-   unset f
+   unset file
 fi
 
-set-background
-exec i3
-
 screen-layout --mode join
+exec i3
