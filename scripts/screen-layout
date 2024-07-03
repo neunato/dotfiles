@@ -370,11 +370,11 @@ function is_true {
 }
 
 function float {
-   echo "$1" | bc -l
+   echo "$1 / 1" | bc -l
 }
 
 function round {
-   printf "%.$2f" $(echo "$1" | bc -l)
+   echo "$1" | bc -l | awk '{printf "%.'"$2"'f", $0}'
 }
 
 function ceil {
