@@ -1,5 +1,7 @@
 set -a
-PATH="${PATH}:$HOME/scripts"
+if [[ ! ":$PATH:" =~ ":$HOME/scripts:" ]]; then
+	PATH="${PATH}:$HOME/scripts"
+fi
 XDG_CONFIG_HOME="$HOME/.config"
 XDG_CACHE_HOME="$HOME/.cache"
 XDG_DATA_HOME="$HOME/.local/share"
