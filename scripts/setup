@@ -398,8 +398,6 @@ function setup_packages {
    as_user $username paru -S --needed --noconfirm slock-git
    as_user $username paru -S --needed --noconfirm openvpn-update-systemd-resolved
    as_user $username paru -S --needed --noconfirm glances
-   as_user $username paru -S --needed --noconfirm mongodb-bin
-   as_user $username paru -S --needed --noconfirm mongosh-bin
 
    head -n -1 /etc/sudoers | EDITOR="tee" visudo > /dev/null
 
@@ -419,7 +417,6 @@ function setup_packages {
    systemctl enable systemd-resolved
    systemctl enable docker.service
    systemctl enable libvirtd.service
-   systemctl enable mongodb.service
    systemctl mask systemd-rfkill.service
    systemctl mask systemd-rfkill.socket
 
@@ -431,7 +428,6 @@ function setup_packages {
       systemctl start systemd-resolved
       systemctl start docker.service
       systemctl start libvirtd.service
-      systemctl start mongodb.service
    fi
 
    sed -i 's/#unix_sock_group/unix_sock_group/g'                /etc/libvirt/libvirtd.conf
