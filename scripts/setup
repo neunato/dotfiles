@@ -236,10 +236,7 @@ function setup_system_config {
    echo 'EndSection'                               | tee --append /etc/X11/xorg.conf > /dev/null
 
    # boot process
-   pacman -S --needed --noconfirm grub
-   pacman -S --needed --noconfirm efibootmgr
-   pacman -S --needed --noconfirm intel-ucode
-   pacman -S --needed --noconfirm plymouth
+   pacman -S --needed --noconfirm grub efibootmgr intel-ucode plymouth
 
    local url=$(github_repo_archive_url "neunato/plymouth-theme-silence" "master")
    local dir="/usr/share/plymouth/themes/silence"
@@ -294,111 +291,112 @@ function setup_packages {
       echo -e "\n[sublime-text]\nServer = https://download.sublimetext.com/arch/dev/x86_64" | tee --append /etc/pacman.conf > /dev/null
    fi
 
-   pacman -Syu --noconfirm
+   arch_packages=()
+   user_packages=()
 
    # hardware-related
-   pacman -S --needed --noconfirm fwupd
-   pacman -S --needed --noconfirm networkmanager
-   pacman -S --needed --noconfirm mesa
-   pacman -S --needed --noconfirm mesa-utils
-   pacman -S --needed --noconfirm intel-media-driver
-   pacman -S --needed --noconfirm nvidia
-   pacman -S --needed --noconfirm nvidia-prime
-   pacman -S --needed --noconfirm nvidia-utils
-   pacman -S --needed --noconfirm nvidia-settings
-   pacman -S --needed --noconfirm alsa-firmware
-   pacman -S --needed --noconfirm sof-firmware
-   pacman -S --needed --noconfirm pipewire
-   pacman -S --needed --noconfirm pipewire-audio
-   pacman -S --needed --noconfirm pipewire-alsa
-   pacman -S --needed --noconfirm pipewire-pulse
-   pacman -S --needed --noconfirm pipewire-jack
-   pacman -S --needed --noconfirm wireplumber
-   pacman -S --needed --noconfirm alsa-utils
-   pacman -S --needed --noconfirm tlp
-   pacman -S --needed --noconfirm acpid
-   pacman -S --needed --noconfirm polkit
+   arch_packages+=("fwupd")
+   arch_packages+=("mesa")
+   arch_packages+=("mesa-utils")
+   arch_packages+=("intel-media-driver")
+   arch_packages+=("nvidia")
+   arch_packages+=("nvidia-prime")
+   arch_packages+=("nvidia-utils")
+   arch_packages+=("nvidia-settings")
+   user_packages+=("xsct")
+   arch_packages+=("alsa-firmware")
+   arch_packages+=("sof-firmware")
+   arch_packages+=("pipewire")
+   arch_packages+=("pipewire-audio")
+   arch_packages+=("pipewire-alsa")
+   arch_packages+=("pipewire-pulse")
+   arch_packages+=("pipewire-jack")
+   arch_packages+=("wireplumber")
+   arch_packages+=("alsa-utils")
+   arch_packages+=("networkmanager")
+   arch_packages+=("tlp")
+   arch_packages+=("acpid")
+   arch_packages+=("polkit")
 
    # x11
-   pacman -S --needed --noconfirm xorg-server
-   pacman -S --needed --noconfirm xorg-xinit
-   pacman -S --needed --noconfirm xorg-xrandr
-   pacman -S --needed --noconfirm xorg-xprop
-   pacman -S --needed --noconfirm xorg-xev
-   pacman -S --needed --noconfirm xclip
-   pacman -S --needed --noconfirm xdotool
-   pacman -S --needed --noconfirm picom
-   pacman -S --needed --noconfirm i3blocks
-   pacman -S --needed --noconfirm xss-lock
+   arch_packages+=("xorg-server")
+   arch_packages+=("xorg-xinit")
+   arch_packages+=("xorg-xrandr")
+   arch_packages+=("xorg-xprop")
+   arch_packages+=("xorg-xev")
+   arch_packages+=("xclip")
+   arch_packages+=("xdotool")
+   arch_packages+=("picom")
+   user_packages+=("i3-git")
+   arch_packages+=("i3blocks")
+   arch_packages+=("xss-lock")
+   user_packages+=("slock-git")
+
+   # cli
+   arch_packages+=("sudo")
+   arch_packages+=("nano")
+   arch_packages+=("bat")
+   arch_packages+=("jq")
+   arch_packages+=("bc")
+   arch_packages+=("wgetpaste")
+   arch_packages+=("moreutils")
+   arch_packages+=("man-db")
+   arch_packages+=("man-pages")
 
    # utilities
-   pacman -S --needed --noconfirm sudo
-   pacman -S --needed --noconfirm nano
-   pacman -S --needed --noconfirm bat
-   pacman -S --needed --noconfirm jq
-   pacman -S --needed --noconfirm bc
-   pacman -S --needed --noconfirm wgetpaste
-   pacman -S --needed --noconfirm dunst
-   pacman -S --needed --noconfirm libnotify
-   pacman -S --needed --noconfirm rofi
-   pacman -S --needed --noconfirm maim
-   pacman -S --needed --noconfirm ffmpeg
-   pacman -S --needed --noconfirm id3v2
-   pacman -S --needed --noconfirm moreutils
-   pacman -S --needed --noconfirm man-db
-   pacman -S --needed --noconfirm man-pages
+   arch_packages+=("dunst")
+   arch_packages+=("libnotify")
+   arch_packages+=("rofi")
+   arch_packages+=("maim")
+   arch_packages+=("ffmpeg")
+   arch_packages+=("id3v2")
+   user_packages+=("glances")
 
    # ssh, vpn
-   pacman -S --needed --noconfirm openssh
-   pacman -S --needed --noconfirm openvpn
-   pacman -S --needed --noconfirm openconnect
+   arch_packages+=("openssh")
+   arch_packages+=("openvpn")
+   arch_packages+=("openconnect")
+   user_packages+=("openvpn-update-systemd-resolved")
 
    # developer tooling
-   pacman -S --needed --noconfirm git
-   pacman -S --needed --noconfirm python
-   pacman -S --needed --noconfirm python-pip
-   pacman -S --needed --noconfirm nodejs
-   pacman -S --needed --noconfirm npm
-   pacman -S --needed --noconfirm rust
-   pacman -S --needed --noconfirm go
-   pacman -S --needed --noconfirm docker
-   pacman -S --needed --noconfirm docker-compose
-   pacman -S --needed --noconfirm aws-cli
+   arch_packages+=("git")
+   arch_packages+=("python")
+   arch_packages+=("python-pip")
+   arch_packages+=("nodejs")
+   arch_packages+=("npm")
+   arch_packages+=("rust")
+   arch_packages+=("go")
+   arch_packages+=("docker")
+   arch_packages+=("docker-compose")
+   arch_packages+=("aws-cli")
 
    # gui applications
-   pacman -S --needed --noconfirm kitty
-   pacman -S --needed --noconfirm zed
-   pacman -S --needed --noconfirm sublime-text
-   pacman -S --needed --noconfirm sublime-merge
-   pacman -S --needed --noconfirm nautilus
-   pacman -S --needed --noconfirm feh
-   pacman -S --needed --noconfirm mpv
-   pacman -S --needed --noconfirm firefox
-   pacman -S --needed --noconfirm chromium
-   pacman -S --needed --noconfirm calibre
-   pacman -S --needed --noconfirm transmission-gtk
+   arch_packages+=("kitty")
+   arch_packages+=("zed")
+   arch_packages+=("sublime-text")
+   arch_packages+=("sublime-merge")
+   arch_packages+=("nautilus")
+   arch_packages+=("feh")
+   arch_packages+=("mpv")
+   arch_packages+=("firefox")
+   arch_packages+=("chromium")
+   arch_packages+=("calibre")
+   arch_packages+=("transmission-gtk")
 
    # virtualisation
-   pacman -S --needed --noconfirm qemu-base
-   pacman -S --needed --noconfirm virt-manager
-   pacman -S --needed --noconfirm dnsmasq
-   pacman -S --needed --noconfirm --ask 4 iptables-nft
+   arch_packages+=("qemu-base")
+   arch_packages+=("virt-manager")
+   arch_packages+=("dnsmasq")
+   arch_packages+=("iptables-nft")
 
    # fonts
-   pacman -S --needed --noconfirm ttf-jetbrains-mono
-   pacman -S --needed --noconfirm ttf-nerd-fonts-symbols-mono
+   arch_packages+=("ttf-jetbrains-mono")
+   arch_packages+=("ttf-nerd-fonts-symbols-mono")
 
-   # aur packages
+   # install packages
    echo "$username ALL=(ALL:ALL) NOPASSWD: ALL" | EDITOR="tee --append" visudo > /dev/null
-
    as_user $username paru -Syu --noconfirm
-   as_user $username paru -S --needed --noconfirm i3-git
-   as_user $username paru -S --needed --noconfirm xlogin
-   as_user $username paru -S --needed --noconfirm xsct
-   as_user $username paru -S --needed --noconfirm slock-git
-   as_user $username paru -S --needed --noconfirm openvpn-update-systemd-resolved
-   as_user $username paru -S --needed --noconfirm glances
-
+   as_user $username paru -S --needed --noconfirm "${arch_packages[@]}" "${user_packages[@]}"
    head -n -1 /etc/sudoers | EDITOR="tee" visudo > /dev/null
 
    # clean up unused packages
@@ -445,8 +443,7 @@ function setup_firmware {
 function install_paru {
    local url="https://aur.archlinux.org/cgit/aur.git/snapshot/paru.tar.gz"
    local dir="/var/tmp/paru"
-   pacman -S --needed --noconfirm git
-   pacman -S --needed --noconfirm rust
+   pacman -S --needed --noconfirm git rust
    extract_tarball "$url" "$dir"
    chmod 777 "$dir"
    as_nobody /bin/bash -c "cd $dir && CARGO_HOME=$dir makepkg"
