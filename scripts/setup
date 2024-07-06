@@ -256,22 +256,9 @@ function setup_system_config {
    sed -i 's/^GRUB_DEFAULT=.*/GRUB_DEFAULT=0/'                  /etc/default/grub
    sed -i 's/^GRUB_TIMEOUT=.*/GRUB_TIMEOUT=0/'                  /etc/default/grub
    sed -i 's/^GRUB_TIMEOUT_STYLE=.*/GRUB_TIMEOUT_STYLE=hidden/' /etc/default/grub
-   sed -i "s/^GRUB_CMDLINE_LINUX_DEFAULT=.*/GRUB_CMDLINE_LINUX_DEFAULT=\"quiet splash loglevel=3 systemd.show_status=error rd.udev.log_level=3 rd.luks.name=$part_root_uuid=root rd.luks.options=$part_root_uuid=timeout=0,tries=0,password-echo=no resume=UUID=$swapfile_uuid resume_offset=$swapfile_offset rootflags=x-systemd.device-timeout=0 nvidia_drm.modeset=1\"/" /etc/default/grub
+   sed -i "s/^GRUB_CMDLINE_LINUX_DEFAULT=.*/GRUB_CMDLINE_LINUX_DEFAULT=\"quiet splash rd.luks.name=$part_root_uuid=root rd.luks.options=$part_root_uuid=timeout=0,tries=0,password-echo=no resume=UUID=$swapfile_uuid resume_offset=$swapfile_offset rootflags=x-systemd.device-timeout=0 nvidia_drm.modeset=1\"/" /etc/default/grub
    grub-mkconfig -o /boot/grub/grub.cfg
    sed -i 's/echo\t/#echo\t/g' /boot/grub/grub.cfg
-
-   # silent boot
-   echo 'kernel.printk = 3 3 3 3' | tee /etc/sysctl.d/20-quiet-printk.conf > /dev/null
-
-   mkdir -p /etc/systemd/system/systemd-fsck-root.service.d
-   echo '[Service]'                     | tee          /etc/systemd/system/systemd-fsck-root.service.d/silent-boot.conf > /dev/null
-   echo 'StandardOutput=null'           | tee --append /etc/systemd/system/systemd-fsck-root.service.d/silent-boot.conf > /dev/null
-   echo 'StandardError=journal+console' | tee --append /etc/systemd/system/systemd-fsck-root.service.d/silent-boot.conf > /dev/null
-
-   mkdir -p /etc/systemd/system/systemd-fsck@.service.d
-   echo '[Service]'                     | tee          /etc/systemd/system/systemd-fsck@.service.d/silent-boot.conf > /dev/null
-   echo 'StandardOutput=null'           | tee --append /etc/systemd/system/systemd-fsck@.service.d/silent-boot.conf > /dev/null
-   echo 'StandardError=journal+console' | tee --append /etc/systemd/system/systemd-fsck@.service.d/silent-boot.conf > /dev/null
 
    mkdir -p /etc/systemd/system/getty@tty1.service.d
    echo '[Service]'                                                                                           | tee          /etc/systemd/system/getty@tty1.service.d/skip-prompt.conf > /dev/null
