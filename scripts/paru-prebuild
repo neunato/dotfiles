@@ -2,6 +2,16 @@
 
 path="$HOME/.config/paru/patches/$PKGBASE"
 
-if [[ -d $path ]]; then
-   cp "$path/"* .
+if [[ ! -d $path ]]; then
+   exit
+fi
+
+for file in "$path/"*; do
+   if [[ -f $file && $file != "$path/PKGBUILD.patch" ]]; then
+      cp "$file" .
+   fi
+done
+
+if [[ -f $path/PKGBUILD.patch ]]; then
+   git apply "$path/PKGBUILD.patch"
 fi
