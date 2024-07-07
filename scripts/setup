@@ -396,26 +396,17 @@ function setup_packages {
    usermod -aG docker "$username"
    usermod -aG libvirt "$username"
 
-   systemctl --user --machine="$username@" enable pipewire-pulse.service
-   systemctl enable NetworkManager
-   systemctl enable "xlogin@$username"
-   systemctl enable tlp.service
-   systemctl enable acpid.service
-   systemctl enable systemd-resolved
-   systemctl enable docker.service
-   systemctl enable libvirtd.service
-   systemctl mask systemd-rfkill.service
-   systemctl mask systemd-rfkill.socket
-
    if [[ $(stat -c %d:%i /) == $(stat -c %d:%i /proc/1/root/.) ]]; then
-      systemctl --user --machine="$username@" start pipewire-pulse.service
-      systemctl start NetworkManager
-      systemctl start tlp.service
-      systemctl start acpid.service
-      systemctl start systemd-resolved
-      systemctl start docker.service
-      systemctl start libvirtd.service
+      start="--now"
    fi
+
+   systemctl --user --machine="$username@" enable $start pipewire-pulse.service
+   systemctl                               enable $start NetworkManager
+   systemctl                               enable        xlogin@"$username"
+   systemctl                               enable $start acpid.service
+   systemctl                               enable $start tlp.service
+   systemctl                               mask systemd-rfkill.service  # tlp
+   systemctl                               mask systemd-rfkill.socket   # tlp
 
    sed -i 's/#unix_sock_group/unix_sock_group/g'                /etc/libvirt/libvirtd.conf
    sed -i 's/#unix_sock_rw_perms/unix_sock_rw_perms/g'          /etc/libvirt/libvirtd.conf
