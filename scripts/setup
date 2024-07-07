@@ -384,8 +384,12 @@ function setup_packages {
 
    # install packages
    echo "$username ALL=(ALL:ALL) NOPASSWD: ALL" | EDITOR="tee --append" visudo > /dev/null
-   as_user $username paru -Syu --noconfirm
-   as_user $username paru -S --useask --ask 4 --needed --noconfirm "${arch_packages[@]}" "${user_packages[@]}"
+   as_user $username paru -Syu --noconfirm &&
+   as_user $username paru -S --useask --ask 4 --needed --noconfirm "${arch_packages[@]}" "${user_packages[@]}" || {
+      head -n -1 /etc/sudoers | EDITOR="tee" visudo > /dev/null
+      echo "Failed to update packages, aborting" >&2
+      exit 1
+   }
    head -n -1 /etc/sudoers | EDITOR="tee" visudo > /dev/null
 
    # clean up unused packages
