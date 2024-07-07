@@ -264,6 +264,9 @@ function setup_system_config {
    echo '[Service]'                                                                                           | tee          /etc/systemd/system/getty@tty1.service.d/skip-prompt.conf > /dev/null
    echo 'ExecStart='                                                                                          | tee --append /etc/systemd/system/getty@tty1.service.d/skip-prompt.conf > /dev/null
    echo "ExecStart=-/bin/agetty --skip-login --nonewline --noissue --autologin $username --noclear %I \$TERM" | tee --append /etc/systemd/system/getty@tty1.service.d/skip-prompt.conf > /dev/null
+
+   # backlight permissions
+   echo 'ACTION=="add", SUBSYSTEM=="backlight", RUN+="/bin/chgrp video $sys$devpath/brightness", RUN+="/bin/chmod g+w $sys$devpath/brightness"' | tee /etc/udev/rules.d/backlight.rules > /dev/null
 }
 
 function setup_packages {
