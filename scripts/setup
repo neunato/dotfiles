@@ -311,6 +311,7 @@ function setup_packages {
    arch_packages+=("xorg-xrandr")
    arch_packages+=("xorg-xprop")
    arch_packages+=("xorg-xev")
+   user_packages+=("xlogin")
    arch_packages+=("xclip")
    arch_packages+=("xdotool")
    arch_packages+=("picom")
@@ -371,6 +372,7 @@ function setup_packages {
    arch_packages+=("transmission-gtk")
 
    # virtualisation
+   arch_packages+=("libvirt")
    arch_packages+=("qemu-base")
    arch_packages+=("virt-manager")
    arch_packages+=("dnsmasq")
