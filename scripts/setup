@@ -427,7 +427,7 @@ function setup_packages {
 
 function setup_firmware {
    pacman -S --needed --noconfirm fwupd
-   fwupdmgr --no-reboot-check refresh
+   fwupdmgr --no-reboot-check --force refresh
    fwupdmgr --no-reboot-check update
 }
 
