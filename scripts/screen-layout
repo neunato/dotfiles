@@ -389,10 +389,10 @@ declare -A saved_dpis
 
 settings_path="$HOME/.local/share/screen-layout"
 result=$(xrandr)
-displays=($(echo "$result" | grep -e ' connected' | awk '{print $1}'))
-resolutions=($(echo "$result" | grep '^ ' | grep '[* ]+ ' | awk '{print $1}'))
-refresh_rates=($(echo "$result" | grep '^ ' | grep '[* ]+ ' | grep -oP '[0-9.]+[* ]\+' | sed -r 's/[+*]//g'))
-sizes=($(echo "$result" | grep -e ' connected' | sed -r 's/^.* axis\)//' | sed -r 's/[ m]//g'))
+displays=($(echo "$result" | grep ' connected' | awk '{print $1}'))
+resolutions=($(echo "$result" | grep -A 1 --no-group-separator ' connected' | grep -v ' connected' | awk '{print $1}'))
+refresh_rates=($(echo "$result" | grep -A 1 --no-group-separator ' connected' | grep -v ' connected' | awk '{print $2}' | sed -r 's/[+*]//g'))
+sizes=($(echo "$result" | grep ' connected' | sed -r 's/^.* axis\)//' | sed -r 's/[ m]//g'))
 scales=()
 widths=()
 heights=()
