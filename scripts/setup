@@ -178,6 +178,7 @@ function setup_system_config {
 
    ln -sf /usr/share/zoneinfo/Europe/Zagreb /etc/localtime
    hwclock --systohc
+   systemctl enable systemd-timesyncd.service
 
    sed -i 's/#en_GB/en_GB/g' /etc/locale.gen
    sed -i 's/#hr_HR/hr_HR/g' /etc/locale.gen
