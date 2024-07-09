@@ -68,7 +68,6 @@ function join_displays {
 
    for i in "${!targets[@]}"; do
       local display=${targets[$i]}
-      local height=${heights[$i]}
       for j in "${!displays[@]}"; do
          if [[ ${displays[$j]} == $display ]]; then
             index_map+=($j)
@@ -76,6 +75,7 @@ function join_displays {
          fi
       done
       if [[ $display == $primary ]]; then
+         local height=${heights[$j]}
          local scale=${scales[$j]}
          screen_height="$(ceil "$height * $scale")"
       fi
