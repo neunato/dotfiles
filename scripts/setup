@@ -237,7 +237,7 @@ function setup_system_config {
    echo 'EndSection'                               | tee --append /etc/X11/xorg.conf > /dev/null
 
    # boot process
-   pacman -S --needed --noconfirm grub efibootmgr intel-ucode plymouth
+   pacman -S --needed --noconfirm efibootmgr intel-ucode plymouth
 
    local url=$(github_repo_archive_url "neunato/plymouth-theme-silence" "master")
    local dir="/usr/share/plymouth/themes/silence"
@@ -246,20 +246,28 @@ function setup_system_config {
    plymouth-set-default-theme silence
 
    cat /dev/null > /etc/mkinitcpio.conf
-   echo 'PRESETS=("default")'                                                                                                  | tee          /etc/mkinitcpio.d/linux.preset > /dev/null
-   echo 'default_kver="/boot/vmlinuz-linux"'                                                                                   | tee --append /etc/mkinitcpio.d/linux.preset > /dev/null
-   echo 'default_image="/boot/initramfs-linux.img"'                                                                            | tee --append /etc/mkinitcpio.d/linux.preset > /dev/null
-   echo 'default_config="/etc/mkinitcpio.conf"'                                                                                | tee --append /etc/mkinitcpio.d/linux.preset > /dev/null
+   echo 'PRESETS=("default")'                                                                                                           | tee          /etc/mkinitcpio.d/linux.preset > /dev/null
+   echo 'default_kver="/boot/vmlinuz-linux"'                                                                                            | tee --append /etc/mkinitcpio.d/linux.preset > /dev/null
+   echo 'default_image="/boot/initramfs-linux.img"'                                                                                     | tee --append /etc/mkinitcpio.d/linux.preset > /dev/null
+   echo 'default_config="/etc/mkinitcpio.conf"'                                                                                         | tee --append /etc/mkinitcpio.d/linux.preset > /dev/null
    echo 'default_options="-A systemd,plymouth,autodetect,microcode,modconf,kms,keyboard,sd-vconsole,block,sd-encrypt,filesystems,fsck"' | tee --append /etc/mkinitcpio.d/linux.preset > /dev/null
    mkinitcpio -P
 
-   grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=GRUB
-   sed -i 's/^GRUB_DEFAULT=.*/GRUB_DEFAULT=0/'                  /etc/default/grub
-   sed -i 's/^GRUB_TIMEOUT=.*/GRUB_TIMEOUT=0/'                  /etc/default/grub
-   sed -i 's/^GRUB_TIMEOUT_STYLE=.*/GRUB_TIMEOUT_STYLE=hidden/' /etc/default/grub
-   sed -i "s/^GRUB_CMDLINE_LINUX_DEFAULT=.*/GRUB_CMDLINE_LINUX_DEFAULT=\"quiet splash nowatchdog modprobe.blacklist=iTCO_wdt rd.luks.name=$part_root_uuid=root rd.luks.options=$part_root_uuid=timeout=0,tries=0,password-echo=no resume=UUID=$swapfile_uuid resume_offset=$swapfile_offset rootflags=x-systemd.device-timeout=0 nvidia_drm.modeset=1\"/" /etc/default/grub
-   grub-mkconfig -o /boot/grub/grub.cfg
-   sed -i 's/echo\t/#echo\t/g' /boot/grub/grub.cfg
+   if ! bootctl -q is-installed; then
+      bootctl install
+   else
+      bootctl --graceful update 2> /dev/null
+   fi
+
+   echo 'default arch.conf' | tee          /boot/loader/loader.conf > /dev/null
+   echo 'timeout 0'         | tee --append /boot/loader/loader.conf > /dev/null
+   echo 'console-mode max'  | tee --append /boot/loader/loader.conf > /dev/null
+   echo 'editor no'         | tee --append /boot/loader/loader.conf > /dev/null
+
+   echo 'title Arch Linux'                                                                                                                                                                                                                                                                     | tee          /boot/loader/entries/arch.conf > /dev/null
+   echo 'linux /vmlinuz-linux'                                                                                                                                                                                                                                                                 | tee --append /boot/loader/entries/arch.conf > /dev/null
+   echo 'initrd /initramfs-linux.img'                                                                                                                                                                                                                                                          | tee --append /boot/loader/entries/arch.conf > /dev/null
+   echo "options quiet splash nowatchdog modprobe.blacklist=iTCO_wdt rd.luks.name=$part_root_uuid=root rd.luks.options=$part_root_uuid=timeout=0,tries=0,password-echo=no resume=UUID=$swapfile_uuid resume_offset=$swapfile_offset rootflags=x-systemd.device-timeout=0 nvidia_drm.modeset=1" | tee --append /boot/loader/entries/arch.conf > /dev/null
 
    mkdir -p /etc/systemd/system/getty@tty1.service.d
    echo '[Service]'                                                                                           | tee          /etc/systemd/system/getty@tty1.service.d/skip-prompt.conf > /dev/null
