@@ -398,7 +398,7 @@ function setup_packages {
 
    # clean up unused packages
    pacman -Qdtq | ifne pacman -Rns --noconfirm -
-   pacman -Qqd | pacman -Rsu --noconfirm -
+   pacman -Qqd | pacman -Rsu --noconfirm - 2> >(grep -v '^warning: removing [^ ]* from target list$' 1>&2)
 
    # groups, services, configuration
    usermod -aG docker "$username"
