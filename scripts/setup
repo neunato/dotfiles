@@ -294,6 +294,8 @@ function setup_packages {
    arch_packages+=("nvidia-prime")
    arch_packages+=("nvidia-utils")
    arch_packages+=("nvidia-settings")
+   arch_packages+=("vulkan-icd-loader")
+   arch_packages+=("vulkan-intel")
    user_packages+=("xsct")
    arch_packages+=("alsa-firmware")
    arch_packages+=("sof-firmware")
