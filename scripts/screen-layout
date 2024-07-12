@@ -195,17 +195,17 @@ function load_settings {
       local settings=()
    fi
 
-   saved_mode="${settings[0]}"
-   saved_primaries=(${settings[1]})
+   saved_mode="${settings[0]:10}"
+   saved_primaries=(${settings[1]:10})
 
-   local scales=(${settings[2]})
+   local scales=(${settings[2]:10})
    for entry in "${scales[@]}"; do
       local display=$(echo "$entry" | sed -r 's/^([^:]+):[^:]+$/\1/')
       local scale=$(echo "$entry" | sed -r 's/^[^:]+:([^:]+)$/\1/')
       saved_scales["$display"]="$scale"
    done
 
-   local dpis=(${settings[3]})
+   local dpis=(${settings[3]:10})
    for entry in "${dpis[@]}"; do
       local display=$(echo "$entry" | sed -r 's/^([^:]+):[^:]+$/\1/')
       local dpi=$(echo "$entry" | sed -r 's/^[^:]+:([^:]+)$/\1/')
@@ -217,26 +217,26 @@ function save_settings {
    if [[ $settings_changed != "true" ]]; then
       return
    fi
-   echo "$saved_mode"            > "$settings_path"
-   echo "${saved_primaries[@]}" >> "$settings_path"
 
    local scales=""
+   local dpis=""
    for display in ${!saved_scales[@]}; do
       local scale="${saved_scales["$display"]}"
       if [[ $scale != "1.0" ]]; then
          scales+="${display}:${saved_scales["$display"]} "
       fi
    done
-   echo "$scales" | xargs >> "$settings_path"
-
-   local dpis=""
    for display in ${!saved_dpis[@]}; do
       local dpi="${saved_dpis["$display"]}"
       if [[ $dpi != "96" ]]; then
          dpis+="${display}:${saved_dpis["$display"]} "
       fi
    done
-   echo "$dpis" | xargs >> "$settings_path"
+
+   echo "$(printf '%-10s' 'mode')$saved_mode"               > "$settings_path"
+   echo "$(printf '%-10s' 'primary')${saved_primaries[*]}" >> "$settings_path"
+   echo "$(printf '%-10s' 'scale')${scales%% }"            >> "$settings_path"
+   echo "$(printf '%-10s' 'dpi')${dpis%% }"                >> "$settings_path"
 }
 
 function set_setting {
