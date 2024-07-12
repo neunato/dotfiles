@@ -7,11 +7,12 @@
 # screen-layout --mode mirror                                      - mirror connected monitors (primary scale applied, other outputs scaled to fit and centered)
 # screen-layout --mode single <output>                             - use one monitor, defaulting to a connected primary or first connected monitor
 # screen-layout --primary <output>                                 - set primary monitor
-# screen-layout --restore                                          - restore mode, primary, scale and dpi
+# screen-layout --restore                                          - restore mode, primary, scale, dpi and layout
 # screen-layout --scale <output1>:<scale1>[,<output2>:<scale2>...] - set scale for specified monitors (applied scale depends on mode)
 # screen-layout --dpi <output1>:<dpi1>[,<output2>:<dpi2>...]       - set dpi for specified monitors (applying primary/highest/96 globally regardless of mode)
 # screen-layout --dry-run                                          - output the xrandr command instead of executing it and don't save settings
 # screen-layout --list-outputs                                     - list connected monitors
+# screen-layout --reset-config                                     - clear any saved settings
 
 # TODO: uniquely identify monitors (EDID?)
 
@@ -25,20 +26,25 @@ while [[ $# -gt 0 ]]; do
       --restore)      restore=true;           shift;;
       --dry-run)      dry_run=true;           shift;;
       --list-outputs) list=true;              shift;;
+      --reset-config) reset=true;             shift;;
       --*)                                    shift;;
       *)              targets+=("$1");        shift;;
    esac
 done
 
-if [[ -z $list && -z $restore && -z $mode && -z $primary && -z $scale && -z $dpi && ${#targets[@]} -eq 0 ]]; then
+if [[ -z $list && -z $reset && -z $restore && -z $mode && -z $primary && -z $scale && -z $dpi && ${#targets[@]} -eq 0 ]]; then
    echo "Invalid arguments" >&2
    exit 1
 fi
-if [[ -n $restore && ! (-z $list && -z $mode && -z $primary && -z $scale && -z $dpi && ${#targets[@]} -eq 0) ]]; then
+if [[ -n $reset && ! (-z $list && -z $restore && -z $mode && -z $primary && -z $scale && -z $dpi && ${#targets[@]} -eq 0) ]]; then
    echo "Invalid arguments" >&2
    exit 1
 fi
-if [[ -n $list && ! (-z $restore && -z $mode && -z $primary && -z $scale && -z $dpi && ${#targets[@]} -eq 0) ]]; then
+if [[ -n $restore && ! (-z $list && -z $reset && -z $mode && -z $primary && -z $scale && -z $dpi && ${#targets[@]} -eq 0) ]]; then
+   echo "Invalid arguments" >&2
+   exit 1
+fi
+if [[ -n $list && ! (-z $reset && -z $restore && -z $mode && -z $primary && -z $scale && -z $dpi && ${#targets[@]} -eq 0) ]]; then
    echo "Invalid arguments" >&2
    exit 1
 fi
@@ -403,13 +409,19 @@ function ceil {
 }
 
 
+settings_path="$HOME/.local/share/screen-layout"
+
+if [[ $reset == "true" ]]; then
+   rm "$settings_path"
+   exit 0
+fi
+
 saved_mode=""
 saved_layout=()
 saved_primaries=()
 declare -A saved_scales
 declare -A saved_dpis
 
-settings_path="$HOME/.local/share/screen-layout"
 result=$(xrandr)
 displays=($(echo "$result" | grep ' connected' | awk '{print $1}'))
 resolutions=($(echo "$result" | grep -A 1 --no-group-separator ' connected' | grep -v ' connected' | awk '{print $1}'))
