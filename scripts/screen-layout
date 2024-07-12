@@ -14,7 +14,6 @@
 # screen-layout --list-outputs                                     - list connected monitors
 
 # TODO: uniquely identify monitors (EDID?)
-# TODO: store and restore outputs when explicitly specified
 
 targets=()
 while [[ $# -gt 0 ]]; do
@@ -196,16 +195,17 @@ function load_settings {
    fi
 
    saved_mode="${settings[0]:10}"
-   saved_primaries=(${settings[1]:10})
+   saved_layout=(${settings[1]:10})
+   saved_primaries=(${settings[2]:10})
 
-   local scales=(${settings[2]:10})
+   local scales=(${settings[3]:10})
    for entry in "${scales[@]}"; do
       local display=$(echo "$entry" | sed -r 's/^([^:]+):[^:]+$/\1/')
       local scale=$(echo "$entry" | sed -r 's/^[^:]+:([^:]+)$/\1/')
       saved_scales["$display"]="$scale"
    done
 
-   local dpis=(${settings[3]:10})
+   local dpis=(${settings[4]:10})
    for entry in "${dpis[@]}"; do
       local display=$(echo "$entry" | sed -r 's/^([^:]+):[^:]+$/\1/')
       local dpi=$(echo "$entry" | sed -r 's/^[^:]+:([^:]+)$/\1/')
@@ -234,6 +234,7 @@ function save_settings {
    done
 
    echo "$(printf '%-10s' 'mode')$saved_mode"               > "$settings_path"
+   echo "$(printf '%-10s' 'layout')${saved_layout[*]}"     >> "$settings_path"
    echo "$(printf '%-10s' 'primary')${saved_primaries[*]}" >> "$settings_path"
    echo "$(printf '%-10s' 'scale')${scales%% }"            >> "$settings_path"
    echo "$(printf '%-10s' 'dpi')${dpis%% }"                >> "$settings_path"
@@ -247,6 +248,11 @@ function set_setting {
 
    if [[ $key == "mode" ]]; then
       saved_mode="$value"
+      return
+   fi
+
+   if [[ $key == "layout" ]]; then
+      saved_layout=($value)
       return
    fi
 
@@ -291,6 +297,21 @@ function resolve_setting {
          echo "$saved_mode"
       else
          echo "join"
+      fi
+      return
+   fi
+
+   if [[ $key == "layout" ]]; then
+      if [[ ${#saved_layout[@]} -ne 0 ]]; then
+         layout=()
+         for target in "${saved_layout[@]}"; do
+            if [[ " ${displays[*]} " =~ " $target " ]]; then
+               layout+=("$target")
+            fi
+         done
+         echo "${layout[*]}"
+      else
+         echo "${displays[*]}"
       fi
       return
    fi
@@ -383,7 +404,8 @@ function ceil {
 
 
 saved_mode=""
-saved_primaries=""
+saved_layout=()
+saved_primaries=()
 declare -A saved_scales
 declare -A saved_dpis
 
@@ -420,13 +442,15 @@ fi
 
 load_settings
 
-if [[ ${#targets[@]} -eq 0 ]]; then
+if [[ ${#targets[@]} -gt 0 ]]; then
+   set_setting "layout" "${targets[*]}"
+else
    if [[ $mode != "single" ]]; then
-      targets=("${displays[@]}")
+      targets=($(resolve_setting "layout"))
    elif [[ -n $primary ]]; then
       targets=("$primary")
    else
-      targets=($(resolve_setting "primary"))
+      targets=("$(resolve_setting "primary")")
    fi
 fi
 
