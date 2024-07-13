@@ -308,13 +308,13 @@ function resolve_setting {
    fi
 
    if [[ $key == "layout" ]]; then
-      if [[ ${#saved_layout[@]} -ne 0 ]]; then
-         layout=()
-         for target in "${saved_layout[@]}"; do
-            if [[ " ${displays[*]} " =~ " $target " ]]; then
-               layout+=("$target")
-            fi
-         done
+      layout=()
+      for target in "${saved_layout[@]}"; do
+         if [[ " ${displays[*]} " =~ " $target " ]]; then
+            layout+=("$target")
+         fi
+      done
+      if [[ ${#layout[@]} -ne 0 ]]; then
          echo "${layout[*]}"
       else
          echo "${displays[*]}"
