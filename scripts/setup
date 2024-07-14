@@ -2,11 +2,14 @@
 
 set -e
 
-if [[ $# -ne 1 ]]; then
+if [[ ! " system system-config firmware packages " =~ " $1 " ]]; then
    echo "Expected 'setup system|system-config|firmware|packages'" >&2
    exit 1
-elif [[ $1 != "system" && $1 != "system-config" && $1 != "firmware" && $1 != "packages" ]]; then
+elif [[ $1 != "system-config" && $# -ne 1 ]]; then
    echo "Expected 'setup system|system-config|firmware|packages'" >&2
+   exit 1
+elif [[ $1 == "system-config" && ($# -gt 2 || ! "--no-gpu" =~ "$2" ) ]]; then
+   echo "Expected 'setup system-config [--no-gpu]'" >&2
    exit 1
 elif [[ $1 == "system" && $EUID -ne 0 ]]; then
    echo "'setup system' must be run as root" >&2
@@ -120,7 +123,7 @@ function setup_system {
    "
 
    # system configuration
-   as_chroot setup_system_config "$username"
+   as_chroot setup_system_config "$username" intel
 
    # packages
    as_chroot setup_packages "$username"
@@ -162,6 +165,7 @@ function setup_system {
 
 function setup_system_config {
    local username=$1
+   local graphics=$2
    local part_root_uuid=$(dmsetup info -c --noheadings -o uuid /dev/mapper/root 2> /dev/null)
    if [[ ! $part_root_uuid =~ ^CRYPT-LUKS2-(.{8})(.{4})(.{4})(.{4})(.{12})-root$ ]]; then
       echo "Root partition not found" >&2
@@ -246,10 +250,10 @@ function setup_system_config {
    plymouth-set-default-theme silence
 
    cat /dev/null > /etc/mkinitcpio.conf
-   echo 'PRESETS=("default")'                                                                                                  | tee          /etc/mkinitcpio.d/linux.preset > /dev/null
-   echo 'default_kver="/boot/vmlinuz-linux"'                                                                                   | tee --append /etc/mkinitcpio.d/linux.preset > /dev/null
-   echo 'default_image="/boot/initramfs-linux.img"'                                                                            | tee --append /etc/mkinitcpio.d/linux.preset > /dev/null
-   echo 'default_config="/etc/mkinitcpio.conf"'                                                                                | tee --append /etc/mkinitcpio.d/linux.preset > /dev/null
+   echo 'PRESETS=("default")'                                                                                                           | tee          /etc/mkinitcpio.d/linux.preset > /dev/null
+   echo 'default_kver="/boot/vmlinuz-linux"'                                                                                            | tee --append /etc/mkinitcpio.d/linux.preset > /dev/null
+   echo 'default_image="/boot/initramfs-linux.img"'                                                                                     | tee --append /etc/mkinitcpio.d/linux.preset > /dev/null
+   echo 'default_config="/etc/mkinitcpio.conf"'                                                                                         | tee --append /etc/mkinitcpio.d/linux.preset > /dev/null
    echo 'default_options="-A systemd,plymouth,autodetect,microcode,modconf,kms,keyboard,sd-vconsole,block,sd-encrypt,filesystems,fsck"' | tee --append /etc/mkinitcpio.d/linux.preset > /dev/null
    mkinitcpio -P
 
@@ -257,7 +261,7 @@ function setup_system_config {
    sed -i 's/^GRUB_DEFAULT=.*/GRUB_DEFAULT=0/'                  /etc/default/grub
    sed -i 's/^GRUB_TIMEOUT=.*/GRUB_TIMEOUT=0/'                  /etc/default/grub
    sed -i 's/^GRUB_TIMEOUT_STYLE=.*/GRUB_TIMEOUT_STYLE=hidden/' /etc/default/grub
-   sed -i "s/^GRUB_CMDLINE_LINUX_DEFAULT=.*/GRUB_CMDLINE_LINUX_DEFAULT=\"quiet splash nowatchdog modprobe.blacklist=iTCO_wdt rd.luks.name=$part_root_uuid=root rd.luks.options=$part_root_uuid=timeout=0,tries=0,password-echo=no resume=UUID=$swapfile_uuid resume_offset=$swapfile_offset rootflags=x-systemd.device-timeout=0 nvidia_drm.modeset=1\"/" /etc/default/grub
+   sed -i "s/^GRUB_CMDLINE_LINUX_DEFAULT=.*/GRUB_CMDLINE_LINUX_DEFAULT=\"quiet splash nowatchdog modprobe.blacklist=iTCO_wdt rd.luks.name=$part_root_uuid=root rd.luks.options=$part_root_uuid=timeout=0,tries=0,password-echo=no resume=UUID=$swapfile_uuid resume_offset=$swapfile_offset rootflags=x-systemd.device-timeout=0 nvidia_drm.modeset=$([[ $graphics == "nvidia" ]] && echo 1 || echo 0)\"/" /etc/default/grub
    grub-mkconfig -o /boot/grub/grub.cfg
    sed -i 's/echo\t/#echo\t/g' /boot/grub/grub.cfg
 
@@ -267,8 +271,15 @@ function setup_system_config {
    echo "ExecStart=-/bin/agetty --skip-login --nonewline --noissue --autologin $username --noclear %I \$TERM" | tee --append /etc/systemd/system/getty@tty1.service.d/skip-prompt.conf > /dev/null
 
    # udev rules
-   echo 'ACTION=="add", SUBSYSTEM=="backlight", RUN+="/bin/chgrp video $sys$devpath/brightness", RUN+="/bin/chmod g+w $sys$devpath/brightness"'                                                          | tee /etc/udev/rules.d/backlight.rules       > /dev/null
-   echo 'ACTION=="change", SUBSYSTEM=="drm", ENV{DISPLAY}=":0", ENV{XAUTHORITY}="/home/'$username'/.Xauthority", ENV{HOME}="/home/'$username'" RUN+="/home/'$username'/scripts/screen-layout --restore"' | tee /etc/udev/rules.d/monitor-hotplug.rules > /dev/null
+   cat /dev/null > /etc/udev/rules.d/no-nvidia.rules
+   if [[ $graphics != "nvidia" ]]; then
+      echo 'ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{class}=="0x0c0330", ATTR{power/control}="auto", ATTR{remove}="1"'                                                              | tee          /etc/udev/rules.d/no-nvidia.rules > /dev/null
+      echo 'ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{class}=="0x0c8000", ATTR{power/control}="auto", ATTR{remove}="1"'                                                              | tee --append /etc/udev/rules.d/no-nvidia.rules > /dev/null
+      echo 'ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{class}=="0x040300", ATTR{power/control}="auto", ATTR{remove}="1"'                                                              | tee --append /etc/udev/rules.d/no-nvidia.rules > /dev/null
+      echo 'ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{class}=="0x03[0-9]*", ATTR{power/control}="auto", ATTR{remove}="1"'                                                            | tee --append /etc/udev/rules.d/no-nvidia.rules > /dev/null
+   fi
+   echo 'ACTION=="add", SUBSYSTEM=="backlight", RUN+="/bin/chgrp video $sys$devpath/brightness", RUN+="/bin/chmod g+w $sys$devpath/brightness"'                                                          | tee          /etc/udev/rules.d/backlight.rules > /dev/null
+   echo 'ACTION=="change", SUBSYSTEM=="drm", ENV{DISPLAY}=":0", ENV{XAUTHORITY}="/home/'$username'/.Xauthority", ENV{HOME}="/home/'$username'" RUN+="/home/'$username'/scripts/screen-layout --restore"' | tee          /etc/udev/rules.d/monitor-hotplug.rules > /dev/null
 }
 
 function setup_packages {
@@ -518,9 +529,15 @@ function github_api_url {
    echo "https://api.github.com/repos/$repo"
 }
 
+if [[ $2 == "--no-gpu" ]]; then
+   graphics="intel"
+else
+   graphics="nvidia"
+fi
+
 case "$1" in
    system)        setup_system;;
-   system-config) as_sudo setup_system_config $(whoami);;
+   system-config) as_sudo setup_system_config "$(whoami)" "$graphics";;
    firmware)      setup_firmware;;
-   packages)      as_sudo setup_packages $(whoami);;
+   packages)      as_sudo setup_packages "$(whoami)";;
 esac
