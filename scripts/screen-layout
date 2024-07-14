@@ -427,9 +427,27 @@ displays=($(echo "$result" | grep ' connected' | awk '{print $1}'))
 resolutions=($(echo "$result" | grep -A 1 --no-group-separator ' connected' | grep -v ' connected' | awk '{print $1}'))
 refresh_rates=($(echo "$result" | grep -A 1 --no-group-separator ' connected' | grep -v ' connected' | awk '{print $2}' | sed -r 's/[+*]//g'))
 sizes=($(echo "$result" | grep ' connected' | sed -r 's/^.* axis\)//' | sed -r 's/[ m]//g'))
+sorted=()
+for i in "${!displays[@]}"; do
+   sorted+=("${displays[$i]}/${resolutions[$i]}/${refresh_rates[$i]}/${sizes[$i]}")
+done
+sorted=($(printf "%s\n" "${sorted[@]}" | sort))
+
+displays=()
+resolutions=()
+refresh_rates=()
+sizes=()
 scales=()
 widths=()
 heights=()
+for display_info in "${sorted[@]}"; do
+   IFS=/ read -r display resolution refresh_rate size <<< "$display_info"
+   displays+=("$display")
+   resolutions+=("$resolution")
+   refresh_rates+=("$refresh_rate")
+   sizes+=("$size")
+done
+
 for i in "${!resolutions[@]}"; do
    resolution=${resolutions[$i]}
    width=$(echo "$resolution" | sed -r 's/^([0-9]+)x[0-9]+$/\1/')
