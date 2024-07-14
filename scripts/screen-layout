@@ -517,3 +517,17 @@ if [[ $mode == "join" || $mode == "single" ]]; then
 elif [[ $mode == "mirror" ]]; then
    mirror_displays
 fi
+
+# fix nvidia issues
+if [[ $dry_run != "true" ]] && pacman -Q nvidia-settings 2>&1 > /dev/null; then
+   metamode="$(nvidia-settings -q CurrentMetaMode -t)"
+   metamode="${metamode#* :: }"
+   if [[ $metamode == "" ]]; then
+      exit
+   fi
+   metamode=${metamode//\{ForceCompositionPipeline=On/\{}
+   metamode=${metamode//, ForceCompositionPipeline=On/}
+   metamode=${metamode//\}/, ForceCompositionPipeline=On\}}
+   metamode=${metamode//\{, /\{}
+   nvidia-settings -a CurrentMetaMode="$metamode" > /dev/null
+fi
