@@ -123,7 +123,7 @@ function setup_system {
    "
 
    # system configuration
-   as_chroot setup_system_config "$username" intel
+   as_chroot setup_system_config "$username"
 
    # packages
    as_chroot setup_packages "$username"
@@ -174,6 +174,10 @@ function setup_system_config {
    part_root_uuid="${BASH_REMATCH[1]}-${BASH_REMATCH[2]}-${BASH_REMATCH[3]}-${BASH_REMATCH[4]}-${BASH_REMATCH[5]}"
    local swapfile_uuid="$(findmnt -no UUID -T /swapfile)"
    local swapfile_offset="$(filefrag -v /swapfile | awk '$1=="0:" {print substr($4, 1, length($4)-2)}')"
+
+   if [[ -z $graphics ]] && nvidia_gpu_exists; then
+      graphics="nvidia"
+   fi
 
    sed -i "s/#ParallelDownloads/ParallelDownloads/" /etc/pacman.conf
 
@@ -302,10 +306,12 @@ function setup_packages {
    arch_packages+=("mesa")
    arch_packages+=("mesa-utils")
    arch_packages+=("intel-media-driver")
-   arch_packages+=("nvidia")
-   arch_packages+=("nvidia-prime")
-   arch_packages+=("nvidia-utils")
-   arch_packages+=("nvidia-settings")
+   if nvidia_gpu_exists; then
+      arch_packages+=("nvidia")
+      arch_packages+=("nvidia-prime")
+      arch_packages+=("nvidia-utils")
+      arch_packages+=("nvidia-settings")
+   fi
    arch_packages+=("vulkan-icd-loader")
    arch_packages+=("vulkan-intel")
    user_packages+=("xsct")
@@ -491,6 +497,12 @@ function as_chroot {
    arch-chroot /mnt /bin/bash -c "$(wrap_f "$@")"
 }
 
+function nvidia_gpu_exists {
+   if ! lspci | grep -q '.* VGA .* NVIDIA .*'; then
+      return 1
+   fi
+}
+
 function github_repo_exists {
    local path=$1
    local token=$2
@@ -531,8 +543,6 @@ function github_api_url {
 
 if [[ $2 == "--no-gpu" ]]; then
    graphics="intel"
-else
-   graphics="nvidia"
 fi
 
 case "$1" in
