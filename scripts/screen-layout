@@ -122,7 +122,7 @@ function join_displays {
    if [[ $dry_run == "true" ]]; then
       echo "$command"
    else
-      eval $command || eval $command
+      eval $command > /dev/null || eval $command > /dev/null
    fi
 }
 
@@ -183,7 +183,7 @@ function mirror_displays {
    if [[ $dry_run == "true" ]]; then
       echo "$command"
    else
-      eval $command || eval $command
+      eval $command > /dev/null || eval $command > /dev/null
    fi
 }
 
