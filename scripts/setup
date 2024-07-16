@@ -403,6 +403,10 @@ function setup_packages {
    arch_packages+=("iptables-nft")
 
    # fonts
+   arch_packages+=("adobe-source-sans-fonts")
+   arch_packages+=("adobe-source-serif-fonts")
+   arch_packages+=("adobe-source-code-pro-fonts")
+   arch_packages+=("adobe-source-han-serif-otc-fonts")
    arch_packages+=("ttf-jetbrains-mono")
    arch_packages+=("ttf-nerd-fonts-symbols-mono")
 
