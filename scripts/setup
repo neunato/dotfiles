@@ -382,6 +382,12 @@ function setup_packages {
    arch_packages+=("docker-compose")
    arch_packages+=("aws-cli")
 
+   # gtk
+   arch_packages+=("gtk3")
+   arch_packages+=("gtk4")
+   arch_packages+=("xdg-desktop-portal")
+   arch_packages+=("xdg-desktop-portal-gtk")
+
    # gui applications
    arch_packages+=("kitty")
    arch_packages+=("zed")

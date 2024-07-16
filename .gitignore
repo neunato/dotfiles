@@ -19,3 +19,5 @@ pictures/*
 !.config/i3
 !.config/i3blocks
 !.config/paru
+!.config/gtk-3.0
+!.config/gtk-4.0
