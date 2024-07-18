@@ -358,6 +358,7 @@ function setup_packages {
    arch_packages+=("dunst")
    arch_packages+=("libnotify")
    arch_packages+=("rofi")
+   user_packages+=("svkbd-git")
    arch_packages+=("maim")
    arch_packages+=("ffmpeg")
    arch_packages+=("id3v2")

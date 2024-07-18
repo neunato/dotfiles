@@ -46,6 +46,12 @@ icon_75=
 icon_100=
 icon_charging=
 
+[keyboard]
+command=bash i3blocks-keyboard
+interval=once
+icon=""
+icon_active="󰌌"
+
 [power]
 full_text="<span rise='-15pt' size='small'> 󰐥 </span>"
 command=bash i3blocks-power

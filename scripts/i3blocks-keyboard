@@ -1,0 +1,22 @@
+#!/bin/bash
+
+if pgrep svkbd-hr > /dev/null; then
+   connected=true
+else
+   connected=false
+fi
+
+if [[ $button -eq 1 && $connected == false ]]; then
+   connected=true
+   i3-msg exec 'svkbd-hr -g 1275x425+-6-47 -fn "JetBrains Mono:bold:size=14"' > /dev/null
+elif [[ $button -eq 1 && $connected == true ]]; then
+   connected=false
+   i3-msg [class="^svkbd$"] kill > /dev/null   # to properly restore focus
+   pkill svkbd-hr                              # to actually kill
+fi
+
+if [[ $connected == true ]]; then
+   echo "$icon_active"
+else
+   echo "$icon"
+fi
