@@ -188,6 +188,7 @@ bindsym Next                    nop
 bindsym $mod+Escape             $exec systemctl suspend
 bindsym $mod+Shift+r            restart
 
+$exec setxkbmap hr                          # some apps are not picking up /etc/X11/xorg.conf for some reason
 $exec dunst
 $exec picom --config ~/.config/picom/picom.conf
 $exec xss-lock --transfer-sleep-lock -- slock

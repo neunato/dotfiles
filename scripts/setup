@@ -197,7 +197,6 @@ function setup_system_config {
    echo 'LC_TIME=hr_HR.utf8'      | tee --append /etc/locale.conf > /dev/null
 
    echo 'KEYMAP=croat'           | tee          /etc/vconsole.conf > /dev/null
-   echo 'XKBLAYOUT=hr'           | tee --append /etc/vconsole.conf > /dev/null
    echo 'FONT=latarcyrheb-sun32' | tee --append /etc/vconsole.conf > /dev/null
 
    echo 'Section "InputClass"'                     | tee          /etc/X11/xorg.conf > /dev/null
