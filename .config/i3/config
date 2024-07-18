@@ -47,7 +47,8 @@ gaps inner 10
 gaps outer -10
 
 for_window [all] title_format "<span weight='light'><i>%title</i></span>"
-for_window [all] floating enable, resize set 50ppt 50ppt, move position center
+for_window [all] floating enable, sticky enable
+for_window [window_type="normal"] resize set 50ppt 50ppt, move position center
 for_window [class="^kitty$"            workspace="^1" window_type="normal"] floating disable
 for_window [class="^Sublime_text$"     workspace="^2" window_type="normal"] floating disable
 for_window [class="^Sublime_merge$"    workspace="^3" window_type="normal"] floating disable
@@ -186,7 +187,8 @@ bindsym Shift+Print             $exec screen-capture --record; $exec i3blocks-re
 bindsym Prior                   nop
 bindsym Next                    nop
 bindsym $mod+Escape             $exec systemctl suspend
-bindsym $mod+Shift+r            restart
+bindsym $mod+Shift+r            reload
+bindsym $mod+Control+Shift+r    restart
 
 $exec setxkbmap hr                          # some apps are not picking up /etc/X11/xorg.conf for some reason
 $exec dunst
