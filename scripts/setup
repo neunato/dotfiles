@@ -334,7 +334,6 @@ function setup_packages {
    arch_packages+=("xorg-xrandr")
    arch_packages+=("xorg-xprop")
    arch_packages+=("xorg-xev")
-   user_packages+=("xlogin")
    arch_packages+=("xclip")
    arch_packages+=("xdotool")
    arch_packages+=("picom")
@@ -440,7 +439,6 @@ function setup_packages {
 
    systemctl --user --machine="$username@" enable $start pipewire-pulse.service
    systemctl enable $start NetworkManager
-   systemctl enable xlogin@"$username"
    systemctl enable $start acpid.service
    systemctl enable $start tlp.service
    systemctl mask systemd-rfkill.service  # tlp
