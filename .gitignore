@@ -2,6 +2,7 @@
 !.gitignore
 !.gitconfig
 !.xinitrc
+!.xserverrc
 !.profile
 !.bashrc
 !.bash_profile
