@@ -2,6 +2,8 @@
 
 if [[ $button -eq 1 ]]; then
    night-light
+elif [[ $button -eq 3 ]]; then
+   brightness-sync-external
 elif [[ $button -eq 4 ]]; then
    brightness up
 elif [[ $button -eq 5 ]]; then
