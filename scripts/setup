@@ -188,14 +188,15 @@ function setup_system_config {
    hwclock --systohc
    systemctl enable systemd-timesyncd.service
 
-   sed -i 's/#en_GB/en_GB/g' /etc/locale.gen
-   sed -i 's/#hr_HR/hr_HR/g' /etc/locale.gen
+   sed -i 's/^#en_GB\.UTF-8/en_GB.UTF-8/'            /etc/locale.gen
+   sed -i 's/^#en_US\.UTF-8/en_US.UTF-8/'            /etc/locale.gen
+   sed -i 's/^d_t_fmt .*/d_t_fmt "%d-%m-%Y %T"/'   /usr/share/i18n/locales/en_GB
+   sed -i 's/^d_t_fmt .*/d_t_fmt "%d-%m-%Y %T"/'   /usr/share/i18n/locales/en_US
+   sed -i 's/^date_fmt .*/date_fmt "%d-%m-%Y %T"/' /usr/share/i18n/locales/en_GB
+   sed -i 's/^date_fmt .*/date_fmt "%d-%m-%Y %T"/' /usr/share/i18n/locales/en_US
    locale-gen
 
-   echo 'LANG=en_GB.utf8'         | tee          /etc/locale.conf > /dev/null
-   echo 'LANGUAGE=en_GB:en_US:en' | tee --append /etc/locale.conf > /dev/null
-   echo 'LC_TIME=hr_HR.utf8'      | tee --append /etc/locale.conf > /dev/null
-
+   echo 'LANG=en_GB.UTF-8'       | tee          /etc/locale.conf   > /dev/null
    echo 'KEYMAP=croat'           | tee          /etc/vconsole.conf > /dev/null
    echo 'FONT=latarcyrheb-sun32' | tee --append /etc/vconsole.conf > /dev/null
 
