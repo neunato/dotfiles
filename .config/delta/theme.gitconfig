@@ -1,0 +1,41 @@
+[delta]
+   dark = true
+   line-numbers = true
+   side-by-side = true
+   keep-plus-minus-markers = false
+   syntax-theme = Nord
+   file-added-label = " [+]"
+   file-copied-label = " [=]"
+   file-modified-label = " [*]"
+   file-removed-label = " [-]"
+   file-renamed-label = " [⟶]"
+   file-style = "#686f7e" bold italic
+   file-decoration-style = "#434C5E" ol
+   hunk-header-style = omit
+   line-numbers-left-format = " {nm:>3} │"
+   line-numbers-left-style = 0
+   line-numbers-right-format = " {np:>3} │"
+   line-numbers-right-style = 0
+   line-numbers-minus-style = "#686f7e" italic
+   line-numbers-plus-style = "#686f7e" italic
+   line-numbers-zero-style = "#434C5E" italic
+   minus-style = syntax "#71261f"
+   minus-emph-style = syntax "#71261f"
+   minus-non-emph-style = syntax "#181818"
+   plus-style = syntax "#0c5717"
+   plus-emph-style = syntax #0f6d1d
+   plus-non-emph-style = syntax "#181818"
+   zero-style = syntax
+   blame-code-style = syntax
+   blame-format = "{author:<18} ({commit:>9}) {timestamp:^16}"
+   blame-palette = "#2E3440" "#3B4252" "#434C5E" "#4C566A"
+   merge-conflict-begin-symbol = ""
+   merge-conflict-end-symbol = ""
+   merge-conflict-ours-diff-header-style = "#434C5E"
+   merge-conflict-ours-diff-header-decoration-style = "#2E3440" ul ol
+   merge-conflict-theirs-diff-header-style = "#434C5E"
+   merge-conflict-theirs-diff-header-decoration-style = "#2E3440" ul ol
+   map-styles = bold purple => syntax "#181818", \
+                bold blue => syntax "#181818", \
+                bold cyan => syntax "#181818", \
+                bold yellow => syntax "#181818"

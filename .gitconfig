@@ -1,5 +1,48 @@
 [user]
    email = wesleymustdie@gmail.com
    name = Jan Ivica
+   signingKey = ~/.ssh/github.pub
+[gpg]
+   format = ssh
+[url "git@github.com:"]
+   insteadOf = "https://github.com/"
 [core]
+   pager = DELTA_PAGER='less -RF -+X' delta --diff-so-fancy --paging=always
    editor = subl -n -w
+[interactive]
+   diffFilter = delta --color-only
+[include]
+   path = ~/.config/delta/theme.gitconfig
+[status]
+   showUntrackedFiles = all
+[log]
+   date = format:%c
+   abbrevCommit = true
+[diff]
+   algorithm = histogram
+   renames = copy
+   colorMoved = default
+[init]
+   defaultBranch = master
+[clone]
+   defaultRemoteName = g
+[branch]
+   sort = -committerdate
+[tag]
+   sort = -version:refname
+[rerere]
+   enabled = true
+[merge]
+   ff = only
+   conflictStyle = diff3
+[rebase]
+   autoStash = true
+   updateRefs = true
+   missingCommitsCheck = error
+[fetch]
+   prune = true
+   pruneTags = true
+[push]
+   default = upstream
+   autoSetupRemote = true
+   followTags = true

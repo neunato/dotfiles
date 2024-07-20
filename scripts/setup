@@ -371,6 +371,7 @@ function setup_packages {
 
    # developer tooling
    arch_packages+=("git")
+   arch_packages+=("git-delta")
    arch_packages+=("python")
    arch_packages+=("python-pip")
    arch_packages+=("nodejs")
