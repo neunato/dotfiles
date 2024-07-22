@@ -23,3 +23,6 @@ pictures/*
 !.config/gtk-3.0
 !.config/gtk-4.0
 !.config/delta
+!.config/zed
+.config/zed/*
+!.config/zed/settings.json
