@@ -398,7 +398,7 @@ function setup_packages {
    arch_packages+=("sublime-merge")
    arch_packages+=("feh")
    arch_packages+=("mpv")
-   arch_packages+=("firefox")
+   arch_packages+=("firefox-developer-edition")
    arch_packages+=("chromium")
    arch_packages+=("calibre")
    arch_packages+=("transmission-gtk")
