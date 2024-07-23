@@ -55,7 +55,7 @@ for_window [class="^Sublime_merge$"    workspace="^3" window_type="normal"] floa
 for_window [class="^firefox$"          workspace="^4" window_type="normal"] floating disable
 for_window [class="^Chromium$"         workspace="^5" window_type="normal"] floating disable
 for_window [class="^thunderbird$"      workspace="^6" window_type="normal"] floating disable
-for_window [class="Nautilus$"          workspace="^7" window_type="normal"] floating disable
+for_window [class="^kitty$"            workspace="^7" window_type="normal"] floating disable
 for_window [class="^mpv$"              workspace="^8"                     ] floating disable
 for_window [class="^transmission-gtk$" workspace="^9" window_type="normal"] floating disable
 
@@ -145,7 +145,7 @@ bindsym $mod+Control+d          $exec smerge --new-window
 bindsym $mod+Control+f          $exec firefox
 bindsym $mod+Control+c          $exec chromium
 bindsym $mod+Control+g          $exec thunderbird
-bindsym $mod+Control+y          $exec nautilus --new-window
+bindsym $mod+Control+y          $exec kitty yazi
 bindsym $mod+Control+v          $exec mpv --force-window --idle --keep-open
 bindsym $mod+Control+t          $exec transmission-gtk
 bindsym $mod+a                  $exec i3-focus-or-open --workspace '$ws_terminal' --class 'kitty' 'kitty'
@@ -154,7 +154,7 @@ bindsym $mod+d                  $exec i3-focus-or-open --workspace '$ws_merge'  
 bindsym $mod+f                  $exec i3-focus-or-open --workspace '$ws_firefox'  --class 'firefox' 'firefox'
 bindsym $mod+c                  $exec i3-focus-or-open --workspace '$ws_chrome'   --class 'Chromium' 'chromium'
 bindsym $mod+g                  $exec i3-focus-or-open --workspace '$ws_email'    --class 'thunderbird' 'thunderbird'
-bindsym $mod+y                  $exec i3-focus-or-open --workspace '$ws_files'    --class 'nautilus' 'nautilus'
+bindsym $mod+y                  $exec i3-focus-or-open --workspace '$ws_files'    --class 'kitty' 'kitty yazi'
 bindsym $mod+v                  $exec i3-focus-or-open --workspace '$ws_video'    --class 'mpv' 'mpv --force-window --idle'
 bindsym $mod+t                  $exec i3-focus-or-open --workspace '$ws_torrent'  --class 'transmission-gtk' 'transmission-gtk'
 bindsym $mod+Shift+a            move container to workspace $ws_terminal; workspace $ws_terminal
