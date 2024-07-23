@@ -8,7 +8,7 @@ fi
 
 if [[ $button -eq 1 && $connected == false ]]; then
    connected=true
-   i3-msg exec 'svkbd-hr -g 1275x425+-6-47 -fn "JetBrains Mono:bold:size=14"' > /dev/null
+   i3-msg exec 'svkbd-hr -g 1275x425+-6-47 -fn "Source Serif 3:bold:size=18"' > /dev/null
 elif [[ $button -eq 1 && $connected == true ]]; then
    connected=false
    i3-msg [class="^svkbd$"] kill > /dev/null   # to properly restore focus

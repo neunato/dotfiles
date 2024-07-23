@@ -9,7 +9,7 @@ index 24fdffb..0d45254 100644
 -source=('git://git.suckless.org/svkbd')
 -sha256sums=('SKIP')
 +source=('git://git.suckless.org/svkbd' 'layout.hr.h')
-+sha256sums=('SKIP' '3228b4aa8e58c2bfbf34c186d036bbd7bf94ea35dddd835867f72cdcc9a066a3')
++sha256sums=('SKIP' 'SKIP')
  
  pkgver() {
  	cd svkbd/
