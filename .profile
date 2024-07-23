@@ -18,4 +18,6 @@ else
 	EDITOR="/usr/bin/nano"
 fi
 
+GDK_DEBUG=portals
+
 set +a

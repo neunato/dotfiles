@@ -358,6 +358,8 @@ function setup_packages {
    # utilities
    arch_packages+=("xdg-utils")
    arch_packages+=("perl-file-mimeinfo")
+   arch_packages+=("xdg-desktop-portal")
+   user_packages+=("xdg-desktop-portal-termfilechooser-git")
    arch_packages+=("dunst")
    arch_packages+=("libnotify")
    arch_packages+=("rofi")
@@ -390,8 +392,6 @@ function setup_packages {
    # gtk
    arch_packages+=("gtk3")
    arch_packages+=("gtk4")
-   arch_packages+=("xdg-desktop-portal")
-   arch_packages+=("xdg-desktop-portal-gtk")
 
    # gui applications
    arch_packages+=("kitty")
