@@ -363,6 +363,7 @@ function setup_packages {
    arch_packages+=("xdg-utils")
    arch_packages+=("perl-file-mimeinfo")
    arch_packages+=("xdg-desktop-portal")
+   arch_packages+=("xdg-desktop-portal-gtk")
    user_packages+=("xdg-desktop-portal-termfilechooser-git")
    arch_packages+=("dunst")
    arch_packages+=("libnotify")
