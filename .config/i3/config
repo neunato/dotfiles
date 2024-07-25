@@ -24,13 +24,13 @@ set $color_white3 #ffffff42
 set $color_black  #000000
 set $color_black2 #222222
 set $color_black3 #0d0d0d
-set $color_gray   #4e4e4e
+set $color_gray   #434c5e
 set $color_red    #ff515d
 
 set $exec exec --no-startup-id
 set $exec_always exec_always --no-startup-id
 
-font pango:JetBrains Mono 12
+font pango:JetBrains Mono, Symbols Nerd Font Mono 12
 floating_modifier $mod
 floating_minimum_size 400x200
 title_align center
@@ -86,7 +86,7 @@ bar {
    tray_output none
    strip_workspace_numbers yes
    workspace_min_width 70
-   padding 5 0 5 5
+   padding 5 0 5 0
 
    colors {
       background         $color_black
