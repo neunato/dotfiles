@@ -197,7 +197,7 @@ function setup_system_config {
    locale-gen
 
    as_user $username mkdir -p "/home/$username/.config/fontconfig/conf.d"
-   as_user $username ln -s /usr/share/fontconfig/conf.avail/50-user.conf "/home/$username/.config/fontconfig/conf.d"
+   as_user $username ln -sf /usr/share/fontconfig/conf.avail/50-user.conf "/home/$username/.config/fontconfig/conf.d"
    as_user $username fc-cache
 
    echo 'LANG=en_GB.UTF-8'       | tee          /etc/locale.conf   > /dev/null
