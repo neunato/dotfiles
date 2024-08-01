@@ -184,7 +184,8 @@ bindsym XF86AudioLowerVolume    $exec volume down && i3blocks-refresh sound
 bindsym XF86AudioMute           $exec volume mute && i3blocks-refresh sound
 bindsym Print                   $exec screen-capture
 bindsym Control+Print           $exec screen-capture --selection
-bindsym Shift+Print             $exec screen-capture --record; $exec i3blocks-refresh capture
+bindsym Control+Shift+Print     $exec screen-capture --selection --record; $exec i3blocks-refresh capture
+bindsym Shift+Print             $exec screen-capture             --record; $exec i3blocks-refresh capture
 bindsym Prior                   nop
 bindsym Next                    nop
 bindsym $mod+Escape             $exec systemctl suspend

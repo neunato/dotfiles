@@ -14,12 +14,7 @@ while [[ $# -gt 0 ]]; do
    esac
 done
 
-if [[ $record == "true" && $selection == "true" ]]; then
-   echo "--record and --selection are exclusive" >&2
-   exit 1
-fi
-
-if [[ $is_recording == "true" && ($record == "true" || $selection == "true") ]]; then
+if [[ $is_recording == true && ($record == true || $selection == true) ]]; then
    echo "--is-recording can't be combined with other options" >&2
    exit 1
 fi
@@ -31,7 +26,7 @@ pidfile="$XDG_RUNTIME_DIR/screen-capture.pid"
 filename="$(date +'%F %T:%N' | cut -c 1-25)"
 
 # check if screen recording is on
-if [[ $is_recording == "true" ]]; then
+if [[ $is_recording == true ]]; then
    if [[ -s $pidfile && -d /proc/$(cat $pidfile) ]]; then
       exit 0
    else
@@ -39,26 +34,22 @@ if [[ $is_recording == "true" ]]; then
    fi
 fi
 
-# take screenshot of selection
-if [[ $selection == "true" ]]; then
+# take screenshot
+if [[ $record != true ]]; then
+   path="$XDG_PICTURES_DIR/screenshots/$filename.png"
    mkdir -p "$XDG_PICTURES_DIR/screenshots"
-   exec maim -s | tee "$XDG_PICTURES_DIR/screenshots/$filename.png" | xclip -selection clipboard -t image/png
-   exit
-fi
-
-# take screenshot of entire window
-if [[ $record != "true" ]]; then
-   mkdir -p "$XDG_PICTURES_DIR/screenshots"
-   exec maim | tee "$XDG_PICTURES_DIR/screenshots/$filename.png" | xclip -selection clipboard -t image/png
+   exec maim -u $([[ $selection == true ]] && echo "-s") | tee "$path" | xclip -selection clipboard -t image/png
    exit
 fi
 
 # start/stop recording
 if ! [[ -s $pidfile && -d /proc/$(cat $pidfile) ]]; then
-   RESOLUTION=$(xrandr -q --current | grep '*' | awk '{print$1}')
-   echo "$$" > "$pidfile"
+   resolution=$(xrandr -q --current | grep '*' | awk '{print $1}')
+   arg=""
+   path="$XDG_VIDEOS_DIR/screencasts/$filename.mp4"
    mkdir -p "$XDG_VIDEOS_DIR/screencasts"
-   exec ffmpeg -f x11grab -video_size "$RESOLUTION" -framerate 25 -i "$DISPLAY" -f alsa -i default -c:v libx264 -preset ultrafast -c:a aac -loglevel quiet "$XDG_VIDEOS_DIR/screencasts/$filename.mkv"
+   echo "$$" > "$pidfile"
+   exec ffmpeg -f x11grab $([[ $selection == true ]] && echo "-select_region 1 -show_region 1 -region_border 2") -video_size "$resolution" -framerate 25 -i "$DISPLAY" -f alsa -i default -c:v libx264 -preset ultrafast -c:a aac -loglevel quiet "$path"
 else
    kill "$(cat $pidfile)"
    rm "$pidfile"
