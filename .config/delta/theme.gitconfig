@@ -23,7 +23,7 @@
    minus-emph-style = syntax "#71261f"
    minus-non-emph-style = syntax "#181818"
    plus-style = syntax "#0c5717"
-   plus-emph-style = syntax #0f6d1d
+   plus-emph-style = syntax "#0f6d1d"
    plus-non-emph-style = syntax "#181818"
    zero-style = syntax
    blame-code-style = syntax
