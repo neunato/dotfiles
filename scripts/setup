@@ -348,7 +348,14 @@ function setup_packages {
    arch_packages+=("xss-lock")
    user_packages+=("slock-git")
 
-   # cli
+   # default applications
+   arch_packages+=("perl-file-mimeinfo")
+   arch_packages+=("xdg-utils")
+   arch_packages+=("xdg-desktop-portal")
+   arch_packages+=("xdg-desktop-portal-gtk")
+   user_packages+=("xdg-desktop-portal-termfilechooser-git")
+
+   # utilities
    arch_packages+=("sudo")
    arch_packages+=("nano")
    arch_packages+=("bat")
@@ -356,15 +363,6 @@ function setup_packages {
    arch_packages+=("bc")
    arch_packages+=("wgetpaste")
    arch_packages+=("moreutils")
-   arch_packages+=("man-db")
-   arch_packages+=("man-pages")
-
-   # utilities
-   arch_packages+=("xdg-utils")
-   arch_packages+=("perl-file-mimeinfo")
-   arch_packages+=("xdg-desktop-portal")
-   arch_packages+=("xdg-desktop-portal-gtk")
-   user_packages+=("xdg-desktop-portal-termfilechooser-git")
    arch_packages+=("dunst")
    arch_packages+=("libnotify")
    arch_packages+=("rofi")
@@ -374,6 +372,8 @@ function setup_packages {
    arch_packages+=("ffmpeg")
    arch_packages+=("id3v2")
    user_packages+=("glances")
+   arch_packages+=("man-db")
+   arch_packages+=("man-pages")
 
    # ssh, vpn
    arch_packages+=("openssh")
@@ -398,7 +398,7 @@ function setup_packages {
    arch_packages+=("gtk3")
    arch_packages+=("gtk4")
 
-   # gui applications
+   # window applications
    arch_packages+=("kitty")
    arch_packages+=("zed")
    arch_packages+=("sublime-text")
