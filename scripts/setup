@@ -359,6 +359,7 @@ function setup_packages {
    arch_packages+=("sudo")
    arch_packages+=("nano")
    arch_packages+=("bat")
+   arch_packages+=("zip")
    arch_packages+=("jq")
    arch_packages+=("bc")
    arch_packages+=("wgetpaste")
@@ -370,6 +371,7 @@ function setup_packages {
    user_packages+=("svkbd-git")
    arch_packages+=("maim")
    arch_packages+=("ffmpeg")
+   arch_packages+=("imagemagick")
    arch_packages+=("id3v2")
    user_packages+=("glances")
    arch_packages+=("man-db")
@@ -386,6 +388,7 @@ function setup_packages {
    arch_packages+=("git-delta")
    arch_packages+=("python")
    arch_packages+=("python-pip")
+   arch_packages+=("deno")
    arch_packages+=("nodejs")
    arch_packages+=("npm")
    arch_packages+=("rust")
@@ -393,6 +396,7 @@ function setup_packages {
    arch_packages+=("docker")
    arch_packages+=("docker-compose")
    arch_packages+=("aws-cli")
+   arch_packages+=("ollama")
 
    # gtk
    arch_packages+=("gtk3")
@@ -456,6 +460,7 @@ function setup_packages {
    systemctl disable systemd-resolved 2> /dev/null
    systemctl disable docker.service 2> /dev/null
    systemctl disable libvirtd.service 2> /dev/null
+   systemctl disable ollama 2> /dev/null
 
    sed -i 's/#unix_sock_group/unix_sock_group/g'                /etc/libvirt/libvirtd.conf
    sed -i 's/#unix_sock_rw_perms/unix_sock_rw_perms/g'          /etc/libvirt/libvirtd.conf
