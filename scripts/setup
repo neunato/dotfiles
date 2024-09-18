@@ -139,6 +139,7 @@ function setup_system {
       git config --global safe.directory '$home'
       git config --global init.defaultBranch master
       git init
+      git config core.hooksPath .hooks
       git remote add g $(github_repo_url "$dotfiles_repo")
       git fetch g
       git reset --hard g/master
