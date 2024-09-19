@@ -22,6 +22,7 @@ PROMPT_COMMAND='
    unset command
 '
 alias bash='echo && bash'
+alias wget="wget --hsts-file='$XDG_CACHE_HOME/wget-hsts'"
 
 # start x
 if [[ -z "$DISPLAY" && "$XDG_VTNR" -eq 1 ]]; then
