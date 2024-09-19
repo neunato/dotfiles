@@ -189,14 +189,15 @@ function setup_system_config {
    hwclock --systohc
    systemctl enable systemd-timesyncd.service
 
-   sed -i 's/^#en_GB\.UTF-8/en_GB.UTF-8/'            /etc/locale.gen
-   sed -i 's/^#en_US\.UTF-8/en_US.UTF-8/'            /etc/locale.gen
+   sed -i 's/^#en_GB\.UTF-8/en_GB.UTF-8/'          /etc/locale.gen
+   sed -i 's/^#en_US\.UTF-8/en_US.UTF-8/'          /etc/locale.gen
    sed -i 's/^d_t_fmt .*/d_t_fmt "%d-%m-%Y %T"/'   /usr/share/i18n/locales/en_GB
    sed -i 's/^d_t_fmt .*/d_t_fmt "%d-%m-%Y %T"/'   /usr/share/i18n/locales/en_US
    sed -i 's/^date_fmt .*/date_fmt "%d-%m-%Y %T"/' /usr/share/i18n/locales/en_GB
    sed -i 's/^date_fmt .*/date_fmt "%d-%m-%Y %T"/' /usr/share/i18n/locales/en_US
    locale-gen
 
+   pacman -S --needed --noconfirm fontconfig
    as_user $username mkdir -p "/home/$username/.config/fontconfig/conf.d"
    as_user $username ln -sf /usr/share/fontconfig/conf.avail/50-user.conf "/home/$username/.config/fontconfig/conf.d"
    as_user $username fc-cache
