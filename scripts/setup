@@ -506,7 +506,9 @@ function extract_tarball {
    local url="$1"
    local dir="$2"
    mkdir -p "$dir"
-   rm -rf "$dir/"*
+   if [[ -n $dir ]]; then
+      rm -rf "$dir/"*
+   fi
    curl -s -L "$url" | tar xz -C "$dir" --strip-components 1
 }
 
