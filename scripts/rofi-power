@@ -9,35 +9,41 @@ echo -e "\0prompt\x1fpower"
 echo -e "\0no-custom\x1ftrue"
 echo -e "\0keep-selection\x1ffalse"
 
-schedule=" Shutdown timer"
+shutdown_timer=" Shutdown Timer"
 shutdown=" Shutdown"
-restart=" Restart"
-logout=" Logout"
-suspend=" Suspend"
+soft_restart=" Soft Restart"
+hard_restart=" Hard Restart"
+sleep="󰒲 Sleep"
+lock=" Lock"
 
 if [[ -z $1 ]]; then
-   echo "$schedule"
+   echo "$shutdown_timer"
    echo "$shutdown"
-   echo "$restart"
-   echo "$logout"
-   echo "$suspend"
+   echo "$soft_restart"
+   echo "$hard_restart"
+   echo "$sleep"
+   echo "$lock"
    exit 1
 fi
 
 case "$1" in
-   $suspend)
+   $lock)
+      coproc slock
+   ;;
+   $sleep)
+      coproc slock
       systemctl suspend
    ;;
-   $logout)
-      systemctl soft-reboot
-   ;;
-   $restart)
+   $hard_restart)
       systemctl reboot
+   ;;
+   $soft_restart)
+      systemctl soft-reboot
    ;;
    $shutdown)
       systemctl poweroff
    ;;
-   $schedule)
+   $shutdown_timer)
       echo "in 60 minutes"
       echo "in 90 minutes"
       echo "in 120 minutes"
