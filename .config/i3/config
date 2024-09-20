@@ -186,14 +186,13 @@ bindsym Print                   $exec screen-capture
 bindsym Control+Print           $exec screen-capture --selection
 bindsym Control+Shift+Print     $exec screen-capture --selection --record; $exec i3blocks-refresh capture
 bindsym Shift+Print             $exec screen-capture             --record; $exec i3blocks-refresh capture
-bindsym $mod+Escape             $exec systemctl suspend
+bindsym $mod+Escape             $exec slock
 bindsym $mod+Shift+r            reload
 bindsym $mod+Control+Shift+r    restart
 
 $exec setxkbmap hr                          # some apps are not picking up /etc/X11/xorg.conf for some reason
 $exec dunst
 $exec picom --config ~/.config/picom/picom.conf
-$exec xss-lock --transfer-sleep-lock -- slock
 $exec idle-run --timer 900 slock --timer 1800 "systemctl suspend"
 $exec_always i3-switch-windows daemon
 $exec i3-msg 'workspace $ws_terminal'

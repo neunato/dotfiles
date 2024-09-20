@@ -347,7 +347,6 @@ function setup_packages {
    arch_packages+=("picom")
    user_packages+=("i3-git")
    arch_packages+=("i3blocks")
-   arch_packages+=("xss-lock")
    user_packages+=("slock-git")
 
    # default applications
