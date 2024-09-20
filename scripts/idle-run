@@ -1,0 +1,53 @@
+#!/bin/bash
+
+# idle-run [--timer <seconds> <command> [--timer <seconds> <command>...]]
+
+timers=()
+commands=()
+done=()
+shortest=100000
+
+while [[ $# -gt 0 ]]; do
+   if [[ $1 == "--timer" ]]; then
+      timers+=($((${2} * 1000)))
+      commands+=("$3")
+      done+=(0)
+      if [[ $2 -lt $shortest ]]; then
+         shortest=$2
+      fi
+      shift; shift
+   fi
+   shift
+done
+
+if [[ $shortest -lt 10 ]]; then
+   shortest=10
+fi
+
+interval=$(echo "$shortest / 100" | bc -l)
+
+while :; do
+   time=$(xprintidle)
+   if grep -qr "RUNNING" /proc/asound; then
+      offset=$time
+   elif [[ $offset -gt $time ]]; then
+      offset=0
+   fi
+   time=$((time - offset))
+
+   for i in "${!timers[@]}"; do
+      duration=${timers[$i]}
+      if [[ $time -ge $duration ]]; then
+         command=${commands[$i]}
+         is_done=${done[$i]}
+         if [[ $is_done == 0 ]]; then
+            eval "$command &"
+         fi
+         done[$i]=1
+      else
+         done[$i]=0
+      fi
+   done
+
+   sleep $interval
+done
