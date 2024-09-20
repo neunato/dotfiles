@@ -242,12 +242,8 @@ function setup_system_config {
    echo '   ModulePath "/usr/lib/xorg/modules"'    | tee --append /etc/X11/xorg.conf > /dev/null
    echo 'EndSection'                               | tee --append /etc/X11/xorg.conf > /dev/null
    echo ''                                         | tee --append /etc/X11/xorg.conf > /dev/null
-
-   echo 'Section "ServerFlags"'                    | tee --append /etc/X11/xorg.conf > /dev/null
-   echo '   Option "BlankTime" "0"'                | tee --append /etc/X11/xorg.conf > /dev/null
-   echo '   Option "StandbyTime" "0"'              | tee --append /etc/X11/xorg.conf > /dev/null
-   echo '   Option "SuspendTime" "30"'             | tee --append /etc/X11/xorg.conf > /dev/null
-   echo '   Option "OffTime" "0"'                  | tee --append /etc/X11/xorg.conf > /dev/null
+   echo 'Section "Extensions"'                     | tee --append /etc/X11/xorg.conf > /dev/null
+   echo '   Option "DPMS" "false"'                 | tee --append /etc/X11/xorg.conf > /dev/null
    echo 'EndSection'                               | tee --append /etc/X11/xorg.conf > /dev/null
 
    # boot process
@@ -279,6 +275,9 @@ function setup_system_config {
    echo '[Service]'                                                                                           | tee          /etc/systemd/system/getty@tty1.service.d/skip-prompt.conf > /dev/null
    echo 'ExecStart='                                                                                          | tee --append /etc/systemd/system/getty@tty1.service.d/skip-prompt.conf > /dev/null
    echo "ExecStart=-/bin/agetty --skip-login --nonewline --noissue --autologin $username --noclear %I \$TERM" | tee --append /etc/systemd/system/getty@tty1.service.d/skip-prompt.conf > /dev/null
+
+   echo '[Login]'                | tee          /etc/systemd/logind.conf > /dev/null
+   echo 'HandleLidSwitch=ignore' | tee --append /etc/systemd/logind.conf > /dev/null
 
    # udev rules
    cat /dev/null > /etc/udev/rules.d/no-nvidia.rules
