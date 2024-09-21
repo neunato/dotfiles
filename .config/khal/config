@@ -1,0 +1,22 @@
+[locale]
+timeformat = %H:%M
+dateformat = %d.%m.%Y.
+longdateformat = %d.%m.%Y.
+datetimeformat = %d.%m.%Y. %H:%M
+longdatetimeformat = %d.%m.%Y. %H:%M
+
+[default]
+default_calendar = private
+highlight_event_days = true
+timedelta = 1d
+
+[view]
+dynamic_days = false
+event_view_always_visible = true
+frame = color
+
+[calendars]
+
+[[private]]
+path = /home/neueu/.local/share/khal/calendars/private
+color = light blue

@@ -1,0 +1,7 @@
+#!/bin/bash
+
+if [[ $button -eq 1 ]]; then
+   kitty khal interactive
+fi
+
+date +"%d.%m.%Y. %H:%M "

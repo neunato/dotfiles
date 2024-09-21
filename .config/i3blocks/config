@@ -57,5 +57,5 @@ full_text="<span size='small'></span>"
 command=bash i3blocks-power
 
 [time]
-command=date +"%d.%m.%Y. %H:%M "
+command=bash i3blocks-time
 interval=60

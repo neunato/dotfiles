@@ -369,6 +369,7 @@ function setup_packages {
    arch_packages+=("libnotify")
    arch_packages+=("rofi")
    arch_packages+=("yazi")
+   arch_packages+=("khal")
    user_packages+=("svkbd-git")
    arch_packages+=("maim")
    arch_packages+=("ffmpeg")
