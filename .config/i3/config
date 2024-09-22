@@ -172,7 +172,7 @@ bindsym $mod+Shift+2            move container to workspace $ws_other_2;  worksp
 bindsym $mod+Shift+3            move container to workspace $ws_other_3;  workspace $ws_other_3
 bindsym $mod+Shift+4            move container to workspace $ws_other_4;  workspace $ws_other_4
 
-bindsym $mod+grave              $exec rofi -show drun -modes drun -show-icons -no-custom; $exec xdotool keyup --clearmodifiers 49
+bindsym $mod+grave              $exec rofi -show combi -combi-modes "drun#run#ssh" -show-icons; $exec xdotool keyup --clearmodifiers 49
 bindsym --release Super_L       $exec i3-switch-windows touch
 bindsym --release Shift+Super_L $exec i3-switch-windows touch
 bindsym $mod+Tab                $exec i3-switch-windows next; $exec xdotool keydown --clearmodifiers $mod
