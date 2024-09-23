@@ -28,6 +28,10 @@ MPV_HOME="$XDG_CONFIG_HOME/mpv"
 WGETRC="$XDG_CONFIG_HOME/wgetrc"
 CUDA_CACHE_PATH="$XDG_CACHE_HOME/nvidia"
 
+SUDO_ASKPASS="$HOME/scripts/rofi-askpass"
+SSH_ASKPASS="$HOME/scripts/rofi-askpass"
+SSH_ASKPASS_REQUIRE="force"
+
 GDK_DEBUG=portals
 GTK_USE_PORTAL=1
 
