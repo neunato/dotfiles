@@ -2,8 +2,11 @@ separator=false
 separator_block_width=40
 markup=pango
 color="#ffffffbf"
+color_white="#ffffffbf"
 color_red="#ff515dcc"
 color_yellow="#FFcc00bf"
+color_green="#00da55"
+color_blue="#51bbff"
 
 [capture]
 command=bash screen-capture --is-recording && echo "$icon"
@@ -46,7 +49,7 @@ icon_100=
 icon_charging=
 
 [vpn]
-command=i3blocks-vpn
+command=bash i3blocks-vpn
 interval=once
 icon="<span size='small' weight='bold'>VPN</span>"
 icon_connected="<span size='small' weight='bold' color='#00da55'>VPN</span>"
@@ -55,11 +58,10 @@ icon_connected="<span size='small' weight='bold' color='#00da55'>VPN</span>"
 command=bash i3blocks-keyboard
 interval=once
 icon=
-icon_active=󰌌
 
 [power]
-full_text="<span size='small'></span>"
 command=bash i3blocks-power
+full_text="<span size='small'></span>"
 
 [time]
 command=bash i3blocks-time

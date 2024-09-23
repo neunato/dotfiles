@@ -15,8 +15,8 @@ elif [[ $button -eq 1 && $connected == true ]]; then
    pkill svkbd-hr                              # to actually kill
 fi
 
+echo "$icon"
 if [[ $connected == true ]]; then
-   echo "$icon_active"
-else
    echo "$icon"
+   echo "$color_green"
 fi
