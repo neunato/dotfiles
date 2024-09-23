@@ -105,4 +105,4 @@ configuration {
    me-accept-custom: "";
 }
 
-@theme "theme"
+@theme "theme.rasi"
