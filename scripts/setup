@@ -382,7 +382,6 @@ function setup_packages {
    # ssh, vpn
    arch_packages+=("openssh")
    arch_packages+=("openvpn")
-   arch_packages+=("openconnect")
    user_packages+=("openvpn-update-systemd-resolved")
 
    # developer tooling

@@ -1,0 +1,25 @@
+#!/bin/bash
+
+if pgrep openvpn > /dev/null; then
+   connected=true
+else
+   connected=false
+fi
+
+if [[ $button -eq 1 && $connected == false ]]; then
+   sudo systemctl start systemd-resolved &&
+   sudo openvpn --cd /etc/openvpn/client/ --config default.ovpn --daemon &&
+   notify-send "VPN connected" &&
+   connected=true
+elif [[ $button -eq 1 && $connected == true ]]; then
+   sudo pkill openvpn &&
+   sudo systemctl stop systemd-resolved &&
+   notify-send "VPN disconnected" &&
+   connected=false
+fi
+
+if [[ $connected == true ]]; then
+   echo "$icon_connected"
+else
+   echo "$icon"
+fi

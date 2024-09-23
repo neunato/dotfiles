@@ -21,11 +21,8 @@ nominal_rssi=$((perfect_rssi - worst_rssi))
 strength=$(((100 * nominal_rssi**2 - (perfect_rssi - rssi) * (15 * nominal_rssi + 62 * (perfect_rssi - rssi))) / (nominal_rssi**2)))
 strength=$((strength > 0 ? strength : 0))
 strength=$((strength < 100 ? strength : 100))
-vpn=$(pgrep openvpn || pgrep openconnect)
 
-if [[ -n $vpn ]]; then
-   icon=$icon_vpn
-elif [[ $strength -gt 75 ]]; then
+if [[ $strength -gt 75 ]]; then
    icon=$icon_wifi_strong
 elif [[ $strength -gt 50 ]]; then
    icon=$icon_wifi_medium

@@ -34,7 +34,6 @@ icon_wifi_missing=󰢿
 icon_wifi_weak=󰢼
 icon_wifi_medium=󰢽
 icon_wifi_strong=󰢾
-icon_vpn=󱠾
 
 [battery]
 command=bash i3blocks-battery
@@ -45,6 +44,12 @@ icon_50=
 icon_75=
 icon_100=
 icon_charging=
+
+[vpn]
+command=i3blocks-vpn
+interval=once
+icon="<span size='small' weight='bold'>VPN</span>"
+icon_connected="<span size='small' weight='bold' color='#00da55'>VPN</span>"
 
 [keyboard]
 command=bash i3blocks-keyboard
