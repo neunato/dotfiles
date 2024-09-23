@@ -5,7 +5,7 @@ if [[ -z $ROFI_RETV ]]; then
    exit
 fi
 
-echo -e "\0prompt\x1fpower"
+echo -e "\0prompt\x1fPower"
 echo -e "\0no-custom\x1ftrue"
 echo -e "\0keep-selection\x1ffalse"
 

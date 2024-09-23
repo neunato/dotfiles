@@ -1,0 +1,6 @@
+@import "config"
+
+configuration {
+   combi-modes: [drun, run, ssh];
+   show-icons: true;
+}
