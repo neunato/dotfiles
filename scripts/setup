@@ -242,6 +242,10 @@ function setup_system_config {
    echo '   ModulePath "/usr/lib/xorg/modules"'    | tee --append /etc/X11/xorg.conf > /dev/null
    echo 'EndSection'                               | tee --append /etc/X11/xorg.conf > /dev/null
    echo ''                                         | tee --append /etc/X11/xorg.conf > /dev/null
+   echo 'Section "ServerFlags"'                    | tee --append /etc/X11/xorg.conf > /dev/null
+   echo '   Option "BlankTime" "0"'                | tee --append /etc/X11/xorg.conf > /dev/null
+   echo 'EndSection'                               | tee --append /etc/X11/xorg.conf > /dev/null
+   echo ''                                         | tee --append /etc/X11/xorg.conf > /dev/null
    echo 'Section "Extensions"'                     | tee --append /etc/X11/xorg.conf > /dev/null
    echo '   Option "DPMS" "false"'                 | tee --append /etc/X11/xorg.conf > /dev/null
    echo 'EndSection'                               | tee --append /etc/X11/xorg.conf > /dev/null
