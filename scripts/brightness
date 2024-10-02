@@ -18,6 +18,7 @@ fi
 if [[ "$1" == "up" ]]; then
    brightness=$(((brightness + step + 5) / 10 * 10))
    brightness=$((brightness < 100 ? brightness : 100))
+   notify-send "Brightness" -h int:value:"$brightness" -h string:x-dunst-stack-tag:progress
    brightness=$(((brightness * max) / 100))
    echo "$brightness" > "$path/brightness"
    exit
@@ -25,6 +26,7 @@ fi
 
 if [[ "$1" == "down" ]]; then
    brightness=$(((brightness - step + 5) / 10 * 10))
+   notify-send "Brightness" -h int:value:"$brightness" -h string:x-dunst-stack-tag:progress
    brightness=$((brightness > 1 ? brightness : 1))
    brightness=$(((brightness * max) / 100))
    echo "$brightness" > "$path/brightness"
