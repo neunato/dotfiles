@@ -1,23 +1,47 @@
 #!/bin/bash
 
-# idle-run [--timer <seconds> <command> [--timer <seconds> <command>...]]
+# idle-run --timer <seconds> [--detect-audio] [--detect-shutdown] <command> [--timer <seconds> [--detect-audio] [--detect-shutdown] <command>...]
 
 timers=()
+detect_audio=()
+detect_shutdown=()
 commands=()
+offsets=()
 done=()
 shortest=100000
 
+if [[ -z $1 ]]; then
+   echo "Expected 'idle-run --timer <seconds> [--detect-audio] [--detect-shutdown] <command> [...]'" >&2
+   exit 1
+fi
+
 while [[ $# -gt 0 ]]; do
    if [[ $1 == "--timer" ]]; then
-      timers+=($((${2} * 1000)))
-      commands+=("$3")
+      shift
+      seconds=$1
+      audio=0
+      shutdown=0
+      shift
+      while [[ $1 == "--detect-audio" || $1 == "--detect-shutdown" ]]; do
+         if [[ $1 == "--detect-audio" ]]; then
+            audio=1
+         else
+            shutdown=1
+         fi
+         shift
+      done
+
+      timers+=($((${seconds} * 1000)))
+      detect_audio+=($audio)
+      detect_shutdown+=($shutdown)
+      commands+=("$1")
+      offsets+=(0)
       done+=(0)
-      if [[ $2 -lt $shortest ]]; then
-         shortest=$2
+      if [[ $seconds -lt $shortest ]]; then
+         shortest=$seconds
       fi
-      shift; shift
+      shift
    fi
-   shift
 done
 
 if [[ $shortest -lt 10 ]]; then
@@ -27,17 +51,33 @@ fi
 interval=$(echo "$shortest / 100" | bc -l)
 
 while :; do
-   time=$(xprintidle)
+   idle_time=$(xprintidle)
+   audio_detected=0
+   shutdown_detected=0
+
    if grep -qr "RUNNING" /proc/asound; then
-      offset=$time
-   elif [[ $offset -gt $time ]]; then
-      offset=0
+      audio_detected=1
    fi
-   time=$((time - offset))
+   if [[ -f /run/systemd/shutdown/scheduled ]]; then
+      shutdown_detected=1
+   fi
 
    for i in "${!timers[@]}"; do
       duration=${timers[$i]}
-      if [[ $time -ge $duration ]]; then
+      audio=${detect_audio[$i]}
+      shutdown=${detect_shutdown[$i]}
+      offset=${offsets[$i]}
+      if [[ $audio_detected == 1 && $audio == 1 ]]; then
+         offset=$idle_time
+      elif [[ $shutdown_detected == 1 && $shutdown == 1 ]]; then
+         offset=$idle_time
+      elif [[ $offset -gt $idle_time ]]; then
+         offset=0
+      fi
+      offsets[$i]=$offset
+      time=$((idle_time - offset))
+
+      if [[ $time -gt $duration ]]; then
          command=${commands[$i]}
          is_done=${done[$i]}
          if [[ $is_done == 0 ]]; then
