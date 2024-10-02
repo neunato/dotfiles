@@ -189,6 +189,7 @@ bindsym Shift+Print             $exec screen-capture             --record; $exec
 bindsym $mod+Escape             $exec slock
 bindsym $mod+Shift+r            reload
 bindsym $mod+Control+Shift+r    restart
+bindsym $mod+h                  $exec dunstctl history-pop
 
 $exec setxkbmap hr                          # some apps are not picking up /etc/X11/xorg.conf for some reason
 $exec dunst
