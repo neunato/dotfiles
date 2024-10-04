@@ -371,7 +371,7 @@ function setup_packages {
    arch_packages+=("moreutils")
    arch_packages+=("dunst")
    arch_packages+=("libnotify")
-   arch_packages+=("rofi")
+   user_packages+=("rofi-git")
    arch_packages+=("yazi")
    arch_packages+=("khal")
    user_packages+=("svkbd-git")

@@ -1,0 +1,24 @@
+diff --git a/PKGBUILD b/PKGBUILD
+index b9bdeb7..9ee038d 100644
+--- a/PKGBUILD
++++ b/PKGBUILD
+@@ -7,7 +7,7 @@
+ # Contributor: SanskritFritz (gmail)
+
+ pkgname=rofi-git
+-pkgver=1.7.5.r90.g82b2ce94
++pkgver=1.7.5.r249.g186b0e7b
+ pkgrel=1
+ pkgdesc='A window switcher, run dialog and dmenu replacement'
+ arch=('x86_64')
+@@ -58,8 +58,9 @@ prepare() {
+     git config "submodule.${submodule}.url" "${srcdir}/${module}"
+     git submodule update "${submodule}"
+   done
++  cd "${srcdir}/rofi"
++  git apply ../../new-selection-fix.patch
+   cd "${srcdir}"
+-
+   meson setup "${pkgname/-git}" build \
+     --buildtype release               \
+     --prefix /usr
