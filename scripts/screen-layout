@@ -383,7 +383,7 @@ function resolve_setting {
 
 function format_scale {
    local scale=$1
-   scale=$(round "$scale" 4)
+   scale=$(round "$scale" 5 | head -c 6)
    if [[ $scale == "1.0000" ]]; then
       scale="0.9999"
    fi
@@ -414,7 +414,7 @@ function ceil {
 settings_path="$HOME/.local/share/screen-layout"
 
 if [[ $reset == "true" ]]; then
-   rm "$settings_path"
+   rm -f "$settings_path"
    exit 0
 fi
 
@@ -479,6 +479,12 @@ fi
 
 load_settings
 
+if [[ -n $mode ]]; then
+   set_setting "mode" $mode
+else
+   mode="$(resolve_setting "mode")"
+fi
+
 if [[ ${#targets[@]} -gt 0 ]]; then
    set_setting "layout" "${targets[*]}"
 else
@@ -489,12 +495,6 @@ else
    else
       targets=("$(resolve_setting "primary")")
    fi
-fi
-
-if [[ -n $mode ]]; then
-   set_setting "mode" $mode
-else
-   mode="$(resolve_setting "mode")"
 fi
 
 if [[ -n $primary ]]; then
