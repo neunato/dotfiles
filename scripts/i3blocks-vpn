@@ -8,7 +8,7 @@ fi
 
 if [[ $button -eq 1 && $connected == false ]]; then
    sudo systemctl start systemd-resolved &&
-   sudo openvpn --cd /etc/openvpn/client/ --config default.ovpn --daemon &&
+   sudo openvpn --cd /etc/openvpn/client/ --config default.ovpn --daemon > /dev/null &&
    notify-send "VPN connected" &&
    connected=true
 elif [[ $button -eq 1 && $connected == true ]]; then
