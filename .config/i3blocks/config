@@ -59,6 +59,10 @@ command=bash i3blocks-keyboard
 interval=once
 icon=
 
+[display]
+command=bash i3blocks-display
+full_text="<span size='small'>󰍹</span>"
+
 [power]
 command=bash i3blocks-power
 full_text="<span size='small'></span>"
