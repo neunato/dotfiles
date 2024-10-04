@@ -1,0 +1,68 @@
+#!/bin/bash
+
+if [[ -z $ROFI_RETV ]]; then
+   rofi -show display -modes display:"$0"
+   exit
+fi
+
+echo -e "\0prompt\x1fdisplay"
+echo -e "\0no-custom\x1ftrue"
+echo -e "\0keep-selection\x1ftrue"
+echo -e "\0new-selection\x1f${ROFI_DATA}"
+
+join="󰍺 Layout: Join"
+single="󰍹 Layout: Single"
+mirror="󰦉 Layout: Mirror"
+list="󰷜 Set Primary"
+scale="󰹑 Set Scale"
+scales=("0.50" "0.60" "0.70" "0.80" "0.90" "1.00" "1.10" "1.20" "1.30" "1.40" "1.50" "1.75" "2.00")
+
+if [[ -z $1 || $1 == "" ]]; then
+   echo -e "\0data\x1f0"
+   echo "$join"
+   echo "$single"
+   echo "$mirror"
+   echo "$list"
+   echo "$scale"
+   exit
+fi
+
+if [[ $1 == $list ]]; then
+   echo -e "\0data\x1f3"
+   echo ""
+   for value in "$(screen-layout --list-outputs)"; do
+      echo "$value"
+   done
+   exit
+fi
+
+if [[ $1 == $scale ]]; then
+   echo -e "\0data\x1f4"
+   echo ""
+   for value in "${scales[@]}"; do
+      echo "$value"
+   done
+   exit
+fi
+
+if [[ $1 == $join ]]; then
+   screen-layout --mode join
+   exit
+fi
+
+if [[ $1 == $single ]]; then
+   screen-layout --mode single
+   exit
+fi
+
+if [[ $1 == $mirror ]]; then
+   screen-layout --mode mirror
+   exit
+fi
+
+if [[ " ${scales[*]} " =~ " $1 " ]]; then
+   screen-layout --scale "$(screen-layout --get-primary):$1"
+   exit
+fi
+
+screen-layout --primary "$(echo $1 | awk '{print $1}')"
