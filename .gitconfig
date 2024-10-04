@@ -8,7 +8,7 @@
    insteadOf = "https://github.com/"
 [core]
    pager = DELTA_PAGER='less -RF -+X' delta --diff-so-fancy --paging=always
-   editor = subl -n -w
+   editor = zeditor -n -w
 [interactive]
    diffFilter = delta --color-only
 [include]
