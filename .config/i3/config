@@ -53,7 +53,7 @@ for_window [class="^kitty$"                     workspace="^1" window_type="norm
 for_window [class="^kitty$"                     workspace="^1" window_type="normal"] floating disable
 for_window [class="^Sublime_text$"              workspace="^2" window_type="normal"] floating disable
 for_window [class="^Sublime_merge$"             workspace="^3" window_type="normal"] floating disable
-for_window [class="^firefox-developer-edition$" workspace="^4" window_type="normal"] floating disable
+for_window [class="^firefox-developer-edition$" workspace="^4" window_role="browser"] floating disable
 for_window [class="^Chromium$"                  workspace="^5" window_type="normal"] floating disable
 for_window [class="^thunderbird$"               workspace="^6" window_type="normal"] floating disable
 for_window [class="^kitty$"                     workspace="^7" window_type="normal"] floating disable
