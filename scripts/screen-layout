@@ -123,8 +123,10 @@ function join_displays {
    command="xrandr --verbose --fb ${screen_width}x${screen_height} --dpi ${dpi} $command"
    if [[ $dry_run == "true" ]]; then
       echo "$command"
-   else
-      eval $command > /dev/null || eval $command > /dev/null
+   elif [[ $(cat $last_run_path) != $command ]]; then
+      eval "$command" > /dev/null || eval "$command" > /dev/null
+      echo "$command" > $last_run_path
+      force_composition_pipeline
    fi
 }
 
@@ -184,8 +186,10 @@ function mirror_displays {
    command="xrandr --verbose --fb ${screen_width}x${screen_height} --dpi ${dpi} $command"
    if [[ $dry_run == "true" ]]; then
       echo "$command"
-   else
-      eval $command > /dev/null || eval $command > /dev/null
+   elif [[ $(cat $last_run_path) != $command ]]; then
+      eval "$command" > /dev/null || eval "$command" > /dev/null
+      echo "$command" > $last_run_path
+      force_composition_pipeline
    fi
 }
 
@@ -193,6 +197,24 @@ function list_displays {
    for i in "${!displays[@]}"; do
       echo "${displays[$i]} (${resolutions[$i]} ${refresh_rates[$i]}Hz)"
    done
+}
+
+function force_composition_pipeline {
+   # fix nvidia issues
+   if ! pacman -Q nvidia-settings 2>&1 > /dev/null; then
+      return
+   fi
+
+   metamode="$(nvidia-settings -q CurrentMetaMode -t)"
+   metamode="${metamode#* :: }"
+   if [[ $metamode == "" ]]; then
+      exit
+   fi
+   metamode=${metamode//\{ForceCompositionPipeline=On/\{}
+   metamode=${metamode//, ForceCompositionPipeline=On/}
+   metamode=${metamode//\}/, ForceCompositionPipeline=On\}}
+   metamode=${metamode//\{, /\{}
+   nvidia-settings -a CurrentMetaMode="$metamode" > /dev/null
 }
 
 function load_settings {
@@ -411,12 +433,18 @@ function ceil {
 }
 
 
-settings_path="$HOME/.local/share/screen-layout"
+settings_path="$HOME/.local/share/screen-layout/settings"
+last_run_path="$HOME/.local/share/screen-layout/last-run"
 
 if [[ $reset == "true" ]]; then
    rm -f "$settings_path"
+   rm -f "$last_run_path"
    exit 0
 fi
+
+mkdir -p "$(dirname "$settings_path")"
+touch "$settings_path"
+touch "$last_run_path"
 
 if [[ $get_primary == "true" ]]; then
    xrandr | grep 'primary' | awk '{print $1}'
@@ -541,18 +569,4 @@ if [[ $mode == "join" || $mode == "single" ]]; then
    join_displays
 elif [[ $mode == "mirror" ]]; then
    mirror_displays
-fi
-
-# fix nvidia issues
-if [[ $dry_run != "true" ]] && pacman -Q nvidia-settings 2>&1 > /dev/null; then
-   metamode="$(nvidia-settings -q CurrentMetaMode -t)"
-   metamode="${metamode#* :: }"
-   if [[ $metamode == "" ]]; then
-      exit
-   fi
-   metamode=${metamode//\{ForceCompositionPipeline=On/\{}
-   metamode=${metamode//, ForceCompositionPipeline=On/}
-   metamode=${metamode//\}/, ForceCompositionPipeline=On\}}
-   metamode=${metamode//\{, /\{}
-   nvidia-settings -a CurrentMetaMode="$metamode" > /dev/null
 fi
