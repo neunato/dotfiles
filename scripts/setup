@@ -5,11 +5,14 @@ set -e
 if [[ ! " system system-config firmware packages " =~ " $1 " ]]; then
    echo "Expected 'setup system|system-config|firmware|packages'" >&2
    exit 1
-elif [[ $1 != "system-config" && $# -ne 1 ]]; then
+elif [[ $1 != "system-config" && $1 != "packages" && $# -ne 1 ]]; then
    echo "Expected 'setup system|system-config|firmware|packages'" >&2
    exit 1
 elif [[ $1 == "system-config" && ($# -gt 2 || ! "--no-gpu" =~ "$2" ) ]]; then
    echo "Expected 'setup system-config [--no-gpu]'" >&2
+   exit 1
+elif [[ $1 == "packages" && ($# -gt 2 || ! "--reinstall" =~ "$2" ) ]]; then
+   echo "Expected 'setup packages [--reinstall]'" >&2
    exit 1
 elif [[ $1 == "system" && $EUID -ne 0 ]]; then
    echo "'setup system' must be run as root" >&2
@@ -298,7 +301,8 @@ function setup_system_config {
 }
 
 function setup_packages {
-   local username=$1
+   local username="$1"
+   local paru_args="$2"
 
    if [[ ! -x $(command -v paru) ]]; then
       install_paru
@@ -439,13 +443,15 @@ function setup_packages {
 
    # install packages
    echo "$username ALL=(ALL:ALL) NOPASSWD: ALL" | EDITOR="tee --append" visudo > /dev/null
+   as_user $username git config --global --rename-section "url.git@github.com:" "url-.git@github.com:"
    as_user $username paru -Syu --noconfirm &&
-   as_user $username paru -S --useask --ask 4 --needed --noconfirm "${arch_packages[@]}" "${user_packages[@]}" || {
-      head -n -1 /etc/sudoers | EDITOR="tee" visudo > /dev/null
+   as_user $username paru -S --useask --ask 4 --noconfirm $paru_args "${arch_packages[@]}" "${user_packages[@]}" || failed=true
+   as_user $username git config --global --rename-section "url-.git@github.com:" "url.git@github.com:"
+   head -n -1 /etc/sudoers | EDITOR="tee" visudo > /dev/null
+   if [[ $failed == "true" ]]; then
       echo "Failed to update packages, aborting" >&2
       exit 1
-   }
-   head -n -1 /etc/sudoers | EDITOR="tee" visudo > /dev/null
+   fi
 
    # clean up unused packages
    pacman -Qdtq | ifne pacman -Rns --noconfirm -
@@ -592,11 +598,13 @@ function github_api_url {
 
 if [[ $2 == "--no-gpu" ]]; then
    graphics="intel"
+elif [[ $2 != "--reinstall" ]]; then
+   paru_args="--needed"
 fi
 
 case "$1" in
    system)        setup_system;;
    system-config) as_sudo setup_system_config "$(whoami)" "$graphics";;
    firmware)      setup_firmware;;
-   packages)      as_sudo setup_packages "$(whoami)";;
+   packages)      as_sudo setup_packages "$(whoami)" "$paru_args";;
 esac
