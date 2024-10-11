@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# screen-layout [--mode join|mirror|single] [--primary <output>] [--scale <output1>:<scale1>[,<output2>:<scale2>...]] [--dpi <output1>:<dpi1>[,<output2>:<dpi2>...]] [--dry-run] [--] [<output1> [<output2>...]]
+# screen-layout [--mode join|mirror|single] [--primary <output>] [--scale <output1>:<scale1>[,<output2>:<scale2>...]] [--dpi <output1>:<dpi1>[,<output2>:<dpi2>...]] [--force] [--dry-run] [--] [<output1> [<output2>...]]
 
 # screen-layout <output1> <output2>                                - enable monitors, disabling others
 # screen-layout --mode join                                        - join connected monitors (primary scale applied, other outputs scaled to match height)
@@ -11,6 +11,7 @@
 # screen-layout --scale <output1>:<scale1>[,<output2>:<scale2>...] - set scale for specified monitors (applied scale depends on mode)
 # screen-layout --dpi <output1>:<dpi1>[,<output2>:<dpi2>...]       - set dpi for specified monitors (applying primary/highest/96 globally regardless of mode)
 # screen-layout --restore                                          - restore mode, primary, scale, dpi and layout
+# screen-layout --force                                            - execute xrandr command even if it hasn't changed
 # screen-layout --dry-run                                          - output the xrandr command instead of executing it and don't save settings
 # screen-layout --list-outputs                                     - list connected monitors
 # screen-layout --reset-config                                     - clear any saved settings
@@ -25,6 +26,7 @@ while [[ $# -gt 0 ]]; do
       --scale)        scale=$2;        shift; shift;;
       --dpi)          dpi=$2;          shift; shift;;
       --restore)      restore=true;           shift;;
+      --force)        force=true;             shift;;
       --dry-run)      dry_run=true;           shift;;
       --get-primary)  get_primary=true;       shift;;
       --list-outputs) list=true;              shift;;
@@ -123,7 +125,7 @@ function join_displays {
    command="xrandr --verbose --fb ${screen_width}x${screen_height} --dpi ${dpi} $command"
    if [[ $dry_run == "true" ]]; then
       echo "$command"
-   elif [[ $(cat $last_run_path) != $command ]]; then
+   elif [[ $force == "true" || $(cat $last_run_path) != $command ]]; then
       eval "$command" > /dev/null || eval "$command" > /dev/null
       echo "$command" > $last_run_path
       force_composition_pipeline
@@ -186,7 +188,7 @@ function mirror_displays {
    command="xrandr --verbose --fb ${screen_width}x${screen_height} --dpi ${dpi} $command"
    if [[ $dry_run == "true" ]]; then
       echo "$command"
-   elif [[ $(cat $last_run_path) != $command ]]; then
+   elif [[ $force == "true" || $(cat $last_run_path) != $command ]]; then
       eval "$command" > /dev/null || eval "$command" > /dev/null
       echo "$command" > $last_run_path
       force_composition_pipeline

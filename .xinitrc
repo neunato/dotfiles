@@ -12,5 +12,5 @@ if [[ -d /etc/X11/xinit/xinitrc.d ]]; then
 fi
 
 xrdb -merge -I"$HOME" "$HOME/.Xresources"
-screen-layout --restore 2> /dev/null
+screen-layout --restore --force 2> /dev/null
 exec i3
