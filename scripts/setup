@@ -284,15 +284,17 @@ function setup_system_config {
    echo 'HandleLidSwitch=ignore' | tee --append /etc/systemd/logind.conf > /dev/null
 
    # udev rules
-   cat /dev/null > /etc/udev/rules.d/no-nvidia.rules
-   if [[ $graphics != "nvidia" ]]; then
-      echo 'ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{class}=="0x0c0330", ATTR{power/control}="auto", ATTR{remove}="1"'                                                              | tee          /etc/udev/rules.d/no-nvidia.rules > /dev/null
-      echo 'ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{class}=="0x0c8000", ATTR{power/control}="auto", ATTR{remove}="1"'                                                              | tee --append /etc/udev/rules.d/no-nvidia.rules > /dev/null
-      echo 'ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{class}=="0x040300", ATTR{power/control}="auto", ATTR{remove}="1"'                                                              | tee --append /etc/udev/rules.d/no-nvidia.rules > /dev/null
-      echo 'ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{class}=="0x03[0-9]*", ATTR{power/control}="auto", ATTR{remove}="1"'                                                            | tee --append /etc/udev/rules.d/no-nvidia.rules > /dev/null
+   if [[ $graphics == "nvidia" ]]; then
+      echo 'ACTION=="change", SUBSYSTEM=="typec", ENV{DISPLAY}=":0", ENV{XAUTHORITY}="/home/'$username'/.Xauthority", ENV{HOME}="/home/'$username'" RUN+="/home/'$username'/scripts/screen-layout --restore"' | tee /etc/udev/rules.d/monitor-hotplug.rules > /dev/null
+      rm -f /etc/udev/rules.d/no-nvidia.rules
+   else
+      echo 'ACTION=="change", SUBSYSTEM=="drm",   ENV{DISPLAY}=":0", ENV{XAUTHORITY}="/home/'$username'/.Xauthority", ENV{HOME}="/home/'$username'" RUN+="/home/'$username'/scripts/screen-layout --restore"' | tee /etc/udev/rules.d/monitor-hotplug.rules > /dev/null
+      echo 'ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{class}=="0x0c0330",   ATTR{power/control}="auto", ATTR{remove}="1"' | tee          /etc/udev/rules.d/no-nvidia.rules > /dev/null
+      echo 'ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{class}=="0x0c8000",   ATTR{power/control}="auto", ATTR{remove}="1"' | tee --append /etc/udev/rules.d/no-nvidia.rules > /dev/null
+      echo 'ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{class}=="0x040300",   ATTR{power/control}="auto", ATTR{remove}="1"' | tee --append /etc/udev/rules.d/no-nvidia.rules > /dev/null
+      echo 'ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{class}=="0x03[0-9]*", ATTR{power/control}="auto", ATTR{remove}="1"' | tee --append /etc/udev/rules.d/no-nvidia.rules > /dev/null
    fi
-   echo 'ACTION=="add", SUBSYSTEM=="backlight", RUN+="/bin/chgrp video $sys$devpath/brightness", RUN+="/bin/chmod g+w $sys$devpath/brightness"'                                                          | tee          /etc/udev/rules.d/backlight.rules > /dev/null
-   echo 'ACTION=="change", SUBSYSTEM=="drm", ENV{DISPLAY}=":0", ENV{XAUTHORITY}="/home/'$username'/.Xauthority", ENV{HOME}="/home/'$username'" RUN+="/home/'$username'/scripts/screen-layout --restore"' | tee          /etc/udev/rules.d/monitor-hotplug.rules > /dev/null
+   echo 'ACTION=="add", SUBSYSTEM=="backlight", RUN+="/bin/chgrp video $sys$devpath/brightness", RUN+="/bin/chmod g+w $sys$devpath/brightness"' | tee /etc/udev/rules.d/backlight.rules > /dev/null
 }
 
 function setup_packages {
