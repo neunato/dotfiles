@@ -49,16 +49,16 @@ gaps outer -10
 for_window [all] title_format "<span weight='light'><i>%title</i></span>"
 for_window [all] floating enable, sticky enable
 for_window [window_type="normal"] resize set 50ppt 50ppt, move position center
-for_window [class="^kitty$"            workspace="^1" window_type="normal"] floating disable
-for_window [class="^kitty$"                   workspace="^1" window_type="normal"] floating disable
-for_window [class="^Sublime_text$"            workspace="^2" window_type="normal"] floating disable
-for_window [class="^Sublime_merge$"           workspace="^3" window_type="normal"] floating disable
-for_window [class="^firefoxdeveloperedition$" workspace="^4" window_type="normal"] floating disable
-for_window [class="^Chromium$"                workspace="^5" window_type="normal"] floating disable
-for_window [class="^thunderbird$"             workspace="^6" window_type="normal"] floating disable
-for_window [class="^kitty$"                   workspace="^7" window_type="normal"] floating disable
-for_window [class="^mpv$"                     workspace="^8"                     ] floating disable
-for_window [class="^transmission-gtk$"        workspace="^9" window_type="normal"] floating disable
+for_window [class="^kitty$"                     workspace="^1" window_type="normal"] floating disable
+for_window [class="^kitty$"                     workspace="^1" window_type="normal"] floating disable
+for_window [class="^Sublime_text$"              workspace="^2" window_type="normal"] floating disable
+for_window [class="^Sublime_merge$"             workspace="^3" window_type="normal"] floating disable
+for_window [class="^firefox-developer-edition$" workspace="^4" window_type="normal"] floating disable
+for_window [class="^Chromium$"                  workspace="^5" window_type="normal"] floating disable
+for_window [class="^thunderbird$"               workspace="^6" window_type="normal"] floating disable
+for_window [class="^kitty$"                     workspace="^7" window_type="normal"] floating disable
+for_window [class="^mpv$"                       workspace="^8"                     ] floating disable
+for_window [class="^transmission-gtk$"          workspace="^9" window_type="normal"] floating disable
 
 workspace  1 output $internal_outputs
 workspace  2 output $external_outputs
@@ -152,7 +152,7 @@ bindsym $mod+Control+t          $exec transmission-gtk
 bindsym $mod+a                  $exec i3-focus-or-open --workspace '$ws_terminal' --class 'kitty' 'kitty'
 bindsym $mod+s                  $exec i3-focus-or-open --workspace '$ws_sublime'  --class 'Sublime_text' 'subl --launch-or-new-window'
 bindsym $mod+d                  $exec i3-focus-or-open --workspace '$ws_merge'    --class 'Sublime_merge' 'smerge --launch-or-new-window'
-bindsym $mod+f                  $exec i3-focus-or-open --workspace '$ws_firefox'  --class 'firefoxdeveloperedition' 'firefox-developer-edition'
+bindsym $mod+f                  $exec i3-focus-or-open --workspace '$ws_firefox'  --class 'firefox-developer-edition' 'firefox-developer-edition'
 bindsym $mod+c                  $exec i3-focus-or-open --workspace '$ws_chrome'   --class 'Chromium' 'chromium'
 bindsym $mod+g                  $exec i3-focus-or-open --workspace '$ws_email'    --class 'thunderbird' 'thunderbird'
 bindsym $mod+y                  $exec i3-focus-or-open --workspace '$ws_files'    --class 'kitty' 'kitty yazi'
