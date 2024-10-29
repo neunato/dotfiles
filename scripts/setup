@@ -384,6 +384,7 @@ function setup_packages {
    arch_packages+=("maim")
    arch_packages+=("ffmpeg")
    arch_packages+=("imagemagick")
+   arch_packages+=("yt-dlp")
    arch_packages+=("id3v2")
    user_packages+=("glances")
    arch_packages+=("man-db")

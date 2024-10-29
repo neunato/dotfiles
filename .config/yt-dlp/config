@@ -1,0 +1,5 @@
+--concurrent-fragments 20
+--abort-on-unavailable-fragments
+--paths ~/videos/youtube
+--paths temp:/tmp/yt-dlp
+--prefer-free-formats
