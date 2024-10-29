@@ -78,7 +78,7 @@ frame_color = "#0b0f13"
 
 [progress]
 stack_tag = "progress"
-format = "<b>%s</b> %n%"
+format = "<b>%s</b> %n%%"
 alignment = center
 timeout = 1
 history_ignore = true
