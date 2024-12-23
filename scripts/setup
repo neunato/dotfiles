@@ -426,12 +426,13 @@ function setup_packages {
    arch_packages+=("calibre")
    arch_packages+=("transmission-gtk")
 
-   # virtualisation
+   # virtualisation, emulation
    arch_packages+=("libvirt")
    arch_packages+=("qemu-base")
    arch_packages+=("virt-manager")
    arch_packages+=("dnsmasq")
    arch_packages+=("iptables-nft")
+   user_packages+=("mesen2-git")
 
    # fonts, icons
    arch_packages+=("adobe-source-sans-fonts")
