@@ -183,9 +183,28 @@ function setup_system_config {
       graphics="nvidia"
    fi
 
-   sed -i "s/#ParallelDownloads/ParallelDownloads/"      /etc/pacman.conf
-   sed -i "s/#[multilib]\n#Include/[multilib]\nInclude/" /etc/pacman.conf
-
+   # pacman
+   echo '[options]'                                                 | tee          /etc/pacman.conf > /dev/null
+   echo 'HoldPkg = pacman glibc'                                    | tee --append /etc/pacman.conf > /dev/null
+   echo 'Architecture = auto'                                       | tee --append /etc/pacman.conf > /dev/null
+   echo 'Color'                                                     | tee --append /etc/pacman.conf > /dev/null
+   echo 'CheckSpace'                                                | tee --append /etc/pacman.conf > /dev/null
+   echo 'VerbosePkgLists'                                           | tee --append /etc/pacman.conf > /dev/null
+   echo 'ParallelDownloads = 10'                                    | tee --append /etc/pacman.conf > /dev/null
+   echo 'SigLevel = Required DatabaseOptional'                      | tee --append /etc/pacman.conf > /dev/null
+   echo 'LocalFileSigLevel = Optional'                              | tee --append /etc/pacman.conf > /dev/null
+   echo ''                                                          | tee --append /etc/pacman.conf > /dev/null
+   echo '[core]'                                                    | tee --append /etc/pacman.conf > /dev/null
+   echo 'Include = /etc/pacman.d/mirrorlist'                        | tee --append /etc/pacman.conf > /dev/null
+   echo ''                                                          | tee --append /etc/pacman.conf > /dev/null
+   echo '[extra]'                                                   | tee --append /etc/pacman.conf > /dev/null
+   echo 'Include = /etc/pacman.d/mirrorlist'                        | tee --append /etc/pacman.conf > /dev/null
+   echo ''                                                          | tee --append /etc/pacman.conf > /dev/null
+   echo '[multilib]'                                                | tee --append /etc/pacman.conf > /dev/null
+   echo 'Include = /etc/pacman.d/mirrorlist'                        | tee --append /etc/pacman.conf > /dev/null
+   echo ''                                                          | tee --append /etc/pacman.conf > /dev/null
+   echo '[sublime-text]'                                            | tee --append /etc/pacman.conf > /dev/null
+   echo 'Server = https://download.sublimetext.com/arch/dev/x86_64' | tee --append /etc/pacman.conf > /dev/null
 
    # localisation
    echo 'arch' | tee /etc/hostname > /dev/null
@@ -310,9 +329,8 @@ function setup_packages {
       install_paru
    fi
 
-   if ! grep -Fxq "[sublime-text]" /etc/pacman.conf; then
+   if ! pacman -Q sublime-text > /dev/null; then
       curl -s -O https://download.sublimetext.com/sublimehq-pub.gpg && pacman-key --add sublimehq-pub.gpg && pacman-key --lsign-key 8A8F901A && rm sublimehq-pub.gpg
-      echo -e "\n[sublime-text]\nServer = https://download.sublimetext.com/arch/dev/x86_64" | tee --append /etc/pacman.conf > /dev/null
    fi
 
    arch_packages=()
