@@ -183,7 +183,9 @@ function setup_system_config {
       graphics="nvidia"
    fi
 
-   sed -i "s/#ParallelDownloads/ParallelDownloads/" /etc/pacman.conf
+   sed -i "s/#ParallelDownloads/ParallelDownloads/"      /etc/pacman.conf
+   sed -i "s/#[multilib]\n#Include/[multilib]\nInclude/" /etc/pacman.conf
+
 
    # localisation
    echo 'arch' | tee /etc/hostname > /dev/null
@@ -432,6 +434,8 @@ function setup_packages {
    arch_packages+=("virt-manager")
    arch_packages+=("dnsmasq")
    arch_packages+=("iptables-nft")
+   arch_packages+=("wine-staging")
+   deps_packages=(giflib lib32-giflib gnutls lib32-gnutls v4l-utils lib32-v4l-utils libpulse lib32-libpulse alsa-plugins lib32-alsa-plugins alsa-lib lib32-alsa-lib sqlite lib32-sqlite libxcomposite lib32-libxcomposite ocl-icd lib32-ocl-icd libva lib32-libva gtk3 lib32-gtk3 gst-plugins-base-libs lib32-gst-plugins-base-libs vulkan-icd-loader lib32-vulkan-icd-loader sdl2 lib32-sdl2)
    user_packages+=("mesen2-git")
 
    # fonts, icons
@@ -447,7 +451,8 @@ function setup_packages {
    echo "$username ALL=(ALL:ALL) NOPASSWD: ALL" | EDITOR="tee --append" visudo > /dev/null
    as_user $username git config --global --rename-section "url.git@github.com:" "url-.git@github.com:"
    as_user $username paru -Syu --noconfirm &&
-   as_user $username paru -S --useask --ask 4 --noconfirm $paru_args "${arch_packages[@]}" "${user_packages[@]}" || failed=true
+   as_user $username paru -S --useask --ask 4 --noconfirm $paru_args "${arch_packages[@]}" "${user_packages[@]}" &&
+   as_user $username paru -S --useask --ask 4 --noconfirm --asdeps $paru_args "${deps_packages[@]}" || failed=true
    as_user $username git config --global --rename-section "url-.git@github.com:" "url.git@github.com:"
    head -n -1 /etc/sudoers | EDITOR="tee" visudo > /dev/null
    if [[ $failed == "true" ]]; then
