@@ -309,10 +309,10 @@ function setup_system_config {
 
    # udev rules
    if [[ $graphics == "nvidia" ]]; then
-      echo 'ACTION=="change", SUBSYSTEM=="typec", ENV{DISPLAY}=":0", ENV{XAUTHORITY}="/home/'$username'/.Xauthority", ENV{HOME}="/home/'$username'" RUN+="/home/'$username'/scripts/screen-layout --restore"' | tee /etc/udev/rules.d/monitor-hotplug.rules > /dev/null
+      echo 'ACTION=="add|remove", SUBSYSTEM=="usb_power_delivery", ENV{DISPLAY}=":0", ENV{XAUTHORITY}="/home/'$username'/.Xauthority", ENV{HOME}="/home/'$username'", RUN+="/usr/bin/su '$username' -c /home/'$username'/scripts/screen-layout-hotplug"' | tee /etc/udev/rules.d/monitor-hotplug.rules > /dev/null
       rm -f /etc/udev/rules.d/no-nvidia.rules
    else
-      echo 'ACTION=="change", SUBSYSTEM=="drm",   ENV{DISPLAY}=":0", ENV{XAUTHORITY}="/home/'$username'/.Xauthority", ENV{HOME}="/home/'$username'" RUN+="/home/'$username'/scripts/screen-layout --restore"' | tee /etc/udev/rules.d/monitor-hotplug.rules > /dev/null
+      echo 'ACTION=="change", SUBSYSTEM=="drm", ENV{DISPLAY}=":0", ENV{XAUTHORITY}="/home/'$username'/.Xauthority", ENV{HOME}="/home/'$username'", RUN+="/home/'$username'/scripts/screen-layout --restore"' | tee /etc/udev/rules.d/monitor-hotplug.rules > /dev/null
       echo 'ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{class}=="0x0c0330",   ATTR{power/control}="auto", ATTR{remove}="1"' | tee          /etc/udev/rules.d/no-nvidia.rules > /dev/null
       echo 'ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{class}=="0x0c8000",   ATTR{power/control}="auto", ATTR{remove}="1"' | tee --append /etc/udev/rules.d/no-nvidia.rules > /dev/null
       echo 'ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{class}=="0x040300",   ATTR{power/control}="auto", ATTR{remove}="1"' | tee --append /etc/udev/rules.d/no-nvidia.rules > /dev/null
