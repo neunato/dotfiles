@@ -25,7 +25,7 @@ alias bash='echo && bash'
 alias sudo='sudo --askpass'
 alias wget="wget --hsts-file='$XDG_CACHE_HOME/wget-hsts'"
 
-# start x
-if [[ -z "$DISPLAY" && "$XDG_VTNR" -eq 1 ]]; then
-   exec startx &> /dev/null
+# start window manager
+if [[ -z "$WAYLAND_DISPLAY" && "$XDG_VTNR" -eq 1 ]]; then
+   exec niri-session &> /dev/null
 fi
