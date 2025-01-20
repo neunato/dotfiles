@@ -49,14 +49,14 @@ gaps outer -10
 for_window [all] title_format "<span weight='light'><i>%title</i></span>"
 for_window [all] floating enable, sticky enable
 for_window [window_type="normal"] resize set 50ppt 50ppt, move position center
-for_window [class="^kitty$"                     workspace="^1" window_type="normal"] floating disable
-for_window [class="^kitty$"                     workspace="^1" window_type="normal"] floating disable
+for_window [class="^foot$"                      workspace="^1" window_type="normal"] floating disable
+for_window [class="^foot$"                      workspace="^1" window_type="normal"] floating disable
 for_window [class="^Sublime_text$"              workspace="^2" window_type="normal"] floating disable
 for_window [class="^Sublime_merge$"             workspace="^3" window_type="normal"] floating disable
 for_window [class="^firefox-developer-edition$" workspace="^4" window_role="browser"] floating disable
 for_window [class="^Chromium$"                  workspace="^5" window_type="normal"] floating disable
 for_window [class="^thunderbird$"               workspace="^6" window_type="normal"] floating disable
-for_window [class="^kitty$"                     workspace="^7" window_type="normal"] floating disable
+for_window [class="^foot$"                      workspace="^7" window_type="normal"] floating disable
 for_window [class="^mpv$"                       workspace="^8"                     ] floating disable
 for_window [class="^transmission-gtk$"          workspace="^9" window_type="normal"] floating disable
 
@@ -139,23 +139,23 @@ bindsym $mod+1                  workspace $ws_other_1
 bindsym $mod+2                  workspace $ws_other_2
 bindsym $mod+3                  workspace $ws_other_3
 bindsym $mod+4                  workspace $ws_other_4
-bindsym $mod+Return             $exec kitty
-bindsym $mod+Control+a          $exec kitty
+bindsym $mod+Return             $exec foot
+bindsym $mod+Control+a          $exec foot
 bindsym $mod+Control+s          $exec subl --new-window
 bindsym $mod+Control+d          $exec smerge --new-window
 bindsym $mod+Control+f          $exec firefox-developer-edition
 bindsym $mod+Control+c          $exec chromium
 bindsym $mod+Control+g          $exec thunderbird
-bindsym $mod+Control+y          $exec kitty yazi
+bindsym $mod+Control+y          $exec foot yazi
 bindsym $mod+Control+v          $exec mpv --force-window --idle --keep-open
 bindsym $mod+Control+t          $exec transmission-gtk
-bindsym $mod+a                  $exec i3-focus-or-open --workspace '$ws_terminal' --class 'kitty' 'kitty'
+bindsym $mod+a                  $exec i3-focus-or-open --workspace '$ws_terminal' --class 'foot' 'foot'
 bindsym $mod+s                  $exec i3-focus-or-open --workspace '$ws_sublime'  --class 'Sublime_text' 'subl --launch-or-new-window'
 bindsym $mod+d                  $exec i3-focus-or-open --workspace '$ws_merge'    --class 'Sublime_merge' 'smerge --launch-or-new-window'
 bindsym $mod+f                  $exec i3-focus-or-open --workspace '$ws_firefox'  --class 'firefox-developer-edition' 'firefox-developer-edition'
 bindsym $mod+c                  $exec i3-focus-or-open --workspace '$ws_chrome'   --class 'Chromium' 'chromium'
 bindsym $mod+g                  $exec i3-focus-or-open --workspace '$ws_email'    --class 'thunderbird' 'thunderbird'
-bindsym $mod+y                  $exec i3-focus-or-open --workspace '$ws_files'    --class 'kitty' 'kitty yazi'
+bindsym $mod+y                  $exec i3-focus-or-open --workspace '$ws_files'    --class 'foot' 'foot yazi'
 bindsym $mod+v                  $exec i3-focus-or-open --workspace '$ws_video'    --class 'mpv' 'mpv --force-window --idle'
 bindsym $mod+t                  $exec i3-focus-or-open --workspace '$ws_torrent'  --class 'transmission-gtk' 'transmission-gtk'
 bindsym $mod+Shift+a            move container to workspace $ws_terminal; workspace $ws_terminal

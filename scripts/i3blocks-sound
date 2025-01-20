@@ -3,7 +3,7 @@
 if [[ $button -eq 1 ]]; then
    volume mute
 elif [[ $button -eq 3 ]]; then
-   kitty alsamixer
+   foot alsamixer
 elif [[ $button -eq 4 ]]; then
    volume up
 elif [[ $button -eq 5 ]]; then

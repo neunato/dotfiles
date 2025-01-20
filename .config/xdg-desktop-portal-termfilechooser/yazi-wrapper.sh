@@ -77,4 +77,4 @@ else
    set -- --chooser-file="$out"
 fi
 
-kitty yazi "$@"
+foot yazi "$@"
