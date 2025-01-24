@@ -183,6 +183,10 @@ function setup_system_config {
       graphics="nvidia"
    fi
 
+   # root config
+   cp "/home/$username/.bashrc" /root
+   cp "/home/$username/.bash_profile" /root
+
    # pacman
    echo '[options]'                                                 | tee          /etc/pacman.conf > /dev/null
    echo 'HoldPkg = pacman glibc'                                    | tee --append /etc/pacman.conf > /dev/null
