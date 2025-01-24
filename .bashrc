@@ -32,14 +32,6 @@ if [[ $EUID != 0 ]]; then
    alias sudo='sudo --askpass'
    alias wget="wget --hsts-file='$XDG_CACHE_HOME/wget-hsts'"
 
-   # ssh agent
-   if ! pgrep -u "$USER" ssh-agent > /dev/null; then
-      ssh-agent -t 1h > "$XDG_RUNTIME_DIR/ssh-agent.env"
-   fi
-   if [[ ! -f "$SSH_AUTH_SOCK" ]]; then
-      source "$XDG_RUNTIME_DIR/ssh-agent.env" >/dev/null
-   fi
-
    # start window manager
    if [[ -z "$WAYLAND_DISPLAY" && "$XDG_VTNR" -eq 1 ]]; then
       exec niri-session &> /dev/null
