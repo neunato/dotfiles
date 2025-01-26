@@ -1,0 +1,53 @@
+#!/bin/bash
+
+# yambar-vpn daemon  - due to yambar's limitations
+# yambar-vpn toggle  - enable/disable vpn
+
+function toggle {
+   if ! pgrep openvpn > /dev/null; then
+      sudo systemctl start systemd-resolved || exit
+      sudo openvpn --cd /etc/openvpn/client/ --config default.ovpn --daemon > /dev/null || exit
+      signal
+      notify-send "VPN connected"
+
+      # external death
+      tail --pid="$(pidof openvpn)" -f /dev/null
+      signal
+      notify-send "VPN connection lost"
+   else
+      sudo pkill -x openvpn || exit
+      sudo systemctl stop systemd-resolved
+      signal
+      notify-send "VPN disconnected"
+   fi
+}
+
+function signal {
+   pgrep -f "$BASH_SOURCE" | grep -v $$ | ifne xargs kill -s USR1
+}
+
+function redraw {
+   if pidof openvpn; then
+      echo -e "connected|bool|true\n"
+   else
+      echo -e "connected|bool|false\n"
+   fi
+}
+
+
+if [[ $1 == "toggle" ]]; then
+   toggle
+   exit
+fi
+
+if [[ $1 == "daemon" ]]; then
+   redraw
+   trap redraw USR1
+   while :; do
+      sleep infinity &
+      pid="$!"
+      wait $pid
+      kill $pid
+   done
+   exit
+fi

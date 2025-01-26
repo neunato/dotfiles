@@ -1,0 +1,149 @@
+font: &font ${font_family}:pixelsize=${font_size}
+font_vpn: &font_vpn ${font_family}:pixelsize=${font_size_vpn}:weight=bold
+font_workspaces: &font_workspaces ${font_family}:pixelsize=${font_size_workspaces}
+underline: &underline {deco: {underline: {size: 1, color: "${color_magenta}"}}}
+
+bar:
+  monitor: ${output}
+  layer: top
+  location: bottom
+  height: ${height}
+  spacing: ${spacing}
+  margin: 0
+  font: *font
+  foreground: ${color_magenta}
+  background: 00000000
+
+  left:
+     - alsa:
+         card: default
+         mixer: Master
+         foreground: ${color_magenta_bright}
+         content:
+           list:
+             on-click:
+               wheel-up: volume up
+               wheel-down: volume down
+             items:
+               - string: {text: " "}
+               - string: {text: "{percent:3}%", left-margin: "${margin_icon}"}
+
+     - backlight:
+         name: intel_backlight
+         foreground: ${color_magenta_bright}
+         content:
+           list:
+             on-click:
+               wheel-up: brightness up
+               wheel-down: brightness down
+             items:
+               - string: {text: 󰃠}
+               - string: {text: "{percent:3}%", left-margin: "${margin_icon}"}
+
+     - battery:
+         name: BAT0
+         poll-interval: 30000
+         content:
+           map:
+             conditions:
+               state == charging || state == full:
+                 - string: {text: }
+                 - string: {text: "{capacity:3}%", left-margin: "${margin_icon}"}
+               state != charging:
+                 - ramp:
+                     tag: capacity
+                     items:
+                       - string: {text: , foreground: "${color_red}"}
+                       - string: {text: , foreground: "${color_red}"}
+                       - string: {text: , foreground: "${color_red}"}
+                       - string: {text: }
+                       - string: {text: }
+                       - string: {text: }
+                       - string: {text: }
+                       - string: {text: }
+                 - string: {text: "{capacity:3}%", left-margin: "${margin_icon}"}
+
+     - network:
+         poll-interval: 10000
+         content:
+           map:
+             conditions:
+               name == wlp0s20f3:
+                 map:
+                   conditions:
+                     state == up:
+                       - ramp:
+                           tag: quality
+                           items:
+                             - string: {text: 󰢿}
+                             - string: {text: 󰢼}
+                             - string: {text: 󰢼}
+                             - string: {text: 󰢽}
+                             - string: {text: 󰢽}
+                             - string: {text: 󰢾}
+                       - string: {text: "{quality:3}%", left-margin: "${margin_icon}"}
+                     state != up:
+                       - string: {text: 󰢿, foreground: "${color_red}"}
+                       - string: {text: "{quality:3}%", left-margin: "${margin_icon}", foreground: "${color_red}"}
+
+  center:
+    - niri-workspaces:
+        font: *font_workspaces
+        foreground: ${color_magenta_bright}
+        content:
+          map:
+            on-click: niri msg action focus-workspace {id}
+            conditions:
+              active:
+                string: {text: , margin: "${margin_icon_workspaces}"}
+              empty:
+                empty: {}
+              ~active:
+                string: {text: , margin: "${margin_icon_workspaces}"}
+
+  right:
+    - removables:
+        content:
+          map:
+            conditions:
+              ~mounted:
+                string:
+                  text: 󱊞
+                  on-click:
+                    left: udisksctl mount -b {device}
+                    right: udisksctl power-off -b {device}
+              mounted:
+                string:
+                  text: 󱊞
+                  on-click:
+                    left: udisksctl unmount -b {device}
+                    right: sh -c "udisksctl unmount -b {device} && udisksctl power-off -b {device}"
+                  foreground: ${color_magenta_bright}
+                  <<: *underline
+
+    - script:
+        path: ~/scripts/yambar-vpn
+        args: [daemon]
+        font: *font_vpn
+        content:
+          map:
+            on-click: yambar-vpn toggle
+            conditions:
+              connected:
+                string: {text: VPN, foreground: "${color_magenta_bright}", <<: *underline}
+              ~connected:
+                string: {text: VPN}
+
+    - label:
+        content:
+          string:
+            on-click: rofi-power
+            text: 
+
+    - clock:
+        time-format: "%d.%m.%Y. %H:%M "
+        foreground: ${color_magenta_bright}
+        content:
+          - string:
+              text: "{time}"
+              on-click: foot khal interactive

@@ -339,6 +339,7 @@ function setup_packages {
 
    arch_packages=()
    user_packages=()
+   deps_packages=()
 
    # hardware-related
    arch_packages+=("fwupd")
@@ -379,11 +380,16 @@ function setup_packages {
    arch_packages+=("xclip")
    arch_packages+=("xdotool")
    arch_packages+=("picom")
-   arch_packages+=("niri")
-   user_packages+=("xwayland-satellite")
    user_packages+=("i3-git")
    arch_packages+=("i3blocks")
    user_packages+=("slock-git")
+
+   # wayland
+   arch_packages+=("niri")
+   arch_packages+=("xwayland-satellite")
+   user_packages+=("yambar-git")
+   deps_packages+=("xcb-util-errors")
+   deps_packages+=("libmpdclient")
 
    # default applications
    arch_packages+=("perl-file-mimeinfo")
@@ -460,7 +466,7 @@ function setup_packages {
    arch_packages+=("dnsmasq")
    arch_packages+=("iptables-nft")
    arch_packages+=("wine-staging")
-   deps_packages=($(pacman -Si wine-staging | sed -n '/^Opt/,/^Conf/p' | sed '$d' | sed 's/^Opt.*://g' | sed 's/^\s*//g' | tr '\n' ' '))
+   deps_packages+=($(pacman -Si wine-staging | sed -n '/^Opt/,/^Conf/p' | sed '$d' | sed 's/^Opt.*://g' | sed 's/^\s*//g' | tr '\n' ' '))
    arch_packages+=("icoutils")
    user_packages+=("mesen2-git")
 

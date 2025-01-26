@@ -1,0 +1,51 @@
+#!/bin/bash
+
+if pidof yambar-toggle; then
+   exit
+fi
+
+shopt -s nullglob
+
+function enable {
+   niri msg --json event-stream | grep --line-buffered "WorkspacesChanged" | while read; do
+      outputs=($(niri msg --json outputs  | jq -r '.[] | select(.current_mode) | .name, .logical.scale'))
+
+      # spawn yambar on all outputs
+      for (( i=0; i<${#outputs[@]}; i+=2 )); do
+         output="${outputs[i]}"
+         pidfile="$XDG_RUNTIME_DIR/yambar-$output.pid"
+         if [[ -s $pidfile ]]; then
+            continue
+         fi
+         scale=$(echo "${outputs[i+1]}" | awk '{printf "%.f", $0}')   # round
+
+         set -a
+         output=$output
+         source "$XDG_CONFIG_HOME/yambar/config.env" $scale
+         set +a
+         yambar --print-pid="$pidfile" &
+      done
+
+      # destroy on disconnected outputs
+      for pidfile in "$XDG_RUNTIME_DIR/yambar-"*; do
+         output=${pidfile#*yambar-}
+         output=${output%.pid}
+         if ! [[ " ${outputs[*]} " =~ " $output " ]]; then
+            kill -INT "$(cat $pidfile)" 2> /dev/null
+            rm "$pidfile"
+         fi
+      done
+   done &
+}
+
+function disable {
+   pkill -x yambar
+   pkill -x yambar-toggle
+   rm $XDG_RUNTIME_DIR/yambar-*.pid 2> /dev/null
+}
+
+if pidof yambar; then
+   disable
+else
+   enable
+fi

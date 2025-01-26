@@ -215,6 +215,7 @@ binds {
 
    Mod+Ctrl+Alt+Delete { quit skip-confirmation=true; }
 
+   Mod+F5    { spawn "yambar-toggle"; }
    Mod+Grave { spawn "rofi" "-show" "combi" "-config" "~/.config/rofi/launcher.rasi"; }
    Mod+Return repeat=false { spawn "foot"; }
 }
@@ -223,6 +224,6 @@ environment {
    DISPLAY ":12"
 }
 
+spawn-at-startup "yambar-toggle"
 spawn-at-startup "xwayland-satellite" ":12"
 spawn-at-startup "start-ssh-agent"
-spawn-at-startup "rofi" "-show" "combi" "-config" "~/.config/rofi/launcher.rasi"
