@@ -32,8 +32,13 @@ input {
    }
 }
 
-output "eDP-1" {
-   scale 1.66667
+output "Sharp Corporation 0x14D6 Unknown" {
+   scale 2.0
+   background-color "#11111B"
+}
+
+output "AU Optronics 0x5B2D Unknown" {
+   scale 1.0
    background-color "#11111B"
 }
 
