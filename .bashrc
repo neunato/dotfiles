@@ -18,7 +18,7 @@ PROMPT_COMMAND='
    history -r
    IFS="[;" read -p $'"'\e[6n'"' -d R -rs _ col row _
    PS0="\n"
-   PS1="\e[30;$([[ $EUID == 0 ]] && echo "101" || echo "107")m$([[ $row -ne 1 || $col -ne 1 ]] && echo "\n")$PWD\e[m\e[K "
+   PS1="$([[ $row -ne 1 || $col -ne 1 ]] && echo "\n")\e[30;$([[ $EUID == 0 ]] && echo "101" || echo "107")m$PWD\e[m\e[K "
    PS2="$(echo "$PWD" | sed -e '"'s/./ /g') "'"
 '
 
