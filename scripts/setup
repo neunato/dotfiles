@@ -407,6 +407,7 @@ function setup_packages {
    arch_packages+=("jq")
    arch_packages+=("bc")
    arch_packages+=("wgetpaste")
+   arch_packages+=("dotool")
    arch_packages+=("moreutils")
    arch_packages+=("dunst")
    arch_packages+=("libnotify")
@@ -496,6 +497,7 @@ function setup_packages {
    pacman -Qdtq | ifne pacman -Rns --noconfirm -
 
    # groups, services, configuration
+   usermod -aG input "$username"
    usermod -aG docker "$username"
    usermod -aG libvirt "$username"
 
