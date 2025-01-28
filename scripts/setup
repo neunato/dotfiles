@@ -395,7 +395,7 @@ function setup_packages {
    arch_packages+=("perl-file-mimeinfo")
    arch_packages+=("xdg-utils")
    arch_packages+=("xdg-desktop-portal")
-   arch_packages+=("xdg-desktop-portal-gtk")
+   arch_packages+=("xdg-desktop-portal-gnome")
    user_packages+=("xdg-desktop-portal-termfilechooser-git")
 
    # utilities
