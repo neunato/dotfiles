@@ -1,6 +1,6 @@
 font: &font ${font_family}:pixelsize=${font_size}
-font_vpn: &font_vpn ${font_family}:pixelsize=${font_size_vpn}:weight=bold
-font_workspaces: &font_workspaces ${font_family}:pixelsize=${font_size_workspaces}
+font_s: &font_s ${font_family}:pixelsize=${font_size_s}:weight=bold
+font_xs: &font_xs ${font_family}:pixelsize=${font_size_xs}
 underline: &underline {deco: {underline: {size: 1, color: "${color_magenta}"}}}
 
 bar:
@@ -25,7 +25,7 @@ bar:
                wheel-up: volume up
                wheel-down: volume down
              items:
-               - string: {text: " "}
+               - string: {text: " 󰕾"}
                - string: {text: "{percent:3}%", left-margin: "${margin_icon}"}
 
      - backlight:
@@ -88,7 +88,7 @@ bar:
 
   center:
     - niri-workspaces:
-        font: *font_workspaces
+        font: *font_xs
         foreground: ${color_magenta_bright}
         content:
           map:
@@ -124,7 +124,7 @@ bar:
     - script:
         path: ~/scripts/yambar-vpn
         args: [daemon]
-        font: *font_vpn
+        font: *font_s
         content:
           map:
             on-click: yambar-vpn toggle
@@ -135,6 +135,7 @@ bar:
                 string: {text: VPN}
 
     - label:
+        font: *font_s
         content:
           string:
             on-click: rofi-power
