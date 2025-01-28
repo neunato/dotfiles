@@ -396,7 +396,6 @@ function setup_packages {
    arch_packages+=("xdg-utils")
    arch_packages+=("xdg-desktop-portal")
    arch_packages+=("xdg-desktop-portal-gnome")
-   user_packages+=("xdg-desktop-portal-termfilechooser-git")
 
    # utilities
    arch_packages+=("sudo")
@@ -412,7 +411,6 @@ function setup_packages {
    arch_packages+=("dunst")
    arch_packages+=("libnotify")
    user_packages+=("rofi-wayland")
-   arch_packages+=("yazi")
    arch_packages+=("khal")
    user_packages+=("svkbd-git")
    arch_packages+=("maim")
@@ -453,6 +451,7 @@ function setup_packages {
    arch_packages+=("zed")
    arch_packages+=("sublime-text")
    arch_packages+=("sublime-merge")
+   arch_packages+=("nautilus")
    arch_packages+=("feh")
    arch_packages+=("mpv")
    arch_packages+=("firefox-developer-edition")
@@ -529,7 +528,6 @@ function setup_packages {
 
    # default applications
    echo '' | as_user $username tee "/home/$username/.config/mimeapps.list" > /dev/null
-   as_user $username xdg-mime default yazi.desktop                      inode/directory x-directory/normal
    as_user $username xdg-mime default dev.zed.Zed.desktop               text/plain
    as_user $username xdg-mime default foot.desktop                      x-scheme-handler/terminal
    as_user $username xdg-mime default firefox-developer-edition.desktop $(cat /usr/share/applications/firefox-developer-edition.desktop | grep MimeType= | sed 's/MimeType=\(.*\)/\1/' | sed 's/;/ /g')
