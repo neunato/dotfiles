@@ -375,7 +375,7 @@ function setup_packages {
    arch_packages+=("tlp")
    arch_packages+=("acpid")
    arch_packages+=("polkit")
-   arch_packages+=("paru-git")
+   arch_packages+=("paru")
 
    # x11
    arch_packages+=("xorg-server")
@@ -563,7 +563,7 @@ function setup_firmware {
 }
 
 function install_paru {
-   local url="https://aur.archlinux.org/cgit/aur.git/snapshot/paru-git.tar.gz"
+   local url="https://aur.archlinux.org/cgit/aur.git/snapshot/paru.tar.gz"
    local dir="/var/tmp/paru"
    pacman -S --needed --noconfirm git rust
    extract_tarball "$url" "$dir"
