@@ -462,7 +462,7 @@ function setup_packages {
    arch_packages+=("sublime-text")
    arch_packages+=("sublime-merge")
    arch_packages+=("nautilus")
-   arch_packages+=("feh")
+   arch_packages+=("imv")
    arch_packages+=("mpv")
    arch_packages+=("firefox-developer-edition")
    arch_packages+=("chromium")
@@ -550,7 +550,7 @@ function setup_packages {
    as_user $username xdg-mime default dev.zed.Zed.desktop               text/plain
    as_user $username xdg-mime default foot.desktop                      x-scheme-handler/terminal
    as_user $username xdg-mime default firefox-developer-edition.desktop $(cat /usr/share/applications/firefox-developer-edition.desktop | grep MimeType= | sed 's/MimeType=\(.*\)/\1/' | sed 's/;/ /g')
-   as_user $username xdg-mime default feh.desktop                       $(cat /usr/share/applications/feh.desktop                       | grep MimeType= | sed 's/MimeType=\(.*\)/\1/' | sed 's/;/ /g')
+   as_user $username xdg-mime default imv.desktop                       $(cat /usr/share/applications/imv.desktop                       | grep MimeType= | sed 's/MimeType=\(.*\)/\1/' | sed 's/;/ /g')
    as_user $username xdg-mime default mpv.desktop                       $(cat /usr/share/applications/mpv.desktop                       | grep MimeType= | sed 's/MimeType=\(.*\)/\1/' | sed 's/;/ /g')
    as_user $username xdg-mime default transmission-gtk.desktop          $(cat /usr/share/applications/transmission-gtk.desktop          | grep MimeType= | sed 's/MimeType=\(.*\)/\1/' | sed 's/;/ /g')
    update-desktop-database /usr/share/applications
