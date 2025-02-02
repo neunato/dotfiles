@@ -234,50 +234,6 @@ function setup_system_config {
    echo 'KEYMAP=croat'           | tee          /etc/vconsole.conf > /dev/null
    echo 'FONT=latarcyrheb-sun32' | tee --append /etc/vconsole.conf > /dev/null
 
-   echo 'Section "InputClass"'                     | tee          /etc/X11/xorg.conf > /dev/null
-   echo '   Identifier "keyboard"'                 | tee --append /etc/X11/xorg.conf > /dev/null
-   echo '   MatchIsKeyboard "true"'                | tee --append /etc/X11/xorg.conf > /dev/null
-   echo '   Option "XkbLayout" "hr"'               | tee --append /etc/X11/xorg.conf > /dev/null
-   echo 'EndSection'                               | tee --append /etc/X11/xorg.conf > /dev/null
-   echo ''                                         | tee --append /etc/X11/xorg.conf > /dev/null
-   echo 'Section "InputClass"'                     | tee --append /etc/X11/xorg.conf > /dev/null
-   echo '   Identifier "touchpad"'                 | tee --append /etc/X11/xorg.conf > /dev/null
-   echo '   MatchIsTouchpad "true"'                | tee --append /etc/X11/xorg.conf > /dev/null
-   echo '   Option "ClickMethod" "clickfinger"'    | tee --append /etc/X11/xorg.conf > /dev/null
-   echo '   Option "NaturalScrolling" "true"'      | tee --append /etc/X11/xorg.conf > /dev/null
-   echo '   Option "AccelerationProfile" "7"'      | tee --append /etc/X11/xorg.conf > /dev/null
-   echo '   Option "AccelerationNumerator" "25"'   | tee --append /etc/X11/xorg.conf > /dev/null
-   echo '   Option "AccelerationDenominator" "10"' | tee --append /etc/X11/xorg.conf > /dev/null
-   echo '   Option "AccelerationThreshold" "40"'   | tee --append /etc/X11/xorg.conf > /dev/null
-   echo '   Option "ConstantDeceleration" "2"'     | tee --append /etc/X11/xorg.conf > /dev/null
-   echo '   Option "VelocityScale" "15"'           | tee --append /etc/X11/xorg.conf > /dev/null
-   echo 'EndSection'                               | tee --append /etc/X11/xorg.conf > /dev/null
-   echo ''                                         | tee --append /etc/X11/xorg.conf > /dev/null
-
-   # xorg config
-   echo 'Section "OutputClass"'                    | tee --append /etc/X11/xorg.conf > /dev/null
-   echo '   Identifier "intel"'                    | tee --append /etc/X11/xorg.conf > /dev/null
-   echo '   MatchDriver "i915"'                    | tee --append /etc/X11/xorg.conf > /dev/null
-   echo '   Driver "modesetting"'                  | tee --append /etc/X11/xorg.conf > /dev/null
-   echo 'EndSection'                               | tee --append /etc/X11/xorg.conf > /dev/null
-   echo ''                                         | tee --append /etc/X11/xorg.conf > /dev/null
-   echo 'Section "OutputClass"'                    | tee --append /etc/X11/xorg.conf > /dev/null
-   echo '   Identifier "nvidia"'                   | tee --append /etc/X11/xorg.conf > /dev/null
-   echo '   MatchDriver "nvidia-drm"'              | tee --append /etc/X11/xorg.conf > /dev/null
-   echo '   Driver "nvidia"'                       | tee --append /etc/X11/xorg.conf > /dev/null
-   echo '   Option "PrimaryGPU" "true"'            | tee --append /etc/X11/xorg.conf > /dev/null
-   echo '   ModulePath "/usr/lib/nvidia/xorg"'     | tee --append /etc/X11/xorg.conf > /dev/null
-   echo '   ModulePath "/usr/lib/xorg/modules"'    | tee --append /etc/X11/xorg.conf > /dev/null
-   echo 'EndSection'                               | tee --append /etc/X11/xorg.conf > /dev/null
-   echo ''                                         | tee --append /etc/X11/xorg.conf > /dev/null
-   echo 'Section "ServerFlags"'                    | tee --append /etc/X11/xorg.conf > /dev/null
-   echo '   Option "BlankTime" "0"'                | tee --append /etc/X11/xorg.conf > /dev/null
-   echo 'EndSection'                               | tee --append /etc/X11/xorg.conf > /dev/null
-   echo ''                                         | tee --append /etc/X11/xorg.conf > /dev/null
-   echo 'Section "Extensions"'                     | tee --append /etc/X11/xorg.conf > /dev/null
-   echo '   Option "DPMS" "false"'                 | tee --append /etc/X11/xorg.conf > /dev/null
-   echo 'EndSection'                               | tee --append /etc/X11/xorg.conf > /dev/null
-
    # boot process
    pacman -S --needed --noconfirm grub efibootmgr intel-ucode plymouth
 
@@ -313,10 +269,8 @@ function setup_system_config {
 
    # udev rules
    if [[ $graphics == "nvidia" ]]; then
-      echo 'ACTION=="add|remove", SUBSYSTEM=="usb_power_delivery", ENV{DISPLAY}=":0", ENV{XAUTHORITY}="/home/'$username'/.Xauthority", ENV{HOME}="/home/'$username'", RUN+="/usr/bin/su '$username' -c /home/'$username'/scripts/screen-layout-hotplug"' | tee /etc/udev/rules.d/monitor-hotplug.rules > /dev/null
       rm -f /etc/udev/rules.d/no-nvidia.rules
    else
-      echo 'ACTION=="change", SUBSYSTEM=="drm", ENV{DISPLAY}=":0", ENV{XAUTHORITY}="/home/'$username'/.Xauthority", ENV{HOME}="/home/'$username'", RUN+="/home/'$username'/scripts/screen-layout --restore"' | tee /etc/udev/rules.d/monitor-hotplug.rules > /dev/null
       echo 'ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{class}=="0x0c0330",   ATTR{power/control}="auto", ATTR{remove}="1"' | tee          /etc/udev/rules.d/no-nvidia.rules > /dev/null
       echo 'ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{class}=="0x0c8000",   ATTR{power/control}="auto", ATTR{remove}="1"' | tee --append /etc/udev/rules.d/no-nvidia.rules > /dev/null
       echo 'ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{class}=="0x040300",   ATTR{power/control}="auto", ATTR{remove}="1"' | tee --append /etc/udev/rules.d/no-nvidia.rules > /dev/null
@@ -377,21 +331,6 @@ function setup_packages {
    arch_packages+=("polkit")
    arch_packages+=("paru")
 
-   # x11
-   arch_packages+=("xorg-server")
-   arch_packages+=("xorg-xinit")
-   arch_packages+=("xorg-xrandr")
-   arch_packages+=("xorg-xprop")
-   arch_packages+=("xorg-xev")
-   user_packages+=("xsct")
-   arch_packages+=("xprintidle")
-   arch_packages+=("xclip")
-   arch_packages+=("xdotool")
-   arch_packages+=("picom")
-   user_packages+=("i3-git")
-   arch_packages+=("i3blocks")
-   user_packages+=("slock-git")
-
    # wayland
    arch_packages+=("niri")
    arch_packages+=("xwayland-satellite")
@@ -422,7 +361,6 @@ function setup_packages {
    arch_packages+=("libnotify")
    user_packages+=("rofi-wayland")
    arch_packages+=("khal")
-   user_packages+=("svkbd-git")
    arch_packages+=("maim")
    arch_packages+=("ffmpeg")
    arch_packages+=("imagemagick")
@@ -530,9 +468,9 @@ function setup_packages {
    systemctl mask systemd-rfkill.service  # tlp
    systemctl mask systemd-rfkill.socket   # tlp
    systemctl disable systemd-resolved 2> /dev/null
-   systemctl disable docker.service 2> /dev/null
+   systemctl disable docker.service   2> /dev/null
    systemctl disable libvirtd.service 2> /dev/null
-   systemctl disable ollama 2> /dev/null
+   systemctl disable ollama           2> /dev/null
    if nvidia_gpu_exists; then
       systemctl enable nvidia-suspend.service
       systemctl enable nvidia-resume.service

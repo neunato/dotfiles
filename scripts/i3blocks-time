@@ -1,7 +1,0 @@
-#!/bin/bash
-
-if [[ $button -eq 1 ]]; then
-   foot khal interactive
-fi
-
-date +"%d.%m.%Y. %H:%M "
