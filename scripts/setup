@@ -341,7 +341,15 @@ function setup_packages {
    user_packages=()
    deps_packages=()
 
-   # hardware-related
+   # essential packages
+   arch_packages+=("base")
+   arch_packages+=("base-devel")
+   arch_packages+=("linux")
+   arch_packages+=("linux-firmware")
+   arch_packages+=("grub")
+   arch_packages+=("efibootmgr")
+   arch_packages+=("intel-ucode")
+   arch_packages+=("plymouth")
    arch_packages+=("fwupd")
    arch_packages+=("mesa")
    arch_packages+=("mesa-utils")
@@ -354,8 +362,6 @@ function setup_packages {
    fi
    arch_packages+=("vulkan-icd-loader")
    arch_packages+=("vulkan-intel")
-   user_packages+=("xsct")
-   arch_packages+=("ddcutil")
    arch_packages+=("alsa-firmware")
    arch_packages+=("sof-firmware")
    arch_packages+=("pipewire")
@@ -369,6 +375,7 @@ function setup_packages {
    arch_packages+=("tlp")
    arch_packages+=("acpid")
    arch_packages+=("polkit")
+   arch_packages+=("paru-git")
 
    # x11
    arch_packages+=("xorg-server")
@@ -376,6 +383,7 @@ function setup_packages {
    arch_packages+=("xorg-xrandr")
    arch_packages+=("xorg-xprop")
    arch_packages+=("xorg-xev")
+   user_packages+=("xsct")
    arch_packages+=("xprintidle")
    arch_packages+=("xclip")
    arch_packages+=("xdotool")
@@ -398,6 +406,7 @@ function setup_packages {
    arch_packages+=("xdg-desktop-portal-gnome")
 
    # utilities
+   arch_packages+=("zsh")
    arch_packages+=("sudo")
    arch_packages+=("nano")
    arch_packages+=("bat")
@@ -408,6 +417,7 @@ function setup_packages {
    arch_packages+=("wgetpaste")
    arch_packages+=("dotool")
    arch_packages+=("moreutils")
+   arch_packages+=("ddcutil")
    arch_packages+=("dunst")
    arch_packages+=("libnotify")
    user_packages+=("rofi-wayland")
@@ -471,6 +481,7 @@ function setup_packages {
    user_packages+=("mesen2-git")
 
    # fonts, icons
+   arch_packages+=("fontconfig")
    arch_packages+=("adobe-source-sans-fonts")
    arch_packages+=("adobe-source-serif-fonts")
    arch_packages+=("adobe-source-code-pro-fonts")
