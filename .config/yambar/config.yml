@@ -1,6 +1,7 @@
 font: &font ${font_family}:pixelsize=${font_size}
 font_s: &font_s ${font_family}:pixelsize=${font_size_s}:weight=bold
-font_xs: &font_xs ${font_family}:pixelsize=${font_size_xs}
+font_l: &font_l ${font_family}:pixelsize=${font_size_l}
+font_xl: &font_xl ${font_family}:pixelsize=${font_size_xl}
 underline: &underline {deco: {underline: {size: 1, color: "${color_magenta}"}}}
 
 bar:
@@ -25,7 +26,7 @@ bar:
                wheel-up: volume up
                wheel-down: volume down
              items:
-               - string: {text: " 󰕾"}
+               - string: {text: " 󰕾", font: *font_l}
                - string: {text: "{percent:3}%", left-margin: "${margin_icon}"}
 
      - backlight:
@@ -88,7 +89,7 @@ bar:
 
   center:
     - niri-workspaces:
-        font: *font_xs
+        font: *font_xl
         foreground: ${color_magenta_bright}
         content:
           map:
