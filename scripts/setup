@@ -425,7 +425,7 @@ function setup_packages {
    arch_packages+=("adobe-source-code-pro-fonts")
    arch_packages+=("adobe-source-han-serif-otc-fonts")
    arch_packages+=("ttf-jetbrains-mono")
-   arch_packages+=("ttf-nerd-fonts-symbols-mono")
+   arch_packages+=("ttf-nerd-fonts-symbols")
    user_packages+=("candy-icons-git")
 
    # install packages
