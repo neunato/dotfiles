@@ -32,6 +32,8 @@ SUDO_ASKPASS="$HOME/scripts/rofi-askpass"
 SSH_ASKPASS="$HOME/scripts/rofi-askpass"
 SSH_ASKPASS_REQUIRE="force"
 
+QT_QPA_PLATFORMTHEME=gtk3
+
 if [[ ! -f /etc/udev/rules.d/no-nvidia.rules ]]; then
    GBM_BACKEND=nvidia-drm
    __GLX_VENDOR_LIBRARY_NAME=nvidia

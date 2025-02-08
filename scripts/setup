@@ -337,6 +337,7 @@ function setup_packages {
    user_packages+=("yambar-git")
    deps_packages+=("xcb-util-errors")
    deps_packages+=("libmpdclient")
+   arch_packages+=("qt6-wayland")
 
    # default applications
    arch_packages+=("perl-file-mimeinfo")
@@ -389,10 +390,6 @@ function setup_packages {
    arch_packages+=("docker-compose")
    arch_packages+=("aws-cli")
    arch_packages+=("ollama")
-
-   # gtk
-   arch_packages+=("gtk3")
-   arch_packages+=("gtk4")
 
    # window applications
    arch_packages+=("foot")
