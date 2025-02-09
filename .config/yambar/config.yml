@@ -2,7 +2,7 @@ font: &font ${font_family}:pixelsize=${font_size}
 font_s: &font_s ${font_family}:pixelsize=${font_size_s}:weight=bold
 font_l: &font_l ${font_family}:pixelsize=${font_size_l}
 font_xl: &font_xl ${font_family}:pixelsize=${font_size_xl}
-underline: &underline {deco: {underline: {size: 1, color: "${color_magenta}"}}}
+underline: &underline { deco: { underline: { size: 1, color: "${color_magenta}" } } }
 
 bar:
   monitor: ${output}
@@ -16,76 +16,109 @@ bar:
   background: 00000000
 
   left:
-     - alsa:
-         card: default
-         mixer: Master
-         foreground: ${color_magenta_bright}
-         content:
-           list:
-             on-click:
-               wheel-up: volume up
-               wheel-down: volume down
-             items:
-               - string: {text: " 󰕾", font: *font_l}
-               - string: {text: "{percent:3}%", left-margin: "${margin_icon}"}
+    - pipewire:
+        anchors:
+          volume_icon: &volume_icon
+            map:
+              conditions:
+                form_factor == headphones && description != "CalDigit Pro Audio Stereo" && ~muted:
+                  string: { text: 󰋋, font: *font_l }
+                form_factor == headphones && description != "CalDigit Pro Audio Stereo" && muted:
+                  string: { text: 󰟎, font: *font_l }
+                ~muted:
+                  string: { text: 󰕾, font: *font_l }
+                muted:
+                  string: { text: 󰖁, font: *font_l }
+        content:
+          map:
+            on-click:
+              left: volume mute
+              wheel-up: volume up
+              wheel-down: volume down
+            conditions:
+              type == sink && muted:
+                list:
+                  foreground: "${color_red}"
+                  items:
+                    - string: { text: " " }
+                    - *volume_icon
+                    - string: { text: "{cubic_volume:3}%", left-margin: "${margin_icon}" }
+              type == sink && ~muted:
+                list:
+                  foreground: "${color_magenta_bright}"
+                  items:
+                    - string: { text: " " }
+                    - *volume_icon
+                    - string: { text: "{cubic_volume:3}%", left-margin: "${margin_icon}" }
 
-     - backlight:
-         name: intel_backlight
-         foreground: ${color_magenta_bright}
-         content:
-           list:
-             on-click:
-               wheel-up: brightness up
-               wheel-down: brightness down
-             items:
-               - string: {text: 󰃠}
-               - string: {text: "{percent:3}%", left-margin: "${margin_icon}"}
+    - backlight:
+        name: intel_backlight
+        foreground: ${color_magenta_bright}
+        content:
+          list:
+            on-click:
+              wheel-up: brightness up
+              wheel-down: brightness down
+            items:
+              - string: { text: 󰃠 }
+              - string: { text: "{percent:3}%", left-margin: "${margin_icon}" }
 
-     - battery:
-         name: BAT0
-         poll-interval: 30000
-         content:
-           map:
-             conditions:
-               state == charging || state == full:
-                 - string: {text: }
-                 - string: {text: "{capacity:3}%", left-margin: "${margin_icon}"}
-               state != charging:
-                 - ramp:
-                     tag: capacity
-                     items:
-                       - string: {text: , foreground: "${color_red}"}
-                       - string: {text: , foreground: "${color_red}"}
-                       - string: {text: , foreground: "${color_red}"}
-                       - string: {text: }
-                       - string: {text: }
-                       - string: {text: }
-                       - string: {text: }
-                       - string: {text: }
-                 - string: {text: "{capacity:3}%", left-margin: "${margin_icon}"}
+    - battery:
+        name: BAT0
+        poll-interval: 30000
+        anchors:
+          battery_icon: &battery_icon
+            map:
+              conditions:
+                state == charging || state == full:
+                  string: { text:  }
+                state != charging:
+                  ramp:
+                    tag: capacity
+                    items:
+                      - string: { text:  }
+                      - string: { text:  }
+                      - string: { text:  }
+                      - string: { text:  }
+                      - string: { text:  }
+                      - string: { text:  }
+                      - string: { text:  }
+                      - string: { text:  }
+        content:
+          map:
+            conditions:
+              capacity <= 20:
+                list:
+                  foreground: "${color_red}"
+                  items:
+                    - *battery_icon
+                    - string: { text: "{capacity:3}%", left-margin: "${margin_icon}" }
+              capacity > 20:
+                - *battery_icon
+                - string: { text: "{capacity:3}%", left-margin: "${margin_icon}" }
 
-     - network:
-         poll-interval: 10000
-         content:
-           map:
-             conditions:
-               name == wlp0s20f3:
-                 map:
-                   conditions:
-                     state == up:
-                       - ramp:
-                           tag: quality
-                           items:
-                             - string: {text: 󰢿}
-                             - string: {text: 󰢼}
-                             - string: {text: 󰢼}
-                             - string: {text: 󰢽}
-                             - string: {text: 󰢽}
-                             - string: {text: 󰢾}
-                       - string: {text: "{quality:3}%", left-margin: "${margin_icon}"}
-                     state != up:
-                       - string: {text: 󰢿, foreground: "${color_red}"}
-                       - string: {text: "{quality:3}%", left-margin: "${margin_icon}", foreground: "${color_red}"}
+    - network:
+        poll-interval: 10000
+        content:
+          map:
+            conditions:
+              (name == wlp2s0 || name == wlp0s20f3) && state == up:
+                - ramp:
+                    tag: quality
+                    items:
+                      - string: { text: 󰢿 }
+                      - string: { text: 󰢼 }
+                      - string: { text: 󰢼 }
+                      - string: { text: 󰢽 }
+                      - string: { text: 󰢽 }
+                      - string: { text: 󰢾 }
+                - string: { text: "{quality:3}%", left-margin: "${margin_icon}" }
+              (name == wlp2s0 || name == wlp0s20f3) && state != up:
+                list:
+                  foreground: "${color_red}"
+                  items:
+                    - string: { text: 󰢿 }
+                    - string: { text: "{quality:3}%", left-margin: "${margin_icon}" }
 
   center:
     - niri-workspaces:
@@ -96,11 +129,11 @@ bar:
             on-click: niri msg action focus-workspace {id}
             conditions:
               active:
-                string: {text: , margin: "${margin_icon_workspaces}"}
+                string: { text: , margin: "${margin_icon_workspaces}" }
               empty:
                 empty: {}
               ~active:
-                string: {text: , margin: "${margin_icon_workspaces}"}
+                string: { text: , margin: "${margin_icon_workspaces}" }
 
   right:
     - removables:
@@ -109,16 +142,16 @@ bar:
             conditions:
               ~mounted:
                 string:
-                  text: 󱊞
                   on-click:
                     left: udisksctl mount -b {device}
                     right: udisksctl power-off -b {device}
+                  text: 󱊞
               mounted:
                 string:
-                  text: 󱊞
                   on-click:
                     left: udisksctl unmount -b {device}
                     right: sh -c "udisksctl unmount -b {device} && udisksctl power-off -b {device}"
+                  text: 󱊞
                   foreground: ${color_magenta_bright}
                   <<: *underline
 
@@ -131,9 +164,9 @@ bar:
             on-click: yambar-vpn toggle
             conditions:
               connected:
-                string: {text: VPN, foreground: "${color_magenta_bright}", <<: *underline}
+                string: { text: VPN, foreground: "${color_magenta_bright}", <<: *underline }
               ~connected:
-                string: {text: VPN}
+                string: { text: VPN }
 
     - label:
         font: *font_s
@@ -147,5 +180,5 @@ bar:
         foreground: ${color_magenta_bright}
         content:
           - string:
-              text: "{time}"
               on-click: foot khal interactive
+              text: "{time}"
