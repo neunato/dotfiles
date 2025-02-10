@@ -87,13 +87,13 @@ bar:
         content:
           map:
             conditions:
-              capacity <= 20:
+              state != charging && capacity <= 20:
                 list:
                   foreground: "${color_red}"
                   items:
                     - *battery_icon
                     - string: { text: "{capacity:3}%", left-margin: "${margin_icon}" }
-              capacity > 20:
+              state == charging || capacity > 20:
                 - *battery_icon
                 - string: { text: "{capacity:3}%", left-margin: "${margin_icon}" }
 
@@ -102,7 +102,7 @@ bar:
         content:
           map:
             conditions:
-              (name == wlp2s0 || name == wlp0s20f3) && state == up:
+              name == wlan0 && state == up:
                 - ramp:
                     tag: quality
                     items:
@@ -113,7 +113,7 @@ bar:
                       - string: { text: 󰢽 }
                       - string: { text: 󰢾 }
                 - string: { text: "{quality:3}%", left-margin: "${margin_icon}" }
-              (name == wlp2s0 || name == wlp0s20f3) && state != up:
+              name == wlan0 && state != up:
                 list:
                   foreground: "${color_red}"
                   items:
