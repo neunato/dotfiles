@@ -5,7 +5,6 @@
 
 function toggle {
    if ! pgrep openvpn > /dev/null; then
-      sudo systemctl start systemd-resolved || exit
       sudo openvpn --cd /etc/openvpn/client/ --config default.ovpn --daemon > /dev/null || exit
       signal
       notify-send "VPN connected"
@@ -16,7 +15,6 @@ function toggle {
       notify-send "VPN connection lost"
    else
       sudo pkill -x openvpn || exit
-      sudo systemctl stop systemd-resolved
       signal
       notify-send "VPN disconnected"
    fi
