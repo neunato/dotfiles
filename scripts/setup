@@ -184,6 +184,11 @@ function setup_system_config {
    fi
 
    pacman -S --needed --noconfirm iwd
+   pacman -S --needed --noconfirm fontconfig
+   pacman -S --needed --noconfirm grub
+   pacman -S --needed --noconfirm efibootmgr
+   pacman -S --needed --noconfirm intel-ucode
+   pacman -S --needed --noconfirm plymouth
 
    # bash
    cp "/home/$username/.bashrc" /root
@@ -231,7 +236,6 @@ function setup_system_config {
    sed -i 's/^date_fmt .*/date_fmt "%d-%m-%Y %T"/' /usr/share/i18n/locales/en_US
    locale-gen
 
-   pacman -S --needed --noconfirm fontconfig
    as_user $username mkdir -p "/home/$username/.config/fontconfig/conf.d"
    as_user $username ln -sf /usr/share/fontconfig/conf.avail/50-user.conf "/home/$username/.config/fontconfig/conf.d"
    as_user $username fc-cache
@@ -241,7 +245,6 @@ function setup_system_config {
    echo 'FONT=latarcyrheb-sun32' | tee --append /etc/vconsole.conf > /dev/null
 
    # boot process
-   pacman -S --needed --noconfirm grub efibootmgr intel-ucode plymouth
 
    local url=$(github_repo_archive_url "neunato/plymouth-theme-silence" "master")
    local dir="/usr/share/plymouth/themes/silence"
