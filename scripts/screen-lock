@@ -1,0 +1,3 @@
+#!/bin/bash
+
+waylock -fork-on-lock -ignore-empty-password -init-color 0x161c26 -input-color 0x0f131a -fail-color 0x161c26

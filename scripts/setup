@@ -346,6 +346,7 @@ function setup_packages {
    user_packages+=("yambar-git")
    deps_packages+=("xcb-util-errors")
    deps_packages+=("libmpdclient")
+   arch_packages+=("waylock")
    arch_packages+=("qt6-wayland")
 
    # default applications
