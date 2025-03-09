@@ -82,3 +82,7 @@ format = "<b>%s</b> %n%%"
 alignment = center
 timeout = 1
 history_ignore = true
+
+[play_sound]
+summary = ".*"
+script = play-notification-sound
