@@ -1,0 +1,5 @@
+#!/bin/bash
+
+if [[ -n $1 ]]; then
+   pgrep -f "yambar-$1" | ifne xargs kill -s USR1
+fi
