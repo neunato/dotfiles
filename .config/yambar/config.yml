@@ -161,7 +161,7 @@ bar:
         font: *font_s
         content:
           map:
-            on-click: yambar-vpn toggle
+            on-click: yambar-vpn click
             conditions:
               connected:
                 string: { text: VPN, foreground: "${color_magenta_bright}", <<: *underline }
