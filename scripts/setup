@@ -122,7 +122,6 @@ function setup_system {
       useradd -m '$username' -G wheel,video
       echo 'root:$root_password' | chpasswd
       echo '$username:$password' | chpasswd
-      echo '%wheel ALL=(ALL:ALL) ALL' | EDITOR='tee' visudo > /dev/null
    "
 
    # system configuration
@@ -189,6 +188,18 @@ function setup_system_config {
    pacman -S --needed --noconfirm efibootmgr
    pacman -S --needed --noconfirm intel-ucode
    pacman -S --needed --noconfirm plymouth
+
+   # sudo
+   echo "Path askpass /home/$username/scripts/rofi-askpass"     | tee /etc/sudo.conf > /dev/null
+
+   echo 'Defaults env_reset'                                    | EDITOR='tee'          visudo > /dev/null
+   echo 'Defaults passwd_timeout=0'                             | EDITOR='tee --append' visudo > /dev/null
+   echo 'Defaults passwd_tries=10'                              | EDITOR='tee --append' visudo > /dev/null
+   echo 'Defaults timestamp_timeout=-1'                         | EDITOR='tee --append' visudo > /dev/null
+   echo ''                                                      | EDITOR='tee --append' visudo > /dev/null
+   echo '%wheel ALL=(ALL:ALL) ALL'                              | EDITOR='tee --append' visudo > /dev/null
+   echo "$username ALL=(root) NOPASSWD: /usr/bin/openvpn"       | EDITOR='tee --append' visudo > /dev/null
+   echo "$username ALL=(root) NOPASSWD: /usr/bin/pkill openvpn" | EDITOR='tee --append' visudo > /dev/null
 
    # bash
    cp "/home/$username/.bashrc" /root
@@ -442,7 +453,8 @@ function setup_packages {
    as_user $username paru -S --useask --ask 4 --noconfirm --asexplicit $paru_args "${arch_packages[@]}" "${user_packages[@]}" &&
    as_user $username paru -S --useask --ask 4 --noconfirm --asdeps $paru_args "${deps_packages[@]}" || failed=true
    as_user $username git config --global --rename-section "url-.git@github.com:" "url.git@github.com:"
-   head -n -1 /etc/sudoers | EDITOR="tee" visudo > /dev/null
+   sed "/$username ALL=(ALL:ALL) NOPASSWD: ALL/d" /etc/sudoers | EDITOR="tee" visudo > /dev/null
+
    if [[ $failed == "true" ]]; then
       echo "Failed to update packages, aborting" >&2
       exit 1
