@@ -20,8 +20,8 @@ elif [[ $1 == "system" && $EUID -ne 0 ]]; then
 elif [[ $1 == "system-config" && $EUID -eq 0 ]]; then
    echo "'setup system-config' must not be run as root" >&2
    exit 1
-elif [[ $1 == "firmware" && $EUID -ne 0 ]]; then
-   echo "'setup firmware' must be run as root" >&2
+elif [[ $1 == "firmware" && $EUID -eq 0 ]]; then
+   echo "'setup firmware' must not be run as root" >&2
    exit 1
 elif [[ $1 == "packages" && $EUID -eq 0 ]]; then
    echo "'setup packages' must not be run as root" >&2
@@ -607,6 +607,8 @@ fi
 case "$1" in
    system)        setup_system;;
    system-config) as_sudo setup_system_config "$(whoami)" "$graphics";;
-   firmware)      setup_firmware;;
+   firmware)      as_sudo setup_firmware;;
    packages)      as_sudo setup_packages "$(whoami)" "$paru_args";;
 esac
+
+mpv --really-quiet ~/sounds/warcraft-jobs-done.mp3
