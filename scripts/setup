@@ -537,7 +537,7 @@ function wrap_f {
 }
 
 function as_sudo {
-   sudo /bin/bash -c "$(wrap_f "$@")"
+   sudo --askpass /bin/bash -c "$(wrap_f "$@")"
 }
 
 function as_nobody {
