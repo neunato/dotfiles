@@ -205,9 +205,11 @@ function setup_system_config {
    cp "/home/$username/.bashrc" /root
    cp "/home/$username/.bash_profile" /root
 
-   # iwd
-   echo '[General]'                                                    | tee          /etc/iwd/main.conf > /dev/null
-   echo 'EnableNetworkConfiguration = true'                            | tee --append /etc/iwd/main.conf > /dev/null
+   # network
+   ln -sf /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
+
+   echo '[General]'                         | tee          /etc/iwd/main.conf > /dev/null
+   echo 'EnableNetworkConfiguration = true' | tee --append /etc/iwd/main.conf > /dev/null
 
    # pacman
    echo '[options]'                                                    | tee          /etc/pacman.conf > /dev/null
@@ -481,7 +483,8 @@ function setup_packages {
    fi
 
    systemctl --user --machine="$username@" enable $start pipewire-pulse.service
-   systemctl --user enable $start ssh-agent.service
+   systemctl --user --machine="$username@" enable $start ssh-agent.service
+   systemctl enable $start systemd-resolved
    systemctl enable $start iwd.service
    systemctl enable $start acpid.service
    systemctl enable $start tlp.service
