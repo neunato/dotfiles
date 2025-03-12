@@ -308,8 +308,12 @@ function setup_packages {
       install_paru
    fi
 
-   if ! pacman -Q sublime-text > /dev/null; then
+   if ! pacman -Q sublime-text > /dev/null 2>&1; then
       curl -s -O https://download.sublimetext.com/sublimehq-pub.gpg && pacman-key --add sublimehq-pub.gpg && pacman-key --lsign-key 8A8F901A && rm sublimehq-pub.gpg
+   fi
+
+   if ! pacman -Q librewolf-bin > /dev/null 2>&1; then
+      gpg --recv-keys --keyserver hkps://keyserver.ubuntu.com 662E3CDD6FE329002D0CA5BB40339DD82B12EF16
    fi
 
    arch_packages=()
@@ -422,7 +426,7 @@ function setup_packages {
    arch_packages+=("nautilus")
    arch_packages+=("imv")
    arch_packages+=("mpv")
-   arch_packages+=("firefox-developer-edition")
+   user_packages+=("librewolf-bin")
    arch_packages+=("chromium")
    arch_packages+=("calibre")
    arch_packages+=("transmission-gtk")
@@ -507,12 +511,12 @@ function setup_packages {
 
    # default applications
    echo '' | as_user $username tee "/home/$username/.config/mimeapps.list" > /dev/null
-   as_user $username xdg-mime default dev.zed.Zed.desktop               text/plain
-   as_user $username xdg-mime default foot.desktop                      x-scheme-handler/terminal
-   as_user $username xdg-mime default firefox-developer-edition.desktop $(cat /usr/share/applications/firefox-developer-edition.desktop | grep MimeType= | sed 's/MimeType=\(.*\)/\1/' | sed 's/;/ /g')
-   as_user $username xdg-mime default imv.desktop                       $(cat /usr/share/applications/imv.desktop                       | grep MimeType= | sed 's/MimeType=\(.*\)/\1/' | sed 's/;/ /g')
-   as_user $username xdg-mime default mpv.desktop                       $(cat /usr/share/applications/mpv.desktop                       | grep MimeType= | sed 's/MimeType=\(.*\)/\1/' | sed 's/;/ /g')
-   as_user $username xdg-mime default transmission-gtk.desktop          $(cat /usr/share/applications/transmission-gtk.desktop          | grep MimeType= | sed 's/MimeType=\(.*\)/\1/' | sed 's/;/ /g')
+   as_user $username xdg-mime default dev.zed.Zed.desktop      text/plain
+   as_user $username xdg-mime default foot.desktop             x-scheme-handler/terminal
+   as_user $username xdg-mime default librewolf.desktop        $(cat /usr/share/applications/librewolf.desktop        | grep MimeType= | sed 's/MimeType=\(.*\)/\1/' | sed 's/;/ /g')
+   as_user $username xdg-mime default imv.desktop              $(cat /usr/share/applications/imv.desktop              | grep MimeType= | sed 's/MimeType=\(.*\)/\1/' | sed 's/;/ /g')
+   as_user $username xdg-mime default mpv.desktop              $(cat /usr/share/applications/mpv.desktop              | grep MimeType= | sed 's/MimeType=\(.*\)/\1/' | sed 's/;/ /g')
+   as_user $username xdg-mime default transmission-gtk.desktop $(cat /usr/share/applications/transmission-gtk.desktop | grep MimeType= | sed 's/MimeType=\(.*\)/\1/' | sed 's/;/ /g')
    update-desktop-database /usr/share/applications
 }
 

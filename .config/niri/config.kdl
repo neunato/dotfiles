@@ -116,9 +116,9 @@ window-rule {
 }
 
 window-rule {
-   match app-id="firefox"
    match app-id="zed"
    match app-id="merge"
+   match app-id="LibreWolf"
 
    default-column-width {
       proportion 1.0
