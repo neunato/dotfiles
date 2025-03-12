@@ -481,6 +481,7 @@ function setup_packages {
    fi
 
    systemctl --user --machine="$username@" enable $start pipewire-pulse.service
+   systemctl --user enable $start ssh-agent.service
    systemctl enable $start iwd.service
    systemctl enable $start acpid.service
    systemctl enable $start tlp.service

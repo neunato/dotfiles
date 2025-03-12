@@ -28,6 +28,7 @@ MPV_HOME="$XDG_CONFIG_HOME/mpv"
 WGETRC="$XDG_CONFIG_HOME/wgetrc"
 CUDA_CACHE_PATH="$XDG_CACHE_HOME/nvidia"
 
+SSH_AUTH_SOCK="$XDG_RUNTIME_DIR/ssh-agent.socket"
 SSH_ASKPASS="$HOME/scripts/rofi-askpass"
 SSH_ASKPASS_REQUIRE="force"
 
