@@ -23,17 +23,18 @@ PROMPT_COMMAND='
 '
 
 # the rest does not apply to root
-if [[ $EUID != 0 ]]; then
+if [[ $EUID == 0 ]]; then
+   exit
+fi
 
-   # environment variables
-   source "$HOME/.profile"
+# environment
+source "$HOME/.profile"
 
-   # aliases
-   alias sudo='sudo --askpass'
-   alias wget="wget --hsts-file='$XDG_CACHE_HOME/wget-hsts'"
+# aliases
+alias sudo='sudo --askpass'
+alias wget="wget --hsts-file='$XDG_CACHE_HOME/wget-hsts'"
 
-   # start window manager
-   if [[ -z "$WAYLAND_DISPLAY" && "$XDG_VTNR" -eq 1 ]]; then
-      exec niri-session &> /dev/null
-   fi
+# start compositor
+if [[ -z "$WAYLAND_DISPLAY" && "$XDG_VTNR" -eq 1 ]]; then
+   exec niri-session &> /dev/null
 fi
