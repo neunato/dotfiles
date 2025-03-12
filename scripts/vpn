@@ -3,7 +3,7 @@
 set -e
 
 if ! pgrep openvpn > /dev/null; then
-   sudo --askpass openvpn --cd /etc/openvpn/client/ --config default.ovpn --daemon > /dev/null
+   sudo openvpn --cd /etc/openvpn/client/ --config default.ovpn --daemon > /dev/null
    yambar-refresh vpn
    notify-send "VPN connected"
 
@@ -12,7 +12,7 @@ if ! pgrep openvpn > /dev/null; then
    yambar-refresh vpn
    notify-send "VPN connection lost"
 else
-   sudo --askpass pkill -x openvpn
+   sudo pkill openvpn
    pgrep -f "${BASH_SOURCE[0]}" | grep -v $$ | ifne xargs kill -9
    yambar-refresh vpn
    notify-send "VPN disconnected"
