@@ -422,6 +422,25 @@ function setup_packages {
    # window applications
    arch_packages+=("foot")
    arch_packages+=("zed")
+   arch_packages+=(
+      gcc
+      clang
+      musl
+      cmake
+      alsa-lib
+      fontconfig
+      wayland
+      libgit2
+      libxcb
+      libxkbcommon-x11
+      openssl
+      zstd
+      pkgconf
+      mold
+      sqlite
+      jq
+      git
+   )
    arch_packages+=("sublime-text")
    arch_packages+=("sublime-merge")
    arch_packages+=("nautilus")
