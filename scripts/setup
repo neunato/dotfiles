@@ -412,7 +412,7 @@ function setup_packages {
    arch_packages+=("nodejs")
    user_packages+=("volta-bin")
    arch_packages+=("npm")
-   arch_packages+=("rust")
+   arch_packages+=("rustup")
    arch_packages+=("go")
    arch_packages+=("docker")
    arch_packages+=("docker-compose")
@@ -505,6 +505,9 @@ function setup_packages {
       as_user $username nvidia-settings --rewrite-config-file --config="/home/$username/.config/nvidia/settings-rc"
    fi
 
+   as_user $username rustup default stable
+   as_user $username rustup update
+
    sed -i 's/#unix_sock_group/unix_sock_group/g'                /etc/libvirt/libvirtd.conf
    sed -i 's/#unix_sock_rw_perms/unix_sock_rw_perms/g'          /etc/libvirt/libvirtd.conf
    sed -i 's/#user = "libvirt-qemu"/user = "'"$username"'"/g'   /etc/libvirt/qemu.conf
@@ -530,7 +533,7 @@ function setup_firmware {
 function install_paru {
    local url="https://aur.archlinux.org/cgit/aur.git/snapshot/paru.tar.gz"
    local dir="/var/tmp/paru"
-   pacman -S --needed --noconfirm git rust
+   pacman -S --needed --noconfirm git rustup
    extract_tarball "$url" "$dir"
    chmod 777 "$dir"
    as_nobody /bin/bash -c "cd $dir && CARGO_HOME=$dir makepkg"
