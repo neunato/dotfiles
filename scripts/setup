@@ -2,14 +2,14 @@
 
 set -e
 
-if [[ ! " system system-config firmware packages " =~ " $1 " ]]; then
-   echo "Expected 'setup system|system-config|firmware|packages'" >&2
+if [[ ! " system system-config firmware graphics packages " =~ " $1 " ]]; then
+   echo "Expected 'setup system|system-config|firmware|graphics|packages'" >&2
    exit 1
-elif [[ $1 != "system-config" && $1 != "packages" && $# -ne 1 ]]; then
-   echo "Expected 'setup system|system-config|firmware|packages'" >&2
+elif [[ $1 != "graphics" && $1 != "packages" && $# -ne 1 ]]; then
+   echo "Expected 'setup system|system-config|firmware|graphics|packages'" >&2
    exit 1
-elif [[ $1 == "system-config" && ($# -gt 2 || ! "--no-gpu" =~ "$2" ) ]]; then
-   echo "Expected 'setup system-config [--no-gpu]'" >&2
+elif [[ $1 == "graphics" && ($# -gt 2 || ! " integrated nvidia " =~ " $2 " ) ]]; then
+   echo "Expected 'setup graphics integrated|nvidia'" >&2
    exit 1
 elif [[ $1 == "packages" && ($# -gt 2 || ! "--reinstall" =~ "$2" ) ]]; then
    echo "Expected 'setup packages [--reinstall]'" >&2
@@ -124,10 +124,14 @@ function setup_system {
       echo '$username:$password' | chpasswd
    "
 
-   # system configuration
-   as_chroot setup_system_config "$username"
+   # system configuration and packages
+   if as_chroot nvidia_gpu_exists; then
+      graphics="nvidia"
+   else
+      graphics="integrated"
+   fi
 
-   # packages
+   as_chroot setup_system_config "$username" "$graphics"
    as_chroot setup_packages "$username"
 
    # user configuration
@@ -178,7 +182,7 @@ function setup_system_config {
    local swapfile_uuid="$(findmnt -no UUID -T /swapfile)"
    local swapfile_offset="$(filefrag -v /swapfile | awk '$1=="0:" {print substr($4, 1, length($4)-2)}')"
 
-   if [[ -z $graphics ]] && nvidia_gpu_exists; then
+   if [[ -z $graphics ]] && nvidia_enabled; then
       graphics="nvidia"
    fi
 
@@ -302,200 +306,202 @@ function setup_system_config {
 
 function setup_packages {
    local username="$1"
-   local paru_args="$2"
+   local mode="$2"              # reinstall|no-install|
 
-   if [[ ! -x $(command -v paru) ]]; then
-      install_paru
-   fi
-
-   if ! pacman -Q sublime-text > /dev/null 2>&1; then
-      curl -s -O https://download.sublimetext.com/sublimehq-pub.gpg && pacman-key --add sublimehq-pub.gpg && pacman-key --lsign-key 8A8F901A && rm sublimehq-pub.gpg
-   fi
-
-   if ! pacman -Q librewolf-bin > /dev/null 2>&1; then
-      gpg --recv-keys --keyserver hkps://keyserver.ubuntu.com 662E3CDD6FE329002D0CA5BB40339DD82B12EF16
-   fi
-
-   arch_packages=()
-   user_packages=()
-   deps_packages=()
-
-   # essential packages
-   arch_packages+=("base")
-   arch_packages+=("base-devel")
-   arch_packages+=("linux")
-   arch_packages+=("linux-firmware")
-   arch_packages+=("grub")
-   arch_packages+=("efibootmgr")
-   arch_packages+=("intel-ucode")
-   arch_packages+=("plymouth")
-   arch_packages+=("fwupd")
-   arch_packages+=("mesa")
-   arch_packages+=("mesa-utils")
-   arch_packages+=("intel-media-driver")
-   if nvidia_gpu_exists; then
-      arch_packages+=("nvidia")
-      arch_packages+=("nvidia-prime")
-      arch_packages+=("nvidia-utils")
-      arch_packages+=("nvidia-settings")
-   fi
-   arch_packages+=("vulkan-icd-loader")
-   arch_packages+=("vulkan-intel")
-   arch_packages+=("alsa-firmware")
-   arch_packages+=("sof-firmware")
-   arch_packages+=("pipewire")
-   arch_packages+=("pipewire-audio")
-   arch_packages+=("pipewire-alsa")
-   arch_packages+=("pipewire-pulse")
-   arch_packages+=("pipewire-jack")
-   arch_packages+=("wireplumber")
-   arch_packages+=("alsa-utils")
-   arch_packages+=("iwd")
-   arch_packages+=("tlp")
-   arch_packages+=("acpid")
-   arch_packages+=("polkit")
-   arch_packages+=("paru")
-
-   # wayland
-   arch_packages+=("niri")
-   arch_packages+=("xwayland-satellite")
-   user_packages+=("yambar-git")
-   deps_packages+=("xcb-util-errors")
-   deps_packages+=("libmpdclient")
-   arch_packages+=("waylock")
-   arch_packages+=("swayidle")
-   arch_packages+=("qt6-wayland")
-
-   # default applications
-   arch_packages+=("perl-file-mimeinfo")
-   arch_packages+=("xdg-utils")
-   arch_packages+=("xdg-desktop-portal")
-   arch_packages+=("xdg-desktop-portal-gnome")
-
-   # utilities
-   arch_packages+=("zsh")
-   arch_packages+=("sudo")
-   arch_packages+=("nano")
-   arch_packages+=("bat")
-   arch_packages+=("zip")
-   arch_packages+=("unzip")
-   arch_packages+=("jq")
-   arch_packages+=("bc")
-   arch_packages+=("wgetpaste")
-   arch_packages+=("dotool")
-   arch_packages+=("moreutils")
-   arch_packages+=("ddcutil")
-   arch_packages+=("dunst")
-   arch_packages+=("libnotify")
-   user_packages+=("rofi-wayland")
-   arch_packages+=("khal")
-   arch_packages+=("maim")
-   arch_packages+=("ffmpeg")
-   arch_packages+=("imagemagick")
-   arch_packages+=("yt-dlp")
-   arch_packages+=("id3v2")
-   user_packages+=("glances")
-   arch_packages+=("man-db")
-   arch_packages+=("man-pages")
-
-   # ssh, vpn
-   arch_packages+=("openssh")
-   arch_packages+=("openvpn")
-   user_packages+=("openvpn-update-systemd-resolved")
-
-   # developer tooling
-   arch_packages+=("git")
-   arch_packages+=("git-delta")
-   arch_packages+=("python")
-   arch_packages+=("python-pip")
-   arch_packages+=("deno")
-   arch_packages+=("nodejs")
-   user_packages+=("volta-bin")
-   arch_packages+=("npm")
-   arch_packages+=("rustup")
-   arch_packages+=("go")
-   arch_packages+=("docker")
-   arch_packages+=("docker-compose")
-   arch_packages+=("aws-cli")
-   arch_packages+=("ollama")
-
-   # window applications
-   arch_packages+=("foot")
-   arch_packages+=("zed")
-   arch_packages+=(
-      gcc
-      clang
-      musl
-      cmake
-      alsa-lib
-      fontconfig
-      wayland
-      libgit2
-      libxcb
-      libxkbcommon-x11
-      openssl
-      zstd
-      pkgconf
-      mold
-      sqlite
-      jq
-      git
-   )
-   arch_packages+=("sublime-text")
-   arch_packages+=("sublime-merge")
-   arch_packages+=("nautilus")
-   arch_packages+=("imv")
-   arch_packages+=("mpv")
-   user_packages+=("librewolf-bin")
-   arch_packages+=("chromium")
-   arch_packages+=("calibre")
-   arch_packages+=("transmission-gtk")
-
-   # virtualisation, emulation
-   arch_packages+=("libvirt")
-   arch_packages+=("qemu-base")
-   arch_packages+=("virt-manager")
-   arch_packages+=("dnsmasq")
-   arch_packages+=("iptables-nft")
-   arch_packages+=("wine-staging")
-   deps_packages+=($(pacman -Si wine-staging | sed -n '/^Opt/,/^Conf/p' | sed '$d' | sed 's/^Opt.*://g' | sed 's/^\s*//g' | tr '\n' ' '))
-   arch_packages+=("icoutils")
-   user_packages+=("mesen2-git")
-
-   # fonts, icons
-   arch_packages+=("fontconfig")
-   arch_packages+=("adobe-source-sans-fonts")
-   arch_packages+=("adobe-source-serif-fonts")
-   arch_packages+=("adobe-source-code-pro-fonts")
-   arch_packages+=("adobe-source-han-serif-otc-fonts")
-   arch_packages+=("ttf-jetbrains-mono")
-   arch_packages+=("ttf-nerd-fonts-symbols")
-   user_packages+=("candy-icons-git")
-
-   # install packages
-   echo "$username ALL=(ALL:ALL) NOPASSWD: ALL" | EDITOR="tee --append" visudo > /dev/null
-   as_user $username git config --global --rename-section "url.git@github.com:" "url-.git@github.com:"
-   as_user $username paru -Syu --noconfirm &&
-   as_user $username paru -S --useask --ask 4 --noconfirm --asexplicit $paru_args "${arch_packages[@]}" "${user_packages[@]}" &&
-   as_user $username paru -S --useask --ask 4 --noconfirm --asdeps $paru_args "${deps_packages[@]}" || failed=true
-   as_user $username git config --global --rename-section "url-.git@github.com:" "url.git@github.com:"
-   sed "/$username ALL=(ALL:ALL) NOPASSWD: ALL/d" /etc/sudoers | EDITOR="tee" visudo > /dev/null
-
-   if [[ $failed == "true" ]]; then
-      echo "Failed to update packages, aborting" >&2
-      exit 1
-   fi
-
-   # clean up unused packages
-   all_packages=" ${arch_packages[@]} ${user_packages[@]} "
-   unlisted_packages=()
-   for package in $(pacman -Qqe); do
-      if [[ ! " ${all_packages[@]} " =~ " ${package} " ]]; then
-         unlisted_packages+=("$package")
+   if [[ $mode != "no-install" ]]; then
+      if [[ ! -x $(command -v paru) ]]; then
+         install_paru
       fi
-   done
-   printf "%b" "${unlisted_packages[@]/%/\\n}" | ifne pacman -D --asdeps -
-   pacman -Qdtq | ifne pacman -Rns --noconfirm -
+
+      if ! pacman -Q sublime-text &> /dev/null; then
+         curl -s -O https://download.sublimetext.com/sublimehq-pub.gpg && pacman-key --add sublimehq-pub.gpg && pacman-key --lsign-key 8A8F901A && rm sublimehq-pub.gpg
+      fi
+
+      if ! pacman -Q librewolf-bin &> /dev/null; then
+         gpg --recv-keys --keyserver hkps://keyserver.ubuntu.com 662E3CDD6FE329002D0CA5BB40339DD82B12EF16
+      fi
+
+      arch_packages=()
+      user_packages=()
+      deps_packages=()
+
+      # essential packages
+      arch_packages+=("base")
+      arch_packages+=("base-devel")
+      arch_packages+=("linux")
+      arch_packages+=("linux-firmware")
+      arch_packages+=("grub")
+      arch_packages+=("efibootmgr")
+      arch_packages+=("intel-ucode")
+      arch_packages+=("plymouth")
+      arch_packages+=("fwupd")
+      arch_packages+=("mesa")
+      arch_packages+=("mesa-utils")
+      arch_packages+=("intel-media-driver")
+      if nvidia_enabled; then
+         arch_packages+=("nvidia")
+         arch_packages+=("nvidia-prime")
+         arch_packages+=("nvidia-utils")
+         arch_packages+=("nvidia-settings")
+      fi
+      arch_packages+=("vulkan-icd-loader")
+      arch_packages+=("vulkan-intel")
+      arch_packages+=("alsa-firmware")
+      arch_packages+=("sof-firmware")
+      arch_packages+=("pipewire")
+      arch_packages+=("pipewire-audio")
+      arch_packages+=("pipewire-alsa")
+      arch_packages+=("pipewire-pulse")
+      arch_packages+=("pipewire-jack")
+      arch_packages+=("wireplumber")
+      arch_packages+=("alsa-utils")
+      arch_packages+=("iwd")
+      arch_packages+=("tlp")
+      arch_packages+=("acpid")
+      arch_packages+=("polkit")
+      arch_packages+=("paru")
+
+      # wayland
+      arch_packages+=("niri")
+      arch_packages+=("xwayland-satellite")
+      user_packages+=("yambar-git")
+      deps_packages+=("xcb-util-errors")
+      deps_packages+=("libmpdclient")
+      arch_packages+=("waylock")
+      arch_packages+=("swayidle")
+      arch_packages+=("qt6-wayland")
+
+      # default applications
+      arch_packages+=("perl-file-mimeinfo")
+      arch_packages+=("xdg-utils")
+      arch_packages+=("xdg-desktop-portal")
+      arch_packages+=("xdg-desktop-portal-gnome")
+
+      # utilities
+      arch_packages+=("zsh")
+      arch_packages+=("sudo")
+      arch_packages+=("nano")
+      arch_packages+=("bat")
+      arch_packages+=("zip")
+      arch_packages+=("unzip")
+      arch_packages+=("jq")
+      arch_packages+=("bc")
+      arch_packages+=("wgetpaste")
+      arch_packages+=("dotool")
+      arch_packages+=("moreutils")
+      arch_packages+=("ddcutil")
+      arch_packages+=("dunst")
+      arch_packages+=("libnotify")
+      user_packages+=("rofi-wayland")
+      arch_packages+=("khal")
+      arch_packages+=("maim")
+      arch_packages+=("ffmpeg")
+      arch_packages+=("imagemagick")
+      arch_packages+=("yt-dlp")
+      arch_packages+=("id3v2")
+      user_packages+=("glances")
+      arch_packages+=("man-db")
+      arch_packages+=("man-pages")
+
+      # ssh, vpn
+      arch_packages+=("openssh")
+      arch_packages+=("openvpn")
+      user_packages+=("openvpn-update-systemd-resolved")
+
+      # developer tooling
+      arch_packages+=("git")
+      arch_packages+=("git-delta")
+      arch_packages+=("python")
+      arch_packages+=("python-pip")
+      arch_packages+=("deno")
+      arch_packages+=("nodejs")
+      user_packages+=("volta-bin")
+      arch_packages+=("npm")
+      arch_packages+=("rustup")
+      arch_packages+=("go")
+      arch_packages+=("docker")
+      arch_packages+=("docker-compose")
+      arch_packages+=("aws-cli")
+      arch_packages+=("ollama")
+
+      # window applications
+      arch_packages+=("foot")
+      arch_packages+=("zed")
+      arch_packages+=(
+         gcc
+         clang
+         musl
+         cmake
+         alsa-lib
+         fontconfig
+         wayland
+         libgit2
+         libxcb
+         libxkbcommon-x11
+         openssl
+         zstd
+         pkgconf
+         mold
+         sqlite
+         jq
+         git
+      )
+      arch_packages+=("sublime-text")
+      arch_packages+=("sublime-merge")
+      arch_packages+=("nautilus")
+      arch_packages+=("imv")
+      arch_packages+=("mpv")
+      user_packages+=("librewolf-bin")
+      arch_packages+=("chromium")
+      arch_packages+=("calibre")
+      arch_packages+=("transmission-gtk")
+
+      # virtualisation, emulation
+      arch_packages+=("libvirt")
+      arch_packages+=("qemu-base")
+      arch_packages+=("virt-manager")
+      arch_packages+=("dnsmasq")
+      arch_packages+=("iptables-nft")
+      arch_packages+=("wine-staging")
+      deps_packages+=($(pacman -Si wine-staging | sed -n '/^Opt/,/^Conf/p' | sed '$d' | sed 's/^Opt.*://g' | sed 's/^\s*//g' | tr '\n' ' '))
+      arch_packages+=("icoutils")
+      user_packages+=("mesen2-git")
+
+      # fonts, icons
+      arch_packages+=("fontconfig")
+      arch_packages+=("adobe-source-sans-fonts")
+      arch_packages+=("adobe-source-serif-fonts")
+      arch_packages+=("adobe-source-code-pro-fonts")
+      arch_packages+=("adobe-source-han-serif-otc-fonts")
+      arch_packages+=("ttf-jetbrains-mono")
+      arch_packages+=("ttf-nerd-fonts-symbols")
+      user_packages+=("candy-icons-git")
+
+      # install packages
+      echo "$username ALL=(ALL:ALL) NOPASSWD: ALL" | EDITOR="tee --append" visudo > /dev/null
+      as_user $username git config --global --rename-section "url.git@github.com:" "url-.git@github.com:"
+      as_user $username paru -Syu --noconfirm &&
+      as_user $username paru -S --useask --ask 4 --noconfirm --asexplicit $([[ $mode != "reinstall" ]] && echo "--needed") "${arch_packages[@]}" "${user_packages[@]}" &&
+      as_user $username paru -S --useask --ask 4 --noconfirm --asdeps     $([[ $mode != "reinstall" ]] && echo "--needed") "${deps_packages[@]}" || failed=true
+      as_user $username git config --global --rename-section "url-.git@github.com:" "url.git@github.com:"
+      sed "/$username ALL=(ALL:ALL) NOPASSWD: ALL/d" /etc/sudoers | EDITOR="tee" visudo > /dev/null
+
+      if [[ $failed == "true" ]]; then
+         echo "Failed to update packages, aborting" >&2
+         exit 1
+      fi
+
+      # clean up unused packages
+      all_packages=" ${arch_packages[@]} ${user_packages[@]} "
+      unlisted_packages=()
+      for package in $(pacman -Qqe); do
+         if [[ ! " ${all_packages[@]} " =~ " ${package} " ]]; then
+            unlisted_packages+=("$package")
+         fi
+      done
+      printf "%b" "${unlisted_packages[@]/%/\\n}" | ifne pacman -D --asdeps -
+      pacman -Qdtq | ifne pacman -Rns --noconfirm -
+   fi
 
    # groups, services, configuration
    usermod -aG input "$username"
@@ -517,11 +523,14 @@ function setup_packages {
    systemctl disable docker.service   2> /dev/null
    systemctl disable libvirtd.service 2> /dev/null
    systemctl disable ollama           2> /dev/null
-   if nvidia_gpu_exists; then
+   if nvidia_enabled; then
       systemctl enable nvidia-suspend.service
       systemctl enable nvidia-resume.service
       as_user $username mkdir -p "/home/$username/.config/nvidia"
       as_user $username nvidia-settings --rewrite-config-file --config="/home/$username/.config/nvidia/settings-rc"
+   else
+      systemctl disable nvidia-suspend.service
+      systemctl disable nvidia-resume.service
    fi
 
    as_user $username rustup default stable
@@ -547,6 +556,13 @@ function setup_firmware {
    pacman -S --needed --noconfirm fwupd
    fwupdmgr --no-reboot-check --force refresh
    fwupdmgr --no-reboot-check update
+}
+
+function setup_graphics {
+   local username="$1"
+   local graphics="$2"
+   setup_system_config "$username" "$graphics"
+   setup_packages "$username" "no-install"
 }
 
 function install_paru {
@@ -597,6 +613,12 @@ function as_chroot {
    arch-chroot /mnt /bin/bash -c "$(wrap_f "$@")"
 }
 
+function nvidia_enabled {
+   if [[ -f /etc/udev/rules.d/no-nvidia.rules ]]; then
+      return 1
+   fi
+}
+
 function nvidia_gpu_exists {
    if ! lspci | grep -q '.* VGA .* NVIDIA .*'; then
       return 1
@@ -641,17 +663,18 @@ function github_api_url {
    echo "https://api.github.com/repos/$repo"
 }
 
-if [[ $2 == "--no-gpu" ]]; then
-   graphics="intel"
-elif [[ $2 != "--reinstall" ]]; then
-   paru_args="--needed"
+if [[ $1 == "graphics" ]]; then
+   graphics="$2"
+elif [[ $2 == "--reinstall" ]]; then
+   mode="reinstall"
 fi
 
 case "$1" in
-   system)        setup_system;;
-   system-config) as_sudo setup_system_config "$(whoami)" "$graphics";;
+   system)        setup_system && exit;;
+   system-config) as_sudo setup_system_config "$(whoami)";;
    firmware)      as_sudo setup_firmware;;
-   packages)      as_sudo setup_packages "$(whoami)" "$paru_args";;
+   graphics)      as_sudo setup_graphics "$(whoami)" "$graphics";;   # integrated|nvidia
+   packages)      as_sudo setup_packages "$(whoami)" "$mode";;       # reinstall|
 esac
 
 mpv --really-quiet ~/sounds/warcraft-jobs-done.mp3
