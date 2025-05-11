@@ -8,19 +8,10 @@ XDG_DATA_DIRS="/usr/local/share:/usr/share"
 XDG_CONFIG_DIRS="/etc/xdg"
 source "$XDG_CONFIG_HOME/user-dirs.dirs"
 
-if [[ ! ":$PATH:" =~ ":$HOME/scripts:" ]]; then
-	PATH="${PATH}:$HOME/scripts"
-fi
-
-if [[ -n "$DISPLAY" ]]; then
-	EDITOR="/usr/bin/zeditor"
-else
-	EDITOR="/usr/bin/nano"
-fi
-
 PYTHON_HISTORY="$XDG_DATA_HOME/.python_history"
 NODE_REPL_HISTORY="$XDG_DATA_HOME/.node_repl_history"
 NPM_CONFIG_USERCONFIG="$XDG_CONFIG_HOME/npm/npmrc"
+VOLTA_HOME="$HOME/.volta"
 DOCKER_CONFIG="$XDG_CONFIG_HOME/docker"
 AWS_SHARED_CREDENTIALS_FILE="$XDG_CONFIG_HOME/aws/credentials"
 AWS_CONFIG_FILE="$XDG_CONFIG_HOME/aws/config"
@@ -33,6 +24,16 @@ SSH_ASKPASS="$HOME/scripts/rofi-askpass"
 SSH_ASKPASS_REQUIRE="force"
 
 QT_QPA_PLATFORMTHEME=gtk3
+
+if [[ ! ":$PATH:" =~ ":$HOME/scripts:" ]]; then
+	PATH="$VOLTA_HOME/bin:${PATH}:$HOME/scripts"
+fi
+
+if [[ -n "$DISPLAY" ]]; then
+	EDITOR="/usr/bin/zeditor"
+else
+	EDITOR="/usr/bin/nano"
+fi
 
 if [[ ! -f /etc/udev/rules.d/no-nvidia.rules ]]; then
    GBM_BACKEND=nvidia-drm

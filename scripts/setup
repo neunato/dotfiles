@@ -410,6 +410,7 @@ function setup_packages {
    arch_packages+=("python-pip")
    arch_packages+=("deno")
    arch_packages+=("nodejs")
+   user_packages+=("volta-bin")
    arch_packages+=("npm")
    arch_packages+=("rust")
    arch_packages+=("go")
