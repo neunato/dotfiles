@@ -4,41 +4,32 @@
 # volume up    - turn up volume by 10%
 # volume down  - turn down volume by 10%
 # volume mute  - toggle mute
-# volume muted - check if currently muted
 
-step=10
-volume=$(amixer -M sget Master | awk -F"[][]" '/(Left|dB):/ { print $2 }')
-volume=${volume:0:-1}
+function get_volume {
+   wpctl get-volume @DEFAULT_SINK@ | awk '{printf $2*100}'
+}
 
 if [[ -z "$1" ]]; then
-   echo "$volume"
+   get_volume
    exit
 fi
 
 if [[ "$1" == "up" ]]; then
-   volume=$(((volume + step + 5) / 10 * 10))
-   volume=$((volume < 100 ? volume : 100))
-   notify-send "Volume" -h int:value:"$volume" -h string:x-dunst-stack-tag:progress
-   amixer -M sset Master "$volume%" > /dev/null
+   wpctl set-volume -l 1.0 @DEFAULT_SINK@ 10%+
+   notify-send "Volume" -h int:value:"$(get_volume)" -h string:x-dunst-stack-tag:progress
    exit
 fi
 
 if [[ "$1" == "down" ]]; then
-   volume=$(((volume - step + 5) / 10 * 10))
-   volume=$((volume > 0 ? volume : 0))
-   notify-send "Volume" -h int:value:"$volume" -h string:x-dunst-stack-tag:progress
-   amixer -M sset Master "$volume%" > /dev/null
+   wpctl set-volume -l 1.0 @DEFAULT_SINK@ 10%-
+   notify-send "Volume" -h int:value:"$(get_volume)" -h string:x-dunst-stack-tag:progress
    exit
 fi
 
 if [[ "$1" == "mute" ]]; then
-   amixer -M sset Master toggle > /dev/null
+   wpctl set-mute @DEFAULT_SINK@ toggle
    exit
 fi
 
-if [[ "$1" == "muted" ]]; then
-   exit $(amixer -M sget Master | grep -q '\[off\]')
-fi
-
-echo "Expected 'volume [up|down|mute|muted]'" >&2
+echo "Expected 'volume [up|down|mute]'" >&2
 exit 1
