@@ -1,0 +1,19 @@
+#!/bin/bash
+
+if [[ $EUID -ne 0 ]]; then
+   exit
+fi
+
+update-systemd-resolved
+
+user=$(who | grep tty1 | awk '{print $1}')
+
+if [[ $1 == "up" ]]; then
+   systemd-run --machine="$user@" --user notify-send "VPN connected"
+   su "$user" -s /bin/bash -c "/home/$user/scripts/yambar-signal vpn on"
+fi
+
+if [[ $1 == "down" ]]; then
+   systemd-run --machine="$user@" --user notify-send "VPN disconnected"
+   su "$user" -s /bin/bash -c "/home/$user/scripts/yambar-signal vpn off"
+fi

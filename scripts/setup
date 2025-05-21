@@ -161,6 +161,8 @@ function setup_system {
       mkdir '$home/videos'
 
       chown -R '$username:$username' .
+      chown root:root scripts/root-*
+      chmod 744 scripts/root-*
    "
 
    cat /tmp/arch_setup.log | as_chroot tee /var/tmp/arch_setup.log > /dev/null
@@ -200,10 +202,10 @@ function setup_system_config {
    echo 'Defaults passwd_timeout=0'                             | EDITOR='tee --append' visudo > /dev/null
    echo 'Defaults passwd_tries=10'                              | EDITOR='tee --append' visudo > /dev/null
    echo 'Defaults timestamp_timeout=-1'                         | EDITOR='tee --append' visudo > /dev/null
-   echo ''                                                      | EDITOR='tee --append' visudo > /dev/null
-   echo '%wheel ALL=(ALL:ALL) ALL'                              | EDITOR='tee --append' visudo > /dev/null
-   echo "$username ALL=(root) NOPASSWD: /usr/bin/openvpn"       | EDITOR='tee --append' visudo > /dev/null
-   echo "$username ALL=(root) NOPASSWD: /usr/bin/pkill openvpn" | EDITOR='tee --append' visudo > /dev/null
+   echo ''                                                                | EDITOR='tee --append' visudo > /dev/null
+   echo '%wheel ALL=(ALL:ALL) ALL'                                        | EDITOR='tee --append' visudo > /dev/null
+   echo "$username ALL=(root) NOPASSWD: /usr/bin/openvpn"                 | EDITOR='tee --append' visudo > /dev/null
+   echo "$username ALL=(root) NOPASSWD: /usr/bin/killall -SIGINT openvpn" | EDITOR='tee --append' visudo > /dev/null
 
    # bash
    cp "/home/$username/.bashrc" /root
