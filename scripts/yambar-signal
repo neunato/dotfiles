@@ -1,0 +1,13 @@
+#!/bin/bash
+
+if [[ $# -ne 2 ]]; then
+   exit
+fi
+
+if [[ $2 == "on" ]]; then
+   pgrep -f "yambar-$1" | ifne xargs kill -s USR1
+fi
+
+if [[ $2 == "off" ]]; then
+   pgrep -f "yambar-$1" | ifne xargs kill -s USR2
+fi
