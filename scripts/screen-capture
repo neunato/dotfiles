@@ -1,56 +1,46 @@
 #!/bin/bash
 
-# screen-capture                - take a screenshot of the entire window and save it to $XDG_PICTURES_DIR/screenshots
-# screen-capture --selection    - take a screenshot of a selection and save it to $XDG_PICTURES_DIR/screenshots
-# screen-capture --record       - start or stop a screen recording and save it to $XDG_VIDEOS_DIR/screencasts
+# screen-capture                - start or stop a screen recording and save it to $XDG_VIDEOS_DIR/screencasts
+# screen-capture --selection    - select part of screen
 # screen-capture --is-recording - check if screen is being recorded
 
-while [[ $# -gt 0 ]]; do
-   case "$1" in
-      --selection)    selection=true;    shift ;;
-      --record)       record=true;       shift ;;
-      --is-recording) is_recording=true; shift ;;
-      *)                                 shift ;;
-   esac
-done
-
-if [[ $is_recording == true && ($record == true || $selection == true) ]]; then
-   echo "--is-recording can't be combined with other options" >&2
+if [[ $# -gt 1 ]]; then
+   echo "Expected 'screen-capture [--selection|--is-recording]'" >&2
    exit 1
 fi
 
-set -o errexit
-set -o pipefail
+if [[ $1 == "--selection" ]]; then
+   selection=true
+elif [[ $1 == "--is-recording" ]]; then
+   is_recording=true
+fi
 
-pidfile="$XDG_RUNTIME_DIR/screen-capture.pid"
-filename="$(date +'%F %T:%N' | cut -c 1-25)"
-
-# check if screen recording is on
+# check if screen is being recording
 if [[ $is_recording == true ]]; then
-   if [[ -s $pidfile && -d /proc/$(cat $pidfile) ]]; then
+   if pidof wf-recorder > /dev/null; then
       exit 0
    else
       exit 1
    fi
 fi
 
-# take screenshot
-if [[ $record != true ]]; then
-   path="$XDG_PICTURES_DIR/screenshots/$filename.png"
-   mkdir -p "$XDG_PICTURES_DIR/screenshots"
-   exec maim -u $([[ $selection == true ]] && echo "-s") | tee "$path" | xclip -selection clipboard -t image/png
-   exit
-fi
+pid="$(pidof wf-recorder)"
 
 # start/stop recording
-if ! [[ -s $pidfile && -d /proc/$(cat $pidfile) ]]; then
-   resolution=$(xrandr -q --current | grep '*' | awk '{print $1}' | head -n 1)
-   arg=""
-   path="$XDG_VIDEOS_DIR/screencasts/$filename.mp4"
-   mkdir -p "$XDG_VIDEOS_DIR/screencasts"
-   echo "$$" > "$pidfile"
-   exec ffmpeg -f x11grab $([[ $selection == true ]] && echo "-select_region 1 -show_region 1 -region_border 2") -video_size "$resolution" -framerate 25 -i "$DISPLAY" -f alsa -i default -c:v libx264 -preset ultrafast -c:a aac -loglevel quiet "$path"
+if [[ -n $pid ]]; then
+   kill -SIGINT "$pid"
+   exit 0
+fi
+
+filename="$(date +'%F %T:%N' | cut -c 1-25)"
+dir="$XDG_VIDEOS_DIR/screencasts"
+path="$dir/$filename.mp4"
+source=$(wpctl inspect @DEFAULT_SINK@ | grep 'node.name' | awk '{print $4}')
+source="${source:1:-1}.monitor"
+mkdir -p "$dir"
+
+if [[ $selection == true ]]; then
+   wf-recorder --audio="$source" --file="$path" --geometry="$(slurp)" &> /dev/null &
 else
-   kill -INT "$(cat $pidfile)"
-   rm "$pidfile"
+   wf-recorder --audio="$source" --file="$path" &> /dev/null &
 fi
