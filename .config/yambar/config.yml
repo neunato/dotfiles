@@ -157,11 +157,10 @@ bar:
 
     - script:
         path: ~/scripts/yambar-vpn
-        args: [daemon]
         font: *font_s
         content:
           map:
-            on-click: yambar-vpn click
+            on-click: vpn
             conditions:
               connected:
                 string: { text: VPN, foreground: "${color_magenta_bright}", <<: *underline }

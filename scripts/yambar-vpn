@@ -1,29 +1,25 @@
 #!/bin/bash
 
-# yambar-vpn daemon - due to yambar's limitations
-# yambar-vpn click  - enable/disable vpn
+function enable {
+   echo -e "connected|bool|true\n"
+}
 
-if [[ $1 == "click" ]]; then
-   vpn
-   exit
+function disable {
+   echo -e "connected|bool|false\n"
+}
+
+if ip link show tun0 | grep ",UP," > /dev/null; then
+   enable
+else
+   disable
 fi
 
-if [[ $1 == "daemon" ]]; then
-   function update {
-      if pidof openvpn; then
-         echo -e "connected|bool|true\n"
-      else
-         echo -e "connected|bool|false\n"
-      fi
-   }
+trap enable USR1
+trap disable USR2
 
-   update
-   trap update USR1
-   while :; do
-      sleep infinity &
-      pid="$!"
-      wait $pid
-      kill $pid
-   done
-   exit
-fi
+while :; do
+   sleep infinity &
+   pid="$!"
+   wait $pid
+   kill $pid
+done
