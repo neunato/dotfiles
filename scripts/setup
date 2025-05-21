@@ -466,7 +466,7 @@ function setup_packages {
       arch_packages+=("icoutils")
       user_packages+=("mesen2-git")
 
-      # fonts, icons
+      # fonts, icons, cursor
       arch_packages+=("fontconfig")
       arch_packages+=("adobe-source-sans-fonts")
       arch_packages+=("adobe-source-serif-fonts")
@@ -475,6 +475,7 @@ function setup_packages {
       arch_packages+=("ttf-jetbrains-mono")
       arch_packages+=("ttf-nerd-fonts-symbols")
       user_packages+=("candy-icons-git")
+      user_packages+=("bibata-cursor-theme-bin")
 
       # install packages
       echo "$username ALL=(ALL:ALL) NOPASSWD: ALL" | EDITOR="tee --append" visudo > /dev/null
