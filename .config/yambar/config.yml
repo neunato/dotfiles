@@ -136,6 +136,16 @@ bar:
                 string: { text: , margin: "${margin_icon_workspaces}" }
 
   right:
+    - script:
+        path: ~/scripts/yambar-screen-capture
+        font: *font_s
+        content:
+          map:
+            on-click: screen-capture
+            conditions:
+              recording:
+                string: { text: , foreground: "${color_red}" }
+
     - removables:
         content:
           map:

@@ -1,0 +1,25 @@
+#!/bin/bash
+
+function enable {
+   echo -e "recording|bool|true\n"
+}
+
+function disable {
+   echo -e "recording|bool|false\n"
+}
+
+if pidof wf-recorder > /dev/null; then
+   enable
+else
+   disable
+fi
+
+trap enable USR1
+trap disable USR2
+
+while :; do
+   sleep infinity &
+   pid="$!"
+   wait $pid
+   kill $pid
+done
