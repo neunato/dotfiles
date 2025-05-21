@@ -359,7 +359,6 @@ function setup_packages {
       arch_packages+=("tlp")
       arch_packages+=("acpid")
       arch_packages+=("polkit")
-      arch_packages+=("paru")
 
       # wayland
       arch_packages+=("niri")
@@ -492,7 +491,7 @@ function setup_packages {
       fi
 
       # clean up unused packages
-      all_packages=" ${arch_packages[@]} ${user_packages[@]} "
+      all_packages="paru ${arch_packages[@]} ${user_packages[@]} "
       unlisted_packages=()
       for package in $(pacman -Qqe); do
          if [[ ! " ${all_packages[@]} " =~ " ${package} " ]]; then
@@ -571,7 +570,11 @@ function install_paru {
    pacman -S --needed --noconfirm git rustup
    extract_tarball "$url" "$dir"
    chmod 777 "$dir"
-   as_nobody /bin/bash -c "cd $dir && CARGO_HOME=$dir makepkg"
+   as_nobody /bin/bash -c "
+      cd $dir
+      RUSTUP_HOME=$dir rustup default stable
+      RUSTUP_HOME=$dir CARGO_HOME=$dir makepkg
+   "
    pacman -U --needed --noconfirm "$(ls $dir/*.tar.zst | grep -v debug)"
    rm -rf "$dir"
 }
