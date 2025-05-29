@@ -181,7 +181,9 @@ bar:
         font: *font_s
         content:
           string:
-            on-click: rofi-power
+            on-click:
+              left: rofi-power
+              right: sh -c "ROFI_RETV=1 rofi-power 'in 60 minutes'"
             text: 
 
     - clock:
