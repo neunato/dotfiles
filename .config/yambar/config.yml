@@ -138,6 +138,8 @@ bar:
   right:
     - script:
         path: ~/scripts/yambar-screen-capture
+        args:
+          - ${output}
         font: *font_s
         content:
           map:

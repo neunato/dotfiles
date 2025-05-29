@@ -8,7 +8,7 @@ function disable {
    echo -e "recording|bool|false\n"
 }
 
-if pidof wf-recorder > /dev/null; then
+if pgrep -f "wf-recorder --output=$1" > /dev/null; then
    enable
 else
    disable

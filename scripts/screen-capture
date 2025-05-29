@@ -2,45 +2,46 @@
 
 # screen-capture                - start or stop a screen recording and save it to $XDG_VIDEOS_DIR/screencasts
 # screen-capture --selection    - select part of screen
-# screen-capture --is-recording - check if screen is being recorded
+# screen-capture --audio        - record sound too
 
-if [[ $# -gt 1 ]]; then
-   echo "Expected 'screen-capture [--selection|--is-recording]'" >&2
-   exit 1
-fi
+set -e
 
-if [[ $1 == "--selection" ]]; then
-   selection=true
-elif [[ $1 == "--is-recording" ]]; then
-   is_recording=true
-fi
+while [[ $# -gt 0 ]]; do
+   case "$1" in
+      --selection) selection=true;;
+      --audio)     audio=true;;
+      *)
+         echo "Expected 'screen-capture [--selection] [--audio]'" >&2
+         exit 1
+      ;;
+   esac
+   shift
+done
 
-# check if screen is being recording
-if [[ $is_recording == true ]]; then
-   if pidof wf-recorder > /dev/null; then
-      exit 0
-   else
-      exit 1
-   fi
-fi
-
-pid="$(pidof wf-recorder)"
-
-# start/stop recording
-if [[ -n $pid ]]; then
-   kill -SIGINT "$pid"
+if pkill -SIGINT wf-recorder; then
+   yambar-signal screen-capture off
    exit 0
 fi
 
-filename="$(date +'%F %T:%N' | cut -c 1-25)"
+args=()
+
 dir="$XDG_VIDEOS_DIR/screencasts"
-path="$dir/$filename.mp4"
-source=$(wpctl inspect @DEFAULT_SINK@ | grep 'node.name' | awk '{print $4}')
-source="${source:1:-1}.monitor"
-mkdir -p "$dir"
+file="$dir/$(date +'%F %T:%N' | cut -c 1-25).mp4"
+args+=("--file=$file")
+
+if [[ $audio == true ]]; then
+   audio="$(wpctl inspect @DEFAULT_SINK@ | grep 'node.name' | awk '{print $4}')"
+   audio="${audio:1:-1}.monitor"
+   args+=("--audio=$audio")
+fi
 
 if [[ $selection == true ]]; then
-   wf-recorder --audio="$source" --file="$path" --geometry="$(slurp)" &> /dev/null &
-else
-   wf-recorder --audio="$source" --file="$path" &> /dev/null &
+   args+=("--geometry=$(slurp)")
 fi
+
+output="$(niri msg focused-output | grep Output | awk -F '[()]' '{print $2}')"
+args=("--output=$output" "${args[@]}")
+
+mkdir -p "$dir"
+wf-recorder "${args[@]}" &
+yambar-signal "screen-capture $output" on
