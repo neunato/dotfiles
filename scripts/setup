@@ -545,12 +545,13 @@ function setup_packages {
 
    # default applications
    echo '' | as_user $username tee "/home/$username/.config/mimeapps.list" > /dev/null
-   as_user $username xdg-mime default dev.zed.Zed.desktop      text/plain
-   as_user $username xdg-mime default foot.desktop             x-scheme-handler/terminal
-   as_user $username xdg-mime default librewolf.desktop        $(cat /usr/share/applications/librewolf.desktop        | grep MimeType= | sed 's/MimeType=\(.*\)/\1/' | sed 's/;/ /g')
-   as_user $username xdg-mime default imv.desktop              $(cat /usr/share/applications/imv.desktop              | grep MimeType= | sed 's/MimeType=\(.*\)/\1/' | sed 's/;/ /g')
-   as_user $username xdg-mime default mpv.desktop              $(cat /usr/share/applications/mpv.desktop              | grep MimeType= | sed 's/MimeType=\(.*\)/\1/' | sed 's/;/ /g')
-   as_user $username xdg-mime default transmission-gtk.desktop $(cat /usr/share/applications/transmission-gtk.desktop | grep MimeType= | sed 's/MimeType=\(.*\)/\1/' | sed 's/;/ /g')
+   as_user $username xdg-mime default dev.zed.Zed.desktop        text/plain
+   as_user $username xdg-mime default foot.desktop               x-scheme-handler/terminal
+   as_user $username xdg-mime default org.gnome.Nautilus.desktop inode/directory
+   as_user $username xdg-mime default librewolf.desktop          $(cat /usr/share/applications/librewolf.desktop        | grep MimeType= | sed 's/MimeType=\(.*\)/\1/' | sed 's/;/ /g')
+   as_user $username xdg-mime default imv.desktop                $(cat /usr/share/applications/imv.desktop              | grep MimeType= | sed 's/MimeType=\(.*\)/\1/' | sed 's/;/ /g')
+   as_user $username xdg-mime default mpv.desktop                $(cat /usr/share/applications/mpv.desktop              | grep MimeType= | sed 's/MimeType=\(.*\)/\1/' | sed 's/;/ /g')
+   as_user $username xdg-mime default transmission-gtk.desktop   $(cat /usr/share/applications/transmission-gtk.desktop | grep MimeType= | sed 's/MimeType=\(.*\)/\1/' | sed 's/;/ /g')
    update-desktop-database /usr/share/applications
 }
 
