@@ -400,7 +400,6 @@ function setup_packages {
       arch_packages+=("imagemagick")
       arch_packages+=("yt-dlp")
       arch_packages+=("id3v2")
-      user_packages+=("glances")
       arch_packages+=("man-db")
       arch_packages+=("man-pages")
 
@@ -456,6 +455,7 @@ function setup_packages {
       arch_packages+=("chromium")
       arch_packages+=("calibre")
       arch_packages+=("transmission-gtk")
+      arch_packages+=("gnome-system-monitor")
 
       # virtualisation, emulation
       arch_packages+=("libvirt")
