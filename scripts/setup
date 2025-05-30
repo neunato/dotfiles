@@ -370,6 +370,7 @@ function setup_packages {
       deps_packages+=("libmpdclient")
       arch_packages+=("waylock")
       arch_packages+=("swayidle")
+      user_packages+=("sway-audio-idle-inhibit-git")
       arch_packages+=("qt6-wayland")
 
       # default applications

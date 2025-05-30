@@ -242,4 +242,5 @@ environment {
 spawn-at-startup "yambar-toggle"
 spawn-at-startup "xwayland-satellite" ":12"
 spawn-at-startup "swayidle" "-w" "timeout" "900" "screen-lock" "timeout" "1800" "systemctl suspend" "before-sleep" "screen-lock"
+spawn-at-startup "audio-inhibit-idle"
 spawn-at-startup "play-startup-sound"
