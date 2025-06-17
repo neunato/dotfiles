@@ -388,6 +388,7 @@ function setup_packages {
       arch_packages+=("unzip")
       arch_packages+=("jq")
       arch_packages+=("bc")
+      user_packages+=("xurls")
       arch_packages+=("wl-clipboard")
       arch_packages+=("wgetpaste")
       arch_packages+=("dotool")
