@@ -5,9 +5,9 @@ if [[ $# -ne 2 ]]; then
 fi
 
 if [[ $2 == "on" ]]; then
-   pgrep -f "yambar-$1" | ifne xargs kill -s USR1
+   pgrep -f "yambar-$1" | xargs -r kill -s USR1
 fi
 
 if [[ $2 == "off" ]]; then
-   pgrep -f "yambar-$1" | ifne xargs kill -s USR2
+   pgrep -f "yambar-$1" | xargs -r kill -s USR2
 fi
