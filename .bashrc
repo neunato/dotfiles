@@ -13,13 +13,21 @@ export HISTTIMEFORMAT="%F %T "
 
 # prompt
 PROMPT_COMMAND='
-   history -a
-   history -c
-   history -r
-   IFS="[;" read -p $'"'\e[6n'"' -d R -rs _ col row _
-   PS0="\n"
-   PS1="$([[ $row -ne 1 || $col -ne 1 ]] && echo "\n")\[\e[30;$([[ $EUID == 0 ]] && echo "101" || echo "107")m\]$PWD\[\e[m\] "
-   PS2="${PWD//?/ } "
+   function _bash_prompt_command {
+      local prompt_marker="\e]133;A\e\\\\"
+      local cmd_start_marker="\e]133;C\e\\\\"
+      local cmd_end_marker="\e]133;D\e\\\\"
+      history -a
+      history -c
+      history -r
+      IFS="[;" read -p $'"'\e[6n'"' -d R -rs _ col row _
+      PS0="\n$cmd_start_marker"
+      PS1="$([[ $row -ne 1 || $col -ne 1 ]] && echo "\n")$prompt_marker\[\e[30;$([[ $EUID == 0 ]] && echo "101" || echo "107")m\]$PWD\[\e[m\] "
+      PS2="${PWD//?/ } "
+      echo -en "$cmd_end_marker"
+      unset -f _bash_prompt_command
+   }
+   _bash_prompt_command
 '
 
 # the rest does not apply to root
