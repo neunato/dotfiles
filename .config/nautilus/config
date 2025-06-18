@@ -1,0 +1,35 @@
+#!/bin/bash
+
+gsettings set org.gtk.gtk4.Settings.FileChooser sort-directories-first true
+gsettings set org.gtk.gtk4.Settings.FileChooser show-hidden true
+gsettings set org.gnome.nautilus.compression default-compression-format 'zip'
+gsettings set org.gnome.nautilus.icon-view captions "['size', 'none', 'none']"
+gsettings set org.gnome.nautilus.icon-view default-zoom-level 'small'
+gsettings set org.gnome.nautilus.list-view default-column-order "['name', 'type', 'size', 'owner', 'group', 'permissions', 'date_modified', 'date_accessed', 'date_created', 'recency', 'detailed_type']"
+gsettings set org.gnome.nautilus.list-view default-visible-columns "['name', 'size', 'permissions', 'date_modified']"
+gsettings set org.gnome.nautilus.list-view default-zoom-level 'medium'
+gsettings set org.gnome.nautilus.list-view use-tree-view false
+gsettings set org.gnome.nautilus.preferences always-use-location-entry false
+gsettings set org.gnome.nautilus.preferences click-policy 'double'
+gsettings set org.gnome.nautilus.preferences date-time-format 'detailed'
+gsettings set org.gnome.nautilus.preferences default-folder-viewer 'list-view'
+gsettings set org.gnome.nautilus.preferences default-sort-in-reverse-order false
+gsettings set org.gnome.nautilus.preferences default-sort-order 'name'
+gsettings set org.gnome.nautilus.preferences fts-enabled true
+gsettings set org.gnome.nautilus.preferences install-mime-activation false
+gsettings set org.gnome.nautilus.preferences migrated-gtk-settings false
+gsettings set org.gnome.nautilus.preferences mouse-back-button "uint32 8"
+gsettings set org.gnome.nautilus.preferences mouse-forward-button "uint32 9"
+gsettings set org.gnome.nautilus.preferences mouse-use-extra-buttons true
+gsettings set org.gnome.nautilus.preferences open-folder-on-dnd-hover true
+gsettings set org.gnome.nautilus.preferences recursive-search 'never'
+gsettings set org.gnome.nautilus.preferences search-filter-time-type 'last_modified'
+gsettings set org.gnome.nautilus.preferences show-create-link false
+gsettings set org.gnome.nautilus.preferences show-delete-permanently true
+gsettings set org.gnome.nautilus.preferences show-directory-item-counts 'local-only'
+gsettings set org.gnome.nautilus.preferences show-hidden-files true
+gsettings set org.gnome.nautilus.preferences show-image-thumbnails 'local-only'
+gsettings set org.gnome.nautilus.preferences thumbnail-limit "uint64 50"
+gsettings set org.gnome.nautilus.window-state initial-size "(1100, 650)"
+gsettings set org.gnome.nautilus.window-state initial-size-file-chooser "(1100, 650)"
+gsettings set org.gnome.nautilus.window-state maximized false
