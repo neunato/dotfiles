@@ -393,6 +393,7 @@ function setup_packages {
       arch_packages+=("wgetpaste")
       arch_packages+=("dotool")
       arch_packages+=("moreutils")
+      user_packages+=("ycwd-git")
       arch_packages+=("ncdu")
       arch_packages+=("ddcutil")
       arch_packages+=("dunst")
