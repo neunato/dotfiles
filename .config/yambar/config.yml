@@ -193,5 +193,5 @@ bar:
         foreground: ${color_magenta_bright}
         content:
           - string:
-              on-click: toggle "foot khal interactive"
+              on-click: toggle "foot --app-id=calendar khal interactive"
               text: "{time}"
