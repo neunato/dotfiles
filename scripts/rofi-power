@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [[ -z $ROFI_RETV ]]; then
-   rofi -show powermenu -modes powermenu:"$0"
+   toggle "rofi -show powermenu -modes powermenu:$0"
    exit
 fi
 
