@@ -26,13 +26,13 @@ SSH_ASKPASS_REQUIRE="force"
 QT_QPA_PLATFORMTHEME=gtk3
 
 if [[ ! ":$PATH:" =~ ":$HOME/scripts:" ]]; then
-	PATH="$VOLTA_HOME/bin:${PATH}:$HOME/scripts"
+   PATH="$VOLTA_HOME/bin:${PATH}:$HOME/scripts"
 fi
 
 if [[ -n "$DISPLAY" ]]; then
-	EDITOR="/usr/bin/zeditor"
+   EDITOR="/usr/bin/zeditor"
 else
-	EDITOR="/usr/bin/nano"
+   EDITOR="/usr/bin/nano"
 fi
 
 if [[ ! -f /etc/udev/rules.d/no-nvidia.rules ]]; then
