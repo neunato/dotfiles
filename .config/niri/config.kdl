@@ -37,6 +37,11 @@ output "Sharp Corporation 0x14D6 Unknown" {
    scale 2.0
 }
 
+output "AU Optronics 0x5B2D Unknown" {
+   mode "1920x1080"
+   scale 1.0
+}
+
 output "Lenovo Group Limited LEN Y27q-20 0x01010101" {
    mode "2560x1440"
    variable-refresh-rate
