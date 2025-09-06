@@ -538,8 +538,6 @@ function setup_packages {
    if nvidia_enabled; then
       systemctl enable nvidia-suspend.service
       systemctl enable nvidia-resume.service
-      as_user $username mkdir -p "/home/$username/.config/nvidia"
-      as_user $username nvidia-settings --rewrite-config-file --config="/home/$username/.config/nvidia/settings-rc"
    else
       systemctl disable nvidia-suspend.service
       systemctl disable nvidia-resume.service
