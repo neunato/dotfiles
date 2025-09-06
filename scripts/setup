@@ -196,12 +196,12 @@ function setup_system_config {
    pacman -S --needed --noconfirm plymouth
 
    # sudo
-   echo "Path askpass /home/$username/scripts/rofi-askpass"     | tee /etc/sudo.conf > /dev/null
+   echo "Path askpass /home/$username/scripts/rofi-askpass" | tee /etc/sudo.conf > /dev/null
 
-   echo 'Defaults env_reset'                                    | EDITOR='tee'          visudo > /dev/null
-   echo 'Defaults passwd_timeout=0'                             | EDITOR='tee --append' visudo > /dev/null
-   echo 'Defaults passwd_tries=10'                              | EDITOR='tee --append' visudo > /dev/null
-   echo 'Defaults timestamp_timeout=-1'                         | EDITOR='tee --append' visudo > /dev/null
+   echo 'Defaults env_reset'                                              | EDITOR='tee'          visudo > /dev/null
+   echo 'Defaults passwd_timeout=0'                                       | EDITOR='tee --append' visudo > /dev/null
+   echo 'Defaults passwd_tries=10'                                        | EDITOR='tee --append' visudo > /dev/null
+   echo 'Defaults timestamp_timeout=-1'                                   | EDITOR='tee --append' visudo > /dev/null
    echo ''                                                                | EDITOR='tee --append' visudo > /dev/null
    echo '%wheel ALL=(ALL:ALL) ALL'                                        | EDITOR='tee --append' visudo > /dev/null
    echo "$username ALL=(root) NOPASSWD: /usr/bin/openvpn"                 | EDITOR='tee --append' visudo > /dev/null
