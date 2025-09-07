@@ -125,13 +125,7 @@ function setup_system {
    "
 
    # system configuration and packages
-   if as_chroot nvidia_gpu_exists; then
-      graphics="nvidia"
-   else
-      graphics="integrated"
-   fi
-
-   as_chroot setup_system_config "$username" "$graphics"
+   as_chroot setup_system_config "$username"
    as_chroot setup_packages "$username"
 
    # user configuration
@@ -184,8 +178,8 @@ function setup_system_config {
    local swapfile_uuid="$(findmnt -no UUID -T /swapfile)"
    local swapfile_offset="$(filefrag -v /swapfile | awk '$1=="0:" {print substr($4, 1, length($4)-2)}')"
 
-   if [[ -z $graphics ]] && nvidia_enabled; then
-      graphics="nvidia"
+   if [[ -z $graphics ]] && nvidia_disabled; then
+      graphics="integrated"
    fi
 
    pacman -S --needed --noconfirm iwd
@@ -295,13 +289,13 @@ function setup_system_config {
    echo 'HandleLidSwitch=ignore' | tee --append /etc/systemd/logind.conf > /dev/null
 
    # udev rules
-   if [[ $graphics == "nvidia" ]]; then
-      rm -f /etc/udev/rules.d/no-nvidia.rules
-   else
+   if [[ $graphics == "integrated" ]]; then
       echo 'ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{class}=="0x0c0330",   ATTR{power/control}="auto", ATTR{remove}="1"' | tee          /etc/udev/rules.d/no-nvidia.rules > /dev/null
       echo 'ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{class}=="0x0c8000",   ATTR{power/control}="auto", ATTR{remove}="1"' | tee --append /etc/udev/rules.d/no-nvidia.rules > /dev/null
       echo 'ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{class}=="0x040300",   ATTR{power/control}="auto", ATTR{remove}="1"' | tee --append /etc/udev/rules.d/no-nvidia.rules > /dev/null
       echo 'ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{class}=="0x03[0-9]*", ATTR{power/control}="auto", ATTR{remove}="1"' | tee --append /etc/udev/rules.d/no-nvidia.rules > /dev/null
+   else
+      rm -f /etc/udev/rules.d/no-nvidia.rules
    fi
    echo 'ACTION=="add", SUBSYSTEM=="backlight", RUN+="/bin/chgrp video $sys$devpath/brightness", RUN+="/bin/chmod g+w $sys$devpath/brightness"' | tee /etc/udev/rules.d/backlight.rules > /dev/null
 }
@@ -340,7 +334,7 @@ function setup_packages {
       arch_packages+=("mesa")
       arch_packages+=("mesa-utils")
       arch_packages+=("intel-media-driver")
-      if nvidia_enabled; then
+      if nvidia_gpu_exists; then
          arch_packages+=("nvidia")
          arch_packages+=("nvidia-prime")
          arch_packages+=("nvidia-utils")
@@ -535,12 +529,12 @@ function setup_packages {
    systemctl disable docker.service   2> /dev/null
    systemctl disable libvirtd.service 2> /dev/null
    systemctl disable ollama           2> /dev/null
-   if nvidia_enabled; then
-      systemctl enable nvidia-suspend.service
-      systemctl enable nvidia-resume.service
-   else
+   if nvidia_disabled; then
       systemctl disable nvidia-suspend.service
       systemctl disable nvidia-resume.service
+   elif nvidia_gpu_exists; then
+      systemctl enable nvidia-suspend.service
+      systemctl enable nvidia-resume.service
    fi
 
    as_user $username rustup default stable
@@ -576,6 +570,10 @@ function setup_firmware {
 function setup_graphics {
    local username="$1"
    local graphics="$2"
+   if ! nvidia_gpu_exists; then
+      echo "GPU not detected, aborting" >&2
+      exit 1
+   fi
    setup_system_config "$username" "$graphics"
    setup_packages "$username" "no-install"
 }
@@ -632,14 +630,14 @@ function as_chroot {
    arch-chroot /mnt /bin/bash -c "$(wrap_f "$@")"
 }
 
-function nvidia_enabled {
-   if [[ -f /etc/udev/rules.d/no-nvidia.rules ]]; then
+function nvidia_disabled {
+   if [[ ! -f /etc/udev/rules.d/no-nvidia.rules ]]; then
       return 1
    fi
 }
 
 function nvidia_gpu_exists {
-   if ! lspci | grep -q '.* VGA .* NVIDIA .*'; then
+   if ! lspci | grep -q '.* VGA .* NVIDIA .*' && ! pacman -Q nvidia &> /dev/null && ! nvidia_disabled; then
       return 1
    fi
 }
