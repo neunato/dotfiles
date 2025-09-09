@@ -32,25 +32,32 @@ input {
    }
 }
 
+output "Lenovo Group Limited LEN Y27q-20 0x01010101" {
+   mode "2560x1440"
+   scale 1.0
+   position x=-2560 y=0
+   variable-refresh-rate
+   focus-at-startup
+}
+
 output "Sharp Corporation 0x14D6 Unknown" {
    mode "3840x2400"
    scale 2.0
+   position x=0 y=0
+   focus-at-startup
 }
 
 output "AU Optronics 0x5B2D Unknown" {
    mode "1920x1080"
    scale 1.0
-}
-
-output "Lenovo Group Limited LEN Y27q-20 0x01010101" {
-   mode "2560x1440"
-   variable-refresh-rate
-   scale 1.0
+   position x=0 y=0
+   focus-at-startup
 }
 
 output "Philips Consumer Electronics Company Philips FTV 0x01010101" {
    mode "3840x2160"
    scale 2.0
+   position x=0 y=-1080
 }
 
 clipboard {
@@ -82,7 +89,8 @@ gestures {
 
 debug {
    enable-overlay-planes
-   render-drm-device "/dev/dri/card1"
+   render-drm-device "/dev/dri/renderD129"
+   honor-xdg-activation-with-invalid-serial
 }
 
 overview {
@@ -277,16 +285,11 @@ binds {
    Mod+F5                          repeat=false { spawn "yambar-toggle"; }
    Mod+Grave                       repeat=false { spawn "toggle" "rofi -show combi -config ~/.config/rofi/launcher.rasi"; }
    Mod+Return                      repeat=false { spawn "foot"; }
-   Mod+Shift+Return                repeat=false { spawn "bash" "-c" "foot --working-directory=\"$(ycwd $(niri msg --json focused-window | jq .pid))\""; }
+   Mod+Shift+Return                repeat=false { spawn-sh "foot --working-directory=\"$(ycwd $(niri msg --json focused-window | jq .pid))\""; }
    Ctrl+Alt+Delete                 repeat=false { spawn "gnome-system-monitor"; }
 }
 
-environment {
-   DISPLAY ":12"
-}
-
 spawn-at-startup "yambar-toggle"
-spawn-at-startup "xwayland-satellite" ":12"
 spawn-at-startup "swayidle" "-w" "timeout" "900" "screen-lock" "timeout" "1800" "systemctl suspend" "before-sleep" "screen-lock"
 spawn-at-startup "audio-inhibit-idle"
 spawn-at-startup "play-startup-sound"
