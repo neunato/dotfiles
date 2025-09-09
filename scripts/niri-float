@@ -1,0 +1,35 @@
+#!/bin/bash
+
+pid="$(pgrep niri-session)"
+window=($(niri msg --json focused-window | jq .id,.is_floating,.layout.window_size[0],.layout.window_size[1]))
+id=${window[0]}
+floating=${window[1]}
+window_width=${window[2]}
+window_height=${window[3]}
+path="/var/tmp/niri-float-$pid-$id"
+
+niri msg action toggle-window-floating
+
+# floating a window for the first time - center it
+if [[ $floating == "false" && ! -f $path ]]; then
+   output=($(niri msg --json focused-output | jq .logical.width,.logical.height))
+   width=${output[0]}
+   height=${output[1]}
+   niri msg action set-window-width 50%
+   niri msg action set-window-height 50%
+   niri msg action move-floating-window -x "$((width / 4))" -y "$((height / 4))"
+fi
+
+# floating a window - store tiling size
+if [[ $floating == "false" ]]; then
+   echo -n "$window_width $window_height" > "$path"
+fi
+
+# unfloating a window - restore last known tiling size
+if [[ $floating == "true" && -f $path ]]; then
+   size=($(cat "$path"))
+   width="${size[0]}"
+   height="${size[1]}"
+   niri msg action set-window-width "$width"
+   niri msg action set-window-height "$height"
+fi
