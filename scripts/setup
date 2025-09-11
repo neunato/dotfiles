@@ -182,7 +182,6 @@ function setup_system_config {
       graphics="integrated"
    fi
 
-   pacman -S --needed --noconfirm iwd
    pacman -S --needed --noconfirm fontconfig
    pacman -S --needed --noconfirm grub
    pacman -S --needed --noconfirm efibootmgr
@@ -208,8 +207,32 @@ function setup_system_config {
    # network
    ln -sf /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
 
-   echo '[General]'                         | tee          /etc/iwd/main.conf > /dev/null
-   echo 'EnableNetworkConfiguration = true' | tee --append /etc/iwd/main.conf > /dev/null
+   echo '[Match]'                   | tee          /etc/systemd/network/20-wired.network > /dev/null
+   echo 'Kind=!*'                   | tee --append /etc/systemd/network/20-wired.network > /dev/null
+   echo 'Type=ether'                | tee --append /etc/systemd/network/20-wired.network > /dev/null
+   echo ''                          | tee --append /etc/systemd/network/20-wired.network > /dev/null
+   echo '[Network]'                 | tee --append /etc/systemd/network/20-wired.network > /dev/null
+   echo 'DHCP=yes'                  | tee --append /etc/systemd/network/20-wired.network > /dev/null
+   echo ''                          | tee --append /etc/systemd/network/20-wired.network > /dev/null
+   echo '[DHCPv4]'                  | tee --append /etc/systemd/network/20-wired.network > /dev/null
+   echo 'RouteMetric=100'           | tee --append /etc/systemd/network/20-wired.network > /dev/null
+   echo ''                          | tee --append /etc/systemd/network/20-wired.network > /dev/null
+   echo '[IPv6AcceptRA]'            | tee --append /etc/systemd/network/20-wired.network > /dev/null
+   echo 'RouteMetric=100'           | tee --append /etc/systemd/network/20-wired.network > /dev/null
+
+   echo '[Match]'                   | tee          /etc/systemd/network/25-wireless.network > /dev/null
+   echo 'Type=wlan'                 | tee --append /etc/systemd/network/25-wireless.network > /dev/null
+   echo 'WLANInterfaceType=station' | tee --append /etc/systemd/network/25-wireless.network > /dev/null
+   echo 'SSID=*'                    | tee --append /etc/systemd/network/25-wireless.network > /dev/null
+   echo ''                          | tee --append /etc/systemd/network/25-wireless.network > /dev/null
+   echo '[Network]'                 | tee --append /etc/systemd/network/25-wireless.network > /dev/null
+   echo 'DHCP=yes'                  | tee --append /etc/systemd/network/25-wireless.network > /dev/null
+   echo ''                          | tee --append /etc/systemd/network/25-wireless.network > /dev/null
+   echo '[DHCPv4]'                  | tee --append /etc/systemd/network/25-wireless.network > /dev/null
+   echo 'RouteMetric=200'           | tee --append /etc/systemd/network/25-wireless.network > /dev/null
+   echo ''                          | tee --append /etc/systemd/network/25-wireless.network > /dev/null
+   echo '[IPv6AcceptRA]'            | tee --append /etc/systemd/network/25-wireless.network > /dev/null
+   echo 'RouteMetric=200'           | tee --append /etc/systemd/network/25-wireless.network > /dev/null
 
    # pacman
    echo '[options]'                                                    | tee          /etc/pacman.conf > /dev/null
@@ -520,6 +543,8 @@ function setup_packages {
 
    systemctl --user --machine="$username@" enable $start pipewire-pulse.service
    systemctl --user --machine="$username@" enable $start ssh-agent.service
+   systemctl mask systemd-networkd-wait-online.service
+   systemctl enable $start systemd-networkd
    systemctl enable $start systemd-resolved
    systemctl enable $start iwd.service
    systemctl enable $start acpid.service
