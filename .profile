@@ -6,7 +6,7 @@ XDG_DATA_HOME="$HOME/.local/share"
 XDG_STATE_HOME="$HOME/.local/state"
 XDG_DATA_DIRS="/usr/local/share:/usr/share"
 XDG_CONFIG_DIRS="/etc/xdg"
-source "$XDG_CONFIG_HOME/user-dirs.dirs"
+. "$XDG_CONFIG_HOME/user-dirs.dirs"
 
 PYTHON_HISTORY="$XDG_DATA_HOME/.python_history"
 NODE_REPL_HISTORY="$XDG_DATA_HOME/.node_repl_history"
@@ -25,17 +25,17 @@ SSH_ASKPASS_REQUIRE="force"
 
 QT_QPA_PLATFORMTHEME=gtk3
 
-if [[ ! ":$PATH:" =~ ":$HOME/scripts:" ]]; then
-   PATH="$VOLTA_HOME/bin:${PATH}:$HOME/scripts"
+if [ ":$PATH:" != *":$HOME/scripts:"* ]; then
+   PATH="$VOLTA_HOME/bin:$PATH:$HOME/scripts"
 fi
 
-if [[ -n "$DISPLAY" ]]; then
+if [ -n "$DISPLAY" ]; then
    EDITOR="/usr/bin/zeditor"
 else
    EDITOR="/usr/bin/nano"
 fi
 
-if [[ ! -f /etc/udev/rules.d/no-nvidia.rules ]]; then
+if [ ! -f /etc/udev/rules.d/no-nvidia.rules ]; then
    GBM_BACKEND=nvidia-drm
    __GLX_VENDOR_LIBRARY_NAME=nvidia
    __NV_PRIME_RENDER_OFFLOAD=1
