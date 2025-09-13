@@ -43,3 +43,7 @@ if [ ! -f /etc/udev/rules.d/no-nvidia.rules ]; then
 fi
 
 set +a
+
+if [ -z "$WAYLAND_DISPLAY" ] && [ "$XDG_VTNR" -eq 1 ]; then
+   exec niri-session -l >/dev/null 2>&1
+fi

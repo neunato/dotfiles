@@ -187,6 +187,7 @@ function setup_system_config {
    pacman -S --needed --noconfirm efibootmgr
    pacman -S --needed --noconfirm intel-ucode
    pacman -S --needed --noconfirm plymouth
+   pacman -S --needed --noconfirm dash
 
    # sudo
    echo "Path askpass /home/$username/scripts/rofi-askpass" | tee /etc/sudo.conf > /dev/null
@@ -200,7 +201,9 @@ function setup_system_config {
    echo "$username ALL=(root) NOPASSWD: /usr/bin/openvpn"                 | EDITOR='tee --append' visudo > /dev/null
    echo "$username ALL=(root) NOPASSWD: /usr/bin/killall -SIGINT openvpn" | EDITOR='tee --append' visudo > /dev/null
 
-   # bash
+   # shell
+   chsh -s /bin/dash "$username"
+
    cp "/home/$username/.bashrc" /root
    cp "/home/$username/.bash_profile" /root
 
@@ -397,6 +400,7 @@ function setup_packages {
       arch_packages+=("xdg-desktop-portal-gnome")
 
       # utilities
+      arch_packages+=("dash")
       arch_packages+=("zsh")
       arch_packages+=("sudo")
       arch_packages+=("nano")
