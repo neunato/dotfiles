@@ -1,0 +1,12 @@
+diff --git a/backlight_control.c b/backlight_control.c
+index 2a04932..b716027 100644
+--- a/backlight_control.c
++++ b/backlight_control.c
+@@ -53,6 +53,7 @@ int main(int argc, char **argv) {
+ 	brightness_value = MIN(brightness_value, MAX_BRIGHTNESS);
+ 	brightness_value = MAX(brightness_value, MIN_BRIGHTNESS);
+ 	fprintf(brightness, "%d", brightness_value);
++	fprintf(stdout, "%d\n", (int)((double)brightness_value / MAX_BRIGHTNESS * 100));
+ 	fclose(brightness);
+ 	return EXIT_SUCCESS;
+ }
