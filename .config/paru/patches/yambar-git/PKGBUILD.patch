@@ -1,0 +1,16 @@
+diff --git a/PKGBUILD b/PKGBUILD
+index 0a17b57..f2cc0c3 100644
+--- a/PKGBUILD
++++ b/PKGBUILD
+@@ -29,6 +29,11 @@ pkgver() {
+   git describe --long --tags | sed 's/[^-]*-g/r&/;s/-/./g'
+ }
+ 
++prepare() {
++   cd ${_pkgname}
++   git apply ../../scroll-fix.patch
++}
++
+ build() {
+   meson setup --buildtype=release --prefix=/usr \
+     --wrap-mode=nofallback \

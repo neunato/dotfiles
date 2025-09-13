@@ -1,0 +1,17 @@
+diff --git a/bar/wayland.c b/bar/wayland.c
+index 86ab252..6c439ed 100644
+--- a/bar/wayland.c
++++ b/bar/wayland.c
+@@ -369,11 +369,7 @@ wl_pointer_axis_discrete(void *data, struct wl_pointer *wl_pointer, uint32_t axi
+ 
+     enum mouse_button btn = discrete > 0 ? MOUSE_BTN_WHEEL_DOWN : MOUSE_BTN_WHEEL_UP;
+ 
+-    int count = abs(discrete);
+-
+-    for (int32_t i = 0; i < count; i++) {
+-        backend->bar_on_mouse(backend->bar, ON_MOUSE_CLICK, btn, seat->pointer.x, seat->pointer.y);
+-    }
++    backend->bar_on_mouse(backend->bar, ON_MOUSE_CLICK, btn, seat->pointer.x, seat->pointer.y);
+ }
+ 
+ static const struct wl_pointer_listener pointer_listener = {
