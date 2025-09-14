@@ -1,51 +1,41 @@
-#!/bin/bash
+#!/bin/dash
 
-if pidof yambar-toggle; then
+# yambar-toggle              - toggle bar on all outputs
+# yambar-toggle --refresh    - reflect current state on all outputs
+
+if [ "$1" = "--refresh" ] && ! pidof yambar > /dev/null; then
    exit
 fi
 
-shopt -s nullglob
-
-function enable {
-   niri msg --json event-stream | grep --line-buffered "WorkspacesChanged" | while read; do
-      outputs=($(niri msg --json outputs  | jq -r '.[] | select(.current_mode) | .name, .logical.scale'))
-
-      # spawn yambar on all outputs
-      for (( i=0; i<${#outputs[@]}; i+=2 )); do
-         output="${outputs[i]}"
-         scale="${outputs[i+1]}"
-         pidfile="$XDG_RUNTIME_DIR/yambar-$output.pid"
-         if [[ -s $pidfile ]]; then
-            continue
-         fi
-
-         set -a
-         output=$output
-         source "$XDG_CONFIG_HOME/yambar/config.env" $scale
-         set +a
-         yambar --print-pid="$pidfile" &
-      done
-
-      # destroy on disconnected outputs
-      for pidfile in "$XDG_RUNTIME_DIR/yambar-"*; do
-         output=${pidfile#*yambar-}
-         output=${output%.pid}
-         if ! [[ " ${outputs[*]} " =~ " $output " ]]; then
-            kill -INT "$(cat $pidfile)" 2> /dev/null
-            rm "$pidfile"
-         fi
-      done
-   done &
-}
-
-function disable {
-   pkill -x yambar
-   pkill -x yambar-toggle
+if [ "$1" != "--refresh" ] && pidof yambar > /dev/null; then
+   pkill yambar > /dev/null
    rm $XDG_RUNTIME_DIR/yambar-*.pid 2> /dev/null
-}
-
-if pidof yambar; then
-   disable
-else
-   enable
+   exit
 fi
+
+# spawn yambar on all outputs
+niri msg --json outputs | jq -r '.[] | select(.current_mode) | "\(.name) \(.logical.scale)"' > /tmp/yambar-outputs
+while read output scale; do
+   pidfile="$XDG_RUNTIME_DIR/yambar-$output.pid"
+   if [ -s $pidfile ]; then
+      continue
+   fi
+   OUTPUT="$output"
+   SCALE="$scale"
+   . "$XDG_CONFIG_HOME/yambar/config.env"
+   yambar --print-pid="$pidfile" &
+done < /tmp/yambar-outputs
+
+# destroy on disconnected outputs
+for pidfile in "$XDG_RUNTIME_DIR/yambar-"*; do
+   if [ ! -s "$pidfile" ]; then
+      continue
+   fi
+   output="$(basename "$pidfile" | sed 's/^yambar-//' | sed 's/\.pid$//')"
+   if ! grep -q "^$output " /tmp/yambar-outputs; then
+      kill -INT "$(cat $pidfile)" 2>/dev/null
+      rm "$pidfile"
+   fi
+done
+
+rm /tmp/yambar-outputs
