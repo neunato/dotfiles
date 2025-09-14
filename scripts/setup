@@ -382,6 +382,7 @@ function setup_packages {
       arch_packages+=("polkit")
       user_packages+=("backlight_control")
       arch_packages+=("wlsunset")
+      arch_packages+=("wev")
 
       # wayland
       arch_packages+=("niri")
@@ -448,6 +449,7 @@ function setup_packages {
       arch_packages+=("npm")
       arch_packages+=("rustup")
       arch_packages+=("go")
+      arch_packages+=("meson")
       arch_packages+=("docker")
       arch_packages+=("docker-compose")
       arch_packages+=("aws-cli")
