@@ -381,6 +381,7 @@ function setup_packages {
       arch_packages+=("acpid")
       arch_packages+=("polkit")
       user_packages+=("backlight_control")
+      arch_packages+=("wlsunset")
 
       # wayland
       arch_packages+=("niri")

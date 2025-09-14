@@ -57,6 +57,7 @@ bar:
         content:
           list:
             on-click:
+              left: rofi-night-light
               wheel-up: brightness up
               wheel-down: brightness down
             items:

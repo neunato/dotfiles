@@ -1,20 +1,17 @@
-#!/bin/bash
+#!/bin/dash
 
-# night-light            - toggle night light
-# night-light --enabled  - check if night light is on
+# night-light on      - enable night light
+# night-light off     - disable night light
+# night-light auto    - automatically enable/disable night light
 
-temperature=$(xsct | awk '{ print $5 }')
-
-if [[ $1 == "--enabled" ]]; then
-   if [[ $temperature -eq 3400 ]]; then
-      exit 0
-   else
-      exit 1
-   fi
+if [ "$1" = "on" ] && ! pgrep -f "wlsunset -S 00:00 -s 00:00" > /dev/null; then
+   pkill wlsunset
+   wlsunset -S 00:00 -s 00:00 > /dev/null 2>&1 &
 fi
-
-if [[ $temperature -ne 3400 ]]; then
-   xsct 3400
-else
-   xsct 0
+if [ "$1" = "off" ]; then
+   pkill wlsunset
+fi
+if [ "$1" = "auto" ] && ! pgrep -f "wlsunset -l 45.8 -L 16.0" > /dev/null; then
+   pkill wlsunset
+   wlsunset -l 45.8 -L 16.0 > /dev/null 2>&1 &
 fi

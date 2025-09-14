@@ -1,0 +1,25 @@
+#!/bin/dash
+
+if [ -z $ROFI_RETV ]; then
+   toggle "rofi -show nightlight -modes nightlight:$0"
+   exit
+fi
+
+printf "\0prompt\x1fNight Light\n"
+printf "\0no-custom\x1ftrue\n"
+
+on="󰃝 Night Light On"
+off="󰃠 Night Light Off"
+auto="󰃡 Night Light Auto"
+
+if [ -z $1 ]; then
+   echo "$on"
+   echo "$off"
+   echo "$auto"
+elif [ "$1" = "$auto" ]; then
+   night-light auto
+elif [ "$1" = "$on" ]; then
+   night-light on
+elif [ "$1" = "$off" ]; then
+   night-light off
+fi
