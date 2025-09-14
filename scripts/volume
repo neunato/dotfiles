@@ -1,32 +1,32 @@
-#!/bin/bash
+#!/bin/dash
 
 # volume       - get current volume
 # volume up    - turn up volume by 10%
 # volume down  - turn down volume by 10%
 # volume mute  - toggle mute
 
-function get_volume {
+get_volume() {
    wpctl get-volume @DEFAULT_SINK@ | awk '{printf $2*100}'
 }
 
-if [[ -z "$1" ]]; then
+if [ -z "$1" ]; then
    get_volume
    exit
 fi
 
-if [[ "$1" == "up" ]]; then
+if [ "$1" = "up" ]; then
    wpctl set-volume -l 1.0 @DEFAULT_SINK@ 10%+
    notify-send "Volume" -h int:value:"$(get_volume)" -h string:x-dunst-stack-tag:progress
    exit
 fi
 
-if [[ "$1" == "down" ]]; then
+if [ "$1" = "down" ]; then
    wpctl set-volume -l 1.0 @DEFAULT_SINK@ 10%-
    notify-send "Volume" -h int:value:"$(get_volume)" -h string:x-dunst-stack-tag:progress
    exit
 fi
 
-if [[ "$1" == "mute" ]]; then
+if [ "$1" = "mute" ]; then
    wpctl set-mute @DEFAULT_SINK@ toggle
    exit
 fi
