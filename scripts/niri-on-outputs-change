@@ -1,5 +1,7 @@
 #!/bin/bash
 
+eval "$1" &
+
 niri msg --json event-stream | grep --line-buffered "WorkspacesChanged" | while read; do
    eval "$1" &
 done
