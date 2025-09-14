@@ -1,7 +1,24 @@
 #!/bin/dash
 
-# brightness up    - turn up brightness by 10%
-# brightness down  - turn down brightness by 10%
+# brightness up              - turn up brightness by 10%
+# brightness down            - turn down brightness by 10%
+# brightness detect-buses    - detect external monitors
+
+if [ "$#" -ne 1 ]; then
+   echo "Expected 'brightness up|down|detect-buses'" >&2
+   exit 1
+fi
+
+if [ "$1" = "detect-buses" ]; then
+   echo -n "" > /tmp/external-monitor-buses
+   ddcutil detect --brief 2> /dev/null | grep -A2 "^Display " | grep -v "^Display " | grep -v "^--" | while read -r line; do
+      bus="${line#*-}"
+      read line
+      output="${line#*-}"
+      echo "$output $bus" >> /tmp/external-monitor-buses
+   done
+   exit
+fi
 
 if [ "$1" = "up" ]; then
    brightness=$(backlight_control +10%)
@@ -11,4 +28,14 @@ if [ "$1" = "down" ]; then
    brightness=$(backlight_control -10%)
 fi
 
-notify-send "Brightness" -h int:value:"$brightness" -h string:x-dunst-stack-tag:progress
+notify-send "Brightness" -h "int:value:$brightness" -h string:x-dunst-stack-tag:progress
+
+# debounce ddcutil calls
+sleep 0.25
+count="$(pgrep -xc brightness)"
+if [ "$count" -gt 1 ]; then
+   exit
+fi
+while read -r output bus; do
+   ddcutil --bus "$bus" setvcp 10 "$brightness" &
+done < /tmp/external-monitor-buses
