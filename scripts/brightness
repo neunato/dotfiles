@@ -13,7 +13,7 @@ if [ "$1" = "detect-buses" ]; then
    echo -n "" > /tmp/external-monitor-buses
    ddcutil detect --brief 2> /dev/null | grep -A2 "^Display " | grep -v "^Display " | grep -v "^--" | while read -r line; do
       bus="${line#*-}"
-      read line
+      read -r line
       output="${line#*-}"
       echo "$output $bus" >> /tmp/external-monitor-buses
    done
