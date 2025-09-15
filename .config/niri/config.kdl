@@ -275,6 +275,8 @@ binds {
    Mod+Shift+Minus                              { set-window-height "-12.5%"; }
    Mod+Shift+Plus                               { set-window-height "+12.5%"; }
    Mod+Q                           repeat=false { close-window; }
+   Mod+Shift+Q                     repeat=false { spawn "niri-close-other-windows" "--in-workspace"; }
+   Mod+Shift+Ctrl+Q                repeat=false { spawn "niri-close-other-windows"; }
    Mod+E                           repeat=false { switch-preset-column-width; }
    Mod+Shift+E                     repeat=false { fullscreen-window; }
    Mod+R                           repeat=false { consume-window-into-column; }
