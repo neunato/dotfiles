@@ -36,7 +36,6 @@ output "Lenovo Group Limited LEN Y27q-20 0x01010101" {
    mode "2560x1440"
    scale 1.0
    position x=-2560 y=0
-   variable-refresh-rate
    focus-at-startup
 }
 
