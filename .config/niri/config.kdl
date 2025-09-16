@@ -288,6 +288,16 @@ binds {
    Mod+Grave                       repeat=false { spawn "toggle" "rofi -show combi -config ~/.config/rofi/launcher.rasi"; }
    Mod+Return                      repeat=false { spawn "foot"; }
    Mod+Shift+Return                repeat=false { spawn-sh "foot --working-directory=\"$(ycwd $(niri msg --json focused-window | jq .pid))\""; }
+   Mod+Less                        repeat=false { spawn "niri-open" "foot"; }
+   Mod+Shift+Less                  repeat=false { spawn "foot"; }
+   Mod+Y                           repeat=false { spawn "niri-open" "nautilus" "org.gnome.Nautilus"; }
+   Mod+Shift+Y                     repeat=false { spawn "nautilus" "--new-window"; }
+   Mod+X                           repeat=false { spawn "niri-open" "librewolf"; }
+   Mod+Shift+X                     repeat=false { spawn "librewolf"; }
+   Mod+C                           repeat=false { spawn "niri-open" "zeditor" "dev.zed.Zed"; }
+   Mod+Shift+C                     repeat=false { spawn "zeditor"; }
+   Mod+V                           repeat=false { spawn "niri-open" "smerge" "sublime_merge"; }
+   Mod+Shift+V                     repeat=false { spawn "smerge" "--new-window"; }
    Ctrl+Alt+Delete                 repeat=false { spawn "gnome-system-monitor"; }
 }
 
