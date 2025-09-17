@@ -170,11 +170,24 @@ window-rule {
 }
 
 window-rule {
+   match app-id="zed"
+   match app-id="merge"
+   match app-id="librewolf"
+
+   default-column-width {
+      proportion 1.0
+   }
+}
+
+window-rule {
    match app-id="org.gnome.Nautilus"
    match app-id="org.gnome.SystemMonitor"
    match app-id="calendar"
+   match app-id="librewolf" title="Library"
+   match app-id="Mesen" title="Settings"
 
    open-floating true
+   open-focused true
 
    default-column-width {
       proportion 0.5;
@@ -186,13 +199,10 @@ window-rule {
 }
 
 window-rule {
-   match app-id="zed"
-   match app-id="merge"
-   match app-id="librewolf"
+   match app-id="Mesen"
+   exclude app-id="Mesen" title="Settings"
 
-   default-column-width {
-      proportion 1.0
-   }
+   open-fullscreen true
 }
 
 binds {
