@@ -12,39 +12,43 @@ program="$1"
 app_id="${2:-$1}"
 workspaces="$(niri msg --json workspaces)"
 window_id="$(niri msg --json windows | jq -r --arg app_id "$app_id" --argjson workspaces "$workspaces" '
-   . as $windows
-   | ($workspaces | map({(.id|tostring): .}) | add) as $ws_map
-   | ($workspaces | map(select(.is_focused == true) | {workspace_id: .id, window_id: (.active_window_id // null)})[0]) as {workspace_id: $workspace_id, window_id: $window_id}
-   | ($windows | map(select(.id == $window_id)) | .[0]) as $focused_window
-   | $windows
-   | group_by(.workspace_id)
-   | map(
-         sort_by(.layout.pos_in_scrolling_layout)
-         | reduce .[] as $window (
-            {result: [], prev_x: 0};
-            (
-               .prev_x + ($window.layout.tile_size[0]/2) as $x
-               | {
-                  result: .result + [$window + {x: $x}],
-                  prev_x: $x + ($window.layout.tile_size[0]/2)
-               }
+   if length == 0 then
+      ""
+   else
+      . as $windows
+      | ($workspaces | map({(.id|tostring): .}) | add) as $ws_map
+      | ($workspaces | map(select(.is_focused == true) | {workspace_id: .id, window_id: (.active_window_id // null)})[0]) as {workspace_id: $workspace_id, window_id: $window_id}
+      | ($windows | map(select(.id == $window_id)) | .[0]) as $focused_window
+      | $windows
+      | group_by(.workspace_id)
+      | map(
+            sort_by(.layout.pos_in_scrolling_layout)
+            | reduce .[] as $window (
+               {result: [], prev_x: 0};
+               (
+                  .prev_x + ($window.layout.tile_size[0]/2) as $x
+                  | {
+                     result: .result + [$window + {x: $x}],
+                     prev_x: $x + ($window.layout.tile_size[0]/2)
+                  }
+               )
             )
+            | .result
+            | (map(select(.id == ($ws_map[.workspace_id|tostring].active_window_id)))[0]) as $active_window
+            | map(. + {x: (.x - $active_window.x)})
          )
-         | .result
-         | (map(select(.id == ($ws_map[.workspace_id|tostring].active_window_id)))[0]) as $active_window
-         | map(. + {x: (.x - $active_window.x)})
-      )
-   | add
-   | map(select(.app_id == $app_id))
-   | sort_by([
-      ($ws_map[.workspace_id|tostring].output != $ws_map[$workspace_id|tostring].output),    # prefer same output (could prefer closest instead, using .logical.*)
-      ($ws_map[.workspace_id|tostring].is_active != true),                                   # prefer active workspace
-      (($ws_map[.workspace_id|tostring].idx - $ws_map[$workspace_id|tostring].idx) | abs),   # prefer closest workspace
-      ((.x - ($focused_window.x // 0)) | abs),                                               # prefer closest window
-      ($ws_map[.workspace_id|tostring].idx),                                                 # prefer upper workspace
-      (-.layout.pos_in_scrolling_layout[0])                                                  # prefer right window
-   ])
-   | .[0].id // ""'
+      | add
+      | map(select(.app_id == $app_id))
+      | sort_by([
+         ($ws_map[.workspace_id|tostring].output != $ws_map[$workspace_id|tostring].output),    # prefer same output (could prefer closest instead, using .logical.*)
+         ($ws_map[.workspace_id|tostring].is_active != true),                                   # prefer active workspace
+         (($ws_map[.workspace_id|tostring].idx - $ws_map[$workspace_id|tostring].idx) | abs),   # prefer closest workspace
+         ((.x - ($focused_window.x // 0)) | abs),                                               # prefer closest window
+         ($ws_map[.workspace_id|tostring].idx),                                                 # prefer upper workspace
+         (-.layout.pos_in_scrolling_layout[0])                                                  # prefer right window
+      ])
+      | .[0].id // ""
+   end'
 )"
 
 if [ -n "$window_id" ]; then
