@@ -428,6 +428,7 @@ function setup_packages {
       arch_packages+=("imagemagick")
       arch_packages+=("yt-dlp")
       arch_packages+=("id3v2")
+      arch_packages+=("bash-completion")
       arch_packages+=("man-db")
       arch_packages+=("man-pages")
 
