@@ -385,7 +385,7 @@ function setup_packages {
       arch_packages+=("wev")
 
       # wayland
-      arch_packages+=("niri")
+      user_packages+=("niri-git")
       arch_packages+=("xwayland-satellite")
       user_packages+=("yambar-git")
       deps_packages+=("xcb-util-errors")
