@@ -43,12 +43,14 @@ output "Sharp Corporation 0x14D6 Unknown" {
    mode "3840x2400"
    scale 2.0
    position x=0 y=0
+   focus-at-startup
 }
 
 output "AU Optronics 0x5B2D Unknown" {
    mode "1920x1080"
    scale 1.0
    position x=0 y=0
+   focus-at-startup
 }
 
 output "Philips Consumer Electronics Company Philips FTV 0x01010101" {
@@ -315,5 +317,5 @@ spawn-at-startup "niri-on-outputs-change" "yambar-toggle --refresh; brightness d
 spawn-at-startup "night-light" "auto"
 spawn-at-startup "swayidle" "-w" "timeout" "900" "screen-lock" "timeout" "1800" "systemctl suspend" "before-sleep" "screen-lock"
 spawn-at-startup "sway-audio-idle-inhibit"
-spawn-at-startup "wl-clip-persist" "--clipboard" "regular"
+spawn-at-startup "wl-clip-persist" "--clipboard" "regular" "--reconnect-tries" "0"
 spawn-at-startup "play-startup-sound"
