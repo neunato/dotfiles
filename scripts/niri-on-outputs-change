@@ -1,7 +1,10 @@
-#!/bin/bash
+#!/bin/dash
 
-eval "$1" &
-
-niri msg --json event-stream | grep --line-buffered "WorkspacesChanged" | while read -r; do
-   eval "$1" &
+niri msg --json event-stream | grep --line-buffered "WorkspacesChanged" | while read -r line; do
+   new="$(echo "$line" | jq -r '[.WorkspacesChanged.workspaces[].output] | unique | sort | join(",")')"
+   if [ "$old" = "$new" ]; then
+      continue
+   fi
+   old="$new"
+   eval "$1"
 done
