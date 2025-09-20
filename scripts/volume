@@ -1,13 +1,20 @@
 #!/bin/dash
 
-# volume         - get current volume
-# volume up      - turn up volume by 10%
-# volume down    - turn down volume by 10%
-# volume <n>     - set volume to wanted %
-# volume mute    - toggle mute
+# volume                    - get current volume
+# volume up   [--silent]    - turn up volume by 10%
+# volume down [--silent]    - turn down volume by 10%
+# volume <n>  [--silent]    - set volume to wanted %
+# volume mute               - toggle mute
 
 get_volume() {
    wpctl get-volume @DEFAULT_SINK@ | awk '{printf $2*100}'
+}
+
+set_volume() {
+   wpctl set-volume -l 1.0 @DEFAULT_SINK@ "$1"
+   if [ "$2" != "--silent" ]; then
+      notify-send "Volume" -h "int:value:$(get_volume)" -h string:x-dunst-stack-tag:progress
+   fi
 }
 
 if [ -z "$1" ]; then
@@ -17,20 +24,17 @@ if [ -z "$1" ]; then
 fi
 
 if [ "$1" = "up" ]; then
-   wpctl set-volume -l 1.0 @DEFAULT_SINK@ 10%+
-   notify-send "Volume" -h string:x-dunst-stack-tag:progress -h "int:value:$(get_volume)"
+   set_volume 10%+ "$2"
    exit
 fi
 
 if [ "$1" = "down" ]; then
-   wpctl set-volume -l 1.0 @DEFAULT_SINK@ 10%-
-   notify-send "Volume" -h string:x-dunst-stack-tag:progress -h "int:value:$(get_volume)"
+   set_volume 10%- "$2"
    exit
 fi
 
 if [ "$1" -eq "$1" ] 2> /dev/null; then
-   wpctl set-volume -l 1.0 @DEFAULT_SINK@ "$1%"
-   notify-send "Volume" -h string:x-dunst-stack-tag:progress -h "int:value:$1"
+   set_volume "$1%" "$2"
    exit
 fi
 
