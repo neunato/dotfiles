@@ -1,14 +1,20 @@
 #!/bin/dash
 
-# brightness                 - get current brightness
-# brightness up              - turn up brightness by 10%
-# brightness down            - turn down brightness by 10%
-# brightness <n>             - set brightness to wanted %
-# brightness detect-buses    - detect external monitors
+# brightness                    - get current brightness
+# brightness up   [--silent]    - turn up brightness by 10%
+# brightness down [--silent]    - turn down brightness by 10%
+# brightness <n>  [--silent]    - set brightness to wanted %
+# brightness detect-buses       - detect external monitors
 
 config="/tmp/external-monitor-buses"
 
-sync_external() {
+set_brightness() {
+   brightness="$(backlight_control "$1")"
+
+   if [ "$2" != "--silent" ]; then
+      notify-send "Brightness" -h "int:value:$brightness" -h string:x-dunst-stack-tag:progress
+   fi
+
    if [ ! -s "$config" ]; then
       return
    fi
@@ -29,6 +35,21 @@ if [ -z "$1" ]; then
    exit
 fi
 
+if [ "$1" = "up" ]; then
+   set_brightness +10 "$2" &
+   exit
+fi
+
+if [ "$1" = "down" ]; then
+   set_brightness -10 "$2" &
+   exit
+fi
+
+if [ "$1" -eq "$1" ] 2> /dev/null; then
+   set_brightness "$1" "$2" &
+   exit
+fi
+
 if [ "$1" = "detect-buses" ]; then
    echo -n "" > "$config"
    ddcutil detect --brief 2> /dev/null | grep -A2 "^Display " | grep -v "^Display " | grep -v "^--" | while read -r line; do
@@ -38,27 +59,6 @@ if [ "$1" = "detect-buses" ]; then
       echo "$output $bus" >> "$config"
       ddcutil --bus "$bus" setvcp 10 "$(brightness)" &
    done
-   exit
-fi
-
-if [ "$1" = "up" ]; then
-   brightness="$(backlight_control +10)"
-   notify-send "Brightness" -h "int:value:$brightness" -h string:x-dunst-stack-tag:progress
-   sync_external &
-   exit
-fi
-
-if [ "$1" = "down" ]; then
-   brightness="$(backlight_control -10)"
-   notify-send "Brightness" -h "int:value:$brightness" -h string:x-dunst-stack-tag:progress
-   sync_external &
-   exit
-fi
-
-if [ "$1" -eq "$1" ] 2> /dev/null; then
-   brightness="$(backlight_control "$1")"
-   notify-send "Brightness" -h "int:value:$brightness" -h string:x-dunst-stack-tag:progress
-   sync_external &
    exit
 fi
 
