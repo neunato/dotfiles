@@ -36,6 +36,7 @@ if [ "$1" = "detect-buses" ]; then
       read -r line
       output="${line#*-}"
       echo "$output $bus" >> "$config"
+      ddcutil --bus "$bus" setvcp 10 "$(brightness)" &
    done
    exit
 fi
