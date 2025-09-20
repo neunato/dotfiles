@@ -550,6 +550,7 @@ function setup_packages {
    systemctl --user --machine="$username@" enable $start pipewire-pulse.service
    systemctl --user --machine="$username@" enable $start ssh-agent.service
    systemctl mask systemd-networkd-wait-online.service
+   systemctl mask systemd-backlight@backlight:intel_backlight.service
    systemctl enable $start systemd-networkd
    systemctl enable $start systemd-resolved
    systemctl enable $start iwd.service
