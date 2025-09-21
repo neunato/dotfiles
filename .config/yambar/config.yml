@@ -103,8 +103,6 @@ bar:
         content:
           map:
             conditions:
-              name == enp62s0u1u4u4 && state == up:
-                - string: { text: "󰈀 100%", right-margin: "${double_spacing}" }
               name == wlan0 && state == up:
                 - ramp:
                     tag: quality
@@ -122,6 +120,8 @@ bar:
                   items:
                     - string: { text: 󰢿 }
                     - string: { text: "{quality:3}%", left-margin: "${margin_icon}", right-margin: "${double_spacing}" }
+              carrier && state == up:
+                - string: { text: "󰈀 100%", right-margin: "${double_spacing}" }
 
   center:
     - niri-workspaces:
