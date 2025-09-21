@@ -94,7 +94,6 @@ debug {
 
 overview {
    zoom 0.5
-   backdrop-color "#11111B"
 
    workspace-shadow {
       off
@@ -106,7 +105,7 @@ layout {
    center-focused-column "never"
    always-center-single-column
    empty-workspace-above-first
-   background-color "#11111B"
+   background-color "transparent"
 
    preset-column-widths {
       proportion 0.5
@@ -138,6 +137,12 @@ layout {
       top 0
       bottom -8
    }
+}
+
+layer-rule {
+    match namespace="wallpaper"
+
+    place-within-backdrop true
 }
 
 layer-rule {
@@ -310,6 +315,7 @@ binds {
    Ctrl+Alt+Delete                 repeat=false { spawn "gnome-system-monitor"; }
 }
 
+spawn-at-startup "swaybg" "-i" "pictures/wallpapers/wallpaper.jpg"
 spawn-at-startup "brightness" "100" "--silent"
 spawn-at-startup "volume" "100" "--silent"
 spawn-at-startup "yambar-toggle"

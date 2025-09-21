@@ -390,6 +390,7 @@ function setup_packages {
       deps_packages+=("libmpdclient")
       arch_packages+=("waylock")
       arch_packages+=("swayidle")
+      arch_packages+=("swaybg")
       user_packages+=("sway-audio-idle-inhibit-git")
       arch_packages+=("wl-clip-persist")
 
