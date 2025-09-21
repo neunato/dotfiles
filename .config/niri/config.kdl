@@ -316,8 +316,8 @@ binds {
 }
 
 spawn-at-startup "swaybg" "-i" "pictures/wallpapers/wallpaper.jpg"
-spawn-at-startup "brightness" "100" "--silent"
-spawn-at-startup "volume" "100" "--silent"
+spawn-at-startup "brightness" "50" "--silent"
+spawn-at-startup "volume" "50" "--silent"
 spawn-at-startup "yambar-toggle"
 spawn-at-startup "niri-on-outputs-change" "yambar-toggle --refresh; brightness detect-buses; hdmi-switch-sound"
 spawn-at-startup "night-light" "auto"
