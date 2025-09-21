@@ -501,12 +501,13 @@ function setup_packages {
 
       # fonts, icons, cursor
       arch_packages+=("fontconfig")
-      arch_packages+=("adobe-source-sans-fonts")
-      arch_packages+=("adobe-source-serif-fonts")
-      arch_packages+=("adobe-source-code-pro-fonts")
-      arch_packages+=("adobe-source-han-serif-otc-fonts")
+      arch_packages+=("adwaita-fonts")
+      arch_packages+=("noto-fonts")
       arch_packages+=("ttf-jetbrains-mono")
       arch_packages+=("ttf-nerd-fonts-symbols")
+      arch_packages+=("adobe-source-han-sans-cn-fonts")
+      arch_packages+=("adobe-source-han-sans-jp-fonts")
+      arch_packages+=("adobe-source-han-sans-kr-fonts")
       user_packages+=("candy-icons-git")
       user_packages+=("bibata-cursor-theme-bin")
 
