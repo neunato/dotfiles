@@ -8,10 +8,12 @@ if [ "$1" = "--refresh" ] && ! pidof yambar > /dev/null; then
 fi
 
 if [ "$1" != "--refresh" ] && pidof yambar > /dev/null; then
-   pkill yambar > /dev/null
-   rm $XDG_RUNTIME_DIR/yambar-*.pid 2> /dev/null
+   sed -i "s/ bottom/ \/\/ bottom/g" ~/.config/niri/config.kdl
+   pkill yambar > /dev/null 2>&1
    exit
 fi
+
+sed -i "s/\/\/ bottom/\bottom/g" ~/.config/niri/config.kdl
 
 # spawn yambar on all outputs
 niri msg --json outputs | jq -r '.[] | select(.current_mode) | "\(.name) \(.logical.scale)"' > /tmp/yambar-outputs
