@@ -1,5 +1,5 @@
-#!/bin/bash
+#!/bin/dash
 
-if [[ $DUNST_STACK_TAG != "progress" ]]; then
+if [ "$DUNST_STACK_TAG" != "progress" ]; then
    mpv --really-quiet ~/sounds/windows-xp-balloon.mp3
 fi

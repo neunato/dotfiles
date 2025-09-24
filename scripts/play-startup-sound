@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/dash
 
 sleep 1.5
 mpv --really-quiet ~/sounds/windows-xp-logon.mp3
