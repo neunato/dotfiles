@@ -503,6 +503,7 @@ function setup_packages {
       arch_packages+=("fontconfig")
       arch_packages+=("adwaita-fonts")
       arch_packages+=("noto-fonts")
+      arch_packages+=("noto-fonts-emoji")
       arch_packages+=("ttf-jetbrains-mono")
       arch_packages+=("ttf-nerd-fonts-symbols-mono")
       arch_packages+=("adobe-source-han-sans-cn-fonts")
