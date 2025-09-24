@@ -504,7 +504,7 @@ function setup_packages {
       arch_packages+=("adwaita-fonts")
       arch_packages+=("noto-fonts")
       arch_packages+=("ttf-jetbrains-mono")
-      arch_packages+=("ttf-nerd-fonts-symbols")
+      arch_packages+=("ttf-nerd-fonts-symbols-mono")
       arch_packages+=("adobe-source-han-sans-cn-fonts")
       arch_packages+=("adobe-source-han-sans-jp-fonts")
       arch_packages+=("adobe-source-han-sans-kr-fonts")

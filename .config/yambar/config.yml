@@ -1,7 +1,6 @@
 font: &font ${font_family}:pixelsize=${font_size}
 font_s: &font_s ${font_family}:pixelsize=${font_size_s}:weight=bold
-font_l: &font_l ${font_family}:pixelsize=${font_size_l}
-font_xl: &font_xl ${font_family}:pixelsize=${font_size_xl}
+font_xs: &font_xs ${font_family}:pixelsize=${font_size_xs}
 underline: &underline { deco: { underline: { size: 1, color: "${color_magenta}" } } }
 
 bar:
@@ -22,13 +21,13 @@ bar:
             map:
               conditions:
                 form_factor == headphones && description != "CalDigit Pro Audio Stereo" && ~muted:
-                  string: { text: 󰋋, font: *font_l }
+                  string: { text: 󰋋 }
                 form_factor == headphones && description != "CalDigit Pro Audio Stereo" && muted:
-                  string: { text: 󰟎, font: *font_l }
+                  string: { text: 󰟎 }
                 ~muted:
-                  string: { text: 󰕾, font: *font_l }
+                  string: { text: 󰕾 }
                 muted:
-                  string: { text: 󰖁, font: *font_l }
+                  string: { text: 󰖁 }
         content:
           map:
             on-click:
@@ -40,14 +39,14 @@ bar:
                 list:
                   foreground: "${color_red}"
                   items:
-                    - string: { text: " " }
+                    - string: { text: "  " }
                     - *volume_icon
                     - string: { text: "{cubic_volume:3}%", left-margin: "${margin_icon}" }
               type == sink && ~muted:
                 list:
                   foreground: "${color_magenta_bright}"
                   items:
-                    - string: { text: " " }
+                    - string: { text: "  " }
                     - *volume_icon
                     - string: { text: "{cubic_volume:3}%", left-margin: "${margin_icon}" }
 
@@ -125,7 +124,7 @@ bar:
 
   center:
     - niri-workspaces:
-        font: *font_xl
+        font: *font_xs
         foreground: ${color_magenta_bright}
         content:
           map:
@@ -192,7 +191,7 @@ bar:
             text: 
 
     - clock:
-        time-format: "%d.%m.%Y. %H:%M "
+        time-format: "%d.%m.%Y. %H:%M  "
         foreground: ${color_magenta_bright}
         content:
           - string:
