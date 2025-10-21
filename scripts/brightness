@@ -12,7 +12,7 @@ set_brightness() {
    brightness="$(backlight_control "$1")"
 
    if [ "$2" != "--silent" ]; then
-      notify-send "Brightness" -h "int:value:$brightness" -h string:x-dunst-stack-tag:progress
+      notify-send "Brightness $brightness%" -a osd -h "int:value:$brightness" -h string:x-canonical-private-synchronous:osd
    fi
 
    if [ ! -s "$config" ]; then

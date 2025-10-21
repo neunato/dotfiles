@@ -419,7 +419,7 @@ function setup_packages {
       user_packages+=("ycwd-git")
       arch_packages+=("ncdu")
       arch_packages+=("ddcutil")
-      arch_packages+=("dunst")
+      arch_packages+=("mako")
       arch_packages+=("libnotify")
       arch_packages+=("rofi")
       arch_packages+=("khal")
