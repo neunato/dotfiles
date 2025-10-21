@@ -35,7 +35,7 @@ for pidfile in "$XDG_RUNTIME_DIR/yambar-"*; do
    fi
    output="$(basename "$pidfile" | sed 's/^yambar-//' | sed 's/\.pid$//')"
    if ! grep -q "^$output " /tmp/yambar-outputs; then
-      kill -INT "$(cat $pidfile)" 2>/dev/null
+      kill -TERM "$(cat $pidfile)" 2>/dev/null
       rm "$pidfile"
    fi
 done

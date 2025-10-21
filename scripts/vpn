@@ -5,5 +5,5 @@ set -e
 if ! pgrep openvpn > /dev/null; then
    sudo openvpn --cd /etc/openvpn/client/ --config default.ovpn --daemon > /dev/null
 else
-   sudo killall -SIGINT openvpn
+   sudo killall -INT openvpn
 fi

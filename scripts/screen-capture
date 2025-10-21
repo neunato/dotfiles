@@ -18,7 +18,7 @@ while [[ $# -gt 0 ]]; do
    shift
 done
 
-if pkill -SIGINT wf-recorder; then
+if pkill -TERM wf-recorder; then
    yambar-signal screen-capture off
    exit 0
 fi
