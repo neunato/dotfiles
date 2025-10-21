@@ -1,7 +1,9 @@
-font: &font ${font_family}:pixelsize=${font_size}
-font_s: &font_s ${font_family}:pixelsize=${font_size_s}:weight=bold
-font_xs: &font_xs ${font_family}:pixelsize=${font_size_xs}
-underline: &underline { deco: { underline: { size: 1, color: "${color_magenta}" } } }
+font_12: &font_12 ${font_family}:pixelsize=${font_size_12}
+font_13: &font_13 ${font_family}:pixelsize=${font_size_13}
+font_14: &font_14 ${font_family}:pixelsize=${font_size_14}
+font_15: &font_15 ${font_family}:pixelsize=${font_size_15}
+font_14_bold: &font_14_bold ${font_family}:pixelsize=${font_size_14}:weight=bold
+underline: &underline { deco: { underline: { size: 1, color: "${color_main}" } } }
 
 bar:
   monitor: ${output}
@@ -10,8 +12,8 @@ bar:
   height: ${height}
   spacing: ${spacing}
   margin: 0
-  font: *font
-  foreground: ${color_magenta}
+  font: *font_15
+  foreground: ${color_main}
   background: 00000000
 
   left:
@@ -39,20 +41,20 @@ bar:
                 list:
                   foreground: "${color_red}"
                   items:
-                    - string: { text: "  " }
+                    - string: { text: " " }
                     - *volume_icon
                     - string: { text: "{cubic_volume:3}%", left-margin: "${margin_icon}" }
               type == sink && ~muted:
                 list:
-                  foreground: "${color_magenta_bright}"
+                  foreground: "${color_main_bright}"
                   items:
-                    - string: { text: "  " }
+                    - string: { text: " " }
                     - *volume_icon
                     - string: { text: "{cubic_volume:3}%", left-margin: "${margin_icon}" }
 
     - backlight:
         name: intel_backlight
-        foreground: ${color_magenta_bright}
+        foreground: ${color_main_bright}
         content:
           list:
             on-click:
@@ -124,8 +126,8 @@ bar:
 
   center:
     - niri-workspaces:
-        font: *font_xs
-        foreground: ${color_magenta_bright}
+        font: *font_12
+        foreground: ${color_main_bright}
         content:
           map:
             on-click: niri msg action focus-workspace {id}
@@ -142,7 +144,7 @@ bar:
         path: ~/scripts/yambar-screen-capture
         args:
           - ${output}
-        font: *font_s
+        font: *font_14
         content:
           map:
             on-click: screen-capture
@@ -166,23 +168,23 @@ bar:
                     left: udisksctl unmount -b {device}
                     right: sh -c "udisksctl unmount -b {device} && udisksctl power-off -b {device}"
                   text: 󱊞
-                  foreground: ${color_magenta_bright}
+                  foreground: ${color_main_bright}
                   <<: *underline
 
     - script:
         path: ~/scripts/yambar-vpn
-        font: *font_s
+        font: *font_14_bold
         content:
           map:
             on-click: vpn
             conditions:
               connected:
-                string: { text: VPN, foreground: "${color_magenta_bright}", <<: *underline }
+                string: { text: VPN, foreground: "${color_main_bright}", <<: *underline }
               ~connected:
                 string: { text: VPN }
 
     - label:
-        font: *font_s
+        font: *font_13
         content:
           string:
             on-click:
@@ -191,8 +193,8 @@ bar:
             text: 
 
     - clock:
-        time-format: "%d.%m.%Y. %H:%M  "
-        foreground: ${color_magenta_bright}
+        time-format: "%d.%m.%Y. %H:%M "
+        foreground: ${color_main_bright}
         content:
           - string:
               on-click: toggle "foot --app-id=calendar khal interactive"
