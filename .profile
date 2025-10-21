@@ -25,9 +25,10 @@ SSH_ASKPASS_REQUIRE="force"
 
 QT_QPA_PLATFORMTHEME=gtk3
 
-if [ ":$PATH:" != *":$HOME/scripts:"* ]; then
-   PATH="$VOLTA_HOME/bin:$PATH:$HOME/scripts"
-fi
+case ":$PATH:" in
+   *":$HOME/scripts:"*) ;;
+   *) PATH="$VOLTA_HOME/bin:$PATH:$HOME/scripts" ;;
+esac
 
 if [ -n "$DISPLAY" ]; then
    EDITOR="/usr/bin/zeditor"
