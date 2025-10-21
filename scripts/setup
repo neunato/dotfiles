@@ -517,7 +517,7 @@ function setup_packages {
       fi
       echo "$username ALL=(ALL:ALL) NOPASSWD: ALL" | EDITOR="tee --append" visudo > /dev/null
       as_user $username git config --global --rename-section "url.git@github.com:" "url-.git@github.com:"
-      as_user $username paru -Syu --noconfirm &&
+      as_user $username paru -Syu --devel --noconfirm &&
       as_user $username paru -S --useask --ask 4 --noconfirm --asexplicit $([[ $mode != "reinstall" ]] && echo "--needed") "${arch_packages[@]}" "${user_packages[@]}" &&
       as_user $username paru -S --useask --ask 4 --noconfirm --asdeps     $([[ $mode != "reinstall" ]] && echo "--needed") "${deps_packages[@]}" || failed=true
       as_user $username git config --global --rename-section "url-.git@github.com:" "url.git@github.com:"
