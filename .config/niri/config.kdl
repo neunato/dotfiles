@@ -323,4 +323,4 @@ spawn-at-startup "niri-on-outputs-change" "yambar-toggle --refresh; brightness d
 spawn-at-startup "night-light" "auto"
 spawn-at-startup "swayidle" "-w" "timeout" "900" "screen-lock" "timeout" "1800" "systemctl suspend" "before-sleep" "screen-lock"
 spawn-at-startup "sway-audio-idle-inhibit"
-spawn-at-startup "play-startup-sound"
+spawn-at-startup "play-sound" "windows-xp-logon"

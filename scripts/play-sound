@@ -1,0 +1,15 @@
+#!/bin/dash
+
+if [ -z "$1" ]; then
+   echo "Expected 'play-sound <sound>'" >&2
+   exit 1
+fi
+
+path="$HOME/sounds/$1.mp3"
+
+if [ ! -f "$path" ]; then
+   echo "Sound file does not exist" >&2
+   exit 1
+fi
+
+mpv --really-quiet "$path" &

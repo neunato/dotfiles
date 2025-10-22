@@ -728,4 +728,4 @@ case "$1" in
    packages)      as_sudo setup_packages "$(whoami)" "$mode";;       # reinstall|
 esac
 
-mpv --really-quiet ~/sounds/warcraft-jobs-done.mp3
+play-sound warcraft-jobs-done
