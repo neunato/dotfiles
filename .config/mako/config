@@ -30,13 +30,15 @@ max-visible=10
 output=0
 layer=overlay
 anchor=top-right
-background-color=#24273a
-text-color=#cad3f5
-border-color=#b7bdf8
-progress-color=over #363a4f
+
+# https://github.com/catppuccin/mako/blob/main/themes/catppuccin-frappe/catppuccin-frappe-lavender
+background-color=#303446
+text-color=#c6d0f5
+border-color=#babbf1
+progress-color=over #414559
 
 [urgency=high]
-border-color=#f5a97f
+border-color=#ef9f76
 
 [app-name=osd]
 on-notify=none
