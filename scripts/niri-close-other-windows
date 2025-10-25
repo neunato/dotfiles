@@ -1,11 +1,11 @@
 #!/bin/dash
 
-niri msg --json workspaces | jq -r 'map(select(.is_focused == true) | .id,.active_window_id) | .[]' | {
+niri msg --json workspaces | jq -c -r 'map(select(.is_focused == true) | .id,.active_window_id) | .[]' | {
    read workspace_id
    read window_id
    if [ "$1" = "--in-workspace" ]; then
-      niri msg --json windows | jq -r 'map(select(.id != '"$window_id"' and .workspace_id == '"$workspace_id"') | .pid) | .[]' | xargs -r kill
+      niri msg --json windows | jq -c -r 'map(select(.id != '"$window_id"' and .workspace_id == '"$workspace_id"') | .pid) | .[]' | xargs -r kill
    else
-      niri msg --json windows | jq -r 'map(select(.id != '"$window_id"') | .pid) | .[]' | xargs -r kill
+      niri msg --json windows | jq -c -r 'map(select(.id != '"$window_id"') | .pid) | .[]' | xargs -r kill
    fi
 }

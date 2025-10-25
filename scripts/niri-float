@@ -1,6 +1,6 @@
 #!/bin/dash
 
-niri msg --json focused-window | jq -r '.id,.is_floating,.layout.window_size[0],.layout.window_size[1]' | {
+niri msg --json focused-window | jq -c -r '.id,.is_floating,.layout.window_size[0],.layout.window_size[1]' | {
    read id
    read floating
    read window_width

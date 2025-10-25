@@ -16,7 +16,7 @@ fi
 sed -i "s/\/\/ bottom/\bottom/g" ~/.config/niri/config.kdl
 
 # spawn yambar on all outputs
-niri msg --json outputs | jq -r '.[] | select(.current_mode) | "\(.name) \(.logical.scale)"' > /tmp/yambar-outputs
+niri msg --json outputs | jq -c -r '.[] | select(.current_mode) | "\(.name) \(.logical.scale)"' > /tmp/yambar-outputs
 while read -r output scale; do
    pidfile="$XDG_RUNTIME_DIR/yambar-$output.pid"
    if [ -s $pidfile ]; then

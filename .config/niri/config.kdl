@@ -300,7 +300,7 @@ binds {
    Mod+F5                          repeat=false { spawn "yambar-toggle"; }
    Mod+Grave                       repeat=false { spawn "toggle" "rofi -show combi -config ~/.config/rofi/launcher.rasi"; }
    Mod+Return                      repeat=false { spawn "foot"; }
-   Mod+Shift+Return                repeat=false { spawn-sh "foot --working-directory=\"$(ycwd $(niri msg --json focused-window | jq .pid))\""; }
+   Mod+Shift+Return                repeat=false { spawn-sh "foot --working-directory=\"$(ycwd $(niri msg --json focused-window | jq -c .pid))\""; }
    Mod+Less                        repeat=false { spawn "niri-open" "foot"; }
    Mod+Shift+Less                  repeat=false { spawn "foot"; }
    Mod+Y                           repeat=false { spawn "niri-open" "nautilus" "org.gnome.Nautilus"; }

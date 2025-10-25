@@ -9,7 +9,7 @@ fi
 program="$1"
 app_id="${2:-$1}"
 workspaces="$(niri msg --json workspaces)"
-window_id="$(niri msg --json windows | jq -r --arg app_id "$app_id" --argjson workspaces "$workspaces" '
+window_id="$(niri msg --json windows | jq -c -r --arg app_id "$app_id" --argjson workspaces "$workspaces" '
    if length == 0 then
       ""
    else
