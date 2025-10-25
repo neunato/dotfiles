@@ -426,6 +426,7 @@ function setup_packages {
       arch_packages+=("slurp")
       arch_packages+=("wf-recorder")
       arch_packages+=("imagemagick")
+      arch_packages+=("sox")
       arch_packages+=("yt-dlp")
       arch_packages+=("id3v2")
       arch_packages+=("bash-completion")
