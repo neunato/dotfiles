@@ -3,15 +3,26 @@
 # night-light on      - enable night light
 # night-light off     - disable night light
 # night-light auto    - automatically enable/disable night light
+# night-light toggle  - toggles between auto/off
 
 if [ "$1" = "on" ] && ! pgrep -f "wlsunset -S 00:00 -s 00:00" > /dev/null; then
    pkill wlsunset
    wlsunset -S 00:00 -s 00:00 > /dev/null 2>&1 &
+   notify-send "Night Light On (Forced)" -a osd -h string:x-canonical-private-synchronous:osd
 fi
 if [ "$1" = "off" ]; then
    pkill wlsunset
+   notify-send "Night Light Off" -a osd -h string:x-canonical-private-synchronous:osd
 fi
 if [ "$1" = "auto" ] && ! pgrep -f "wlsunset -l 45.8 -L 16.0" > /dev/null; then
    pkill wlsunset
    wlsunset -l 45.8 -L 16.0 > /dev/null 2>&1 &
+   notify-send "Night Light On" -a osd -h string:x-canonical-private-synchronous:osd
+fi
+if [ "$1" = "toggle" ]; then
+   if pgrep "wlsunset" > /dev/null; then
+      night-light off
+   else
+      night-light auto
+   fi
 fi
