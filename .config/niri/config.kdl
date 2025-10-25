@@ -122,13 +122,12 @@ layout {
 
    border {
       width 2
-      active-color "#CBA6F7B3"
-      inactive-color "#313244B3"
-      urgent-color "#FF515D"
+      active-color "#b7bdf8"             // https://catppuccin.com/palette - Macchiato Lavender
+      inactive-color "#5b6078"           // https://catppuccin.com/palette - Macchiato Surface 2
+      urgent-color "#ed8796"             // https://catppuccin.com/palette - Macchiato Red
    }
-
    insert-hint {
-      color "#CBA6F766"
+      color "#b7bdf87d"                  // https://catppuccin.com/palette - Macchiato Lavender
    }
 
    struts {
@@ -167,8 +166,8 @@ window-rule {
    match is-floating=true
 
    border {
-      active-color "#89B4FA"
-      inactive-color "#4D6084"
+      active-color "#c6a0f6c8"                  // https://catppuccin.com/palette - Macchiato Mauve
+      inactive-color "#c6a0f664"                // https://catppuccin.com/palette - Macchiato Mauve
    }
 
    shadow {
