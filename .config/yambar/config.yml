@@ -34,6 +34,7 @@ bar:
           map:
             on-click:
               left: volume mute
+              right: volume boost
               wheel-up: volume up
               wheel-down: volume down
             conditions:

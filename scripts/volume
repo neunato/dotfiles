@@ -5,6 +5,7 @@
 # volume down [--silent]    - turn down volume by 10%
 # volume <n>  [--silent]    - set volume to wanted %
 # volume mute               - toggle mute
+# volume boost              - toggle boost
 
 get_volume() {
    wpctl get-volume @DEFAULT_SINK@ | awk '{printf $2*100}'
@@ -15,7 +16,12 @@ is_muted() {
 }
 
 set_volume() {
-   wpctl set-volume -l 1.0 @DEFAULT_SINK@ "$1"
+   if [ -f /tmp/sound-boost ]; then
+      limit=2.0
+   else
+      limit=1.0
+   fi
+   wpctl set-volume -l "$limit" @DEFAULT_SINK@ "$1"
    local info
    local volume
    info="$(wpctl get-volume @DEFAULT_SINK@)"
@@ -53,6 +59,21 @@ if [ "$1" = "mute" ]; then
    wpctl set-mute @DEFAULT_SINK@ toggle
    if [ "$2" != "--silent" ]; then
       notify-send "$(is_muted && echo "Sound Muted" || echo "Sound Unmuted")" -a osd -h string:x-canonical-private-synchronous:osd
+   fi
+   exit
+fi
+
+if [ "$1" = "boost" ]; then
+   if [ -f /tmp/sound-boost ]; then
+      rm /tmp/sound-boost
+      wpctl set-volume -l 1.0 @DEFAULT_SINK@ 0+
+      message="Sound Boost Off"
+   else
+      touch /tmp/sound-boost
+      message="Sound Boost On"
+   fi
+   if [ "$2" != "--silent" ]; then
+      notify-send "$message" -a osd -h string:x-canonical-private-synchronous:osd
    fi
    exit
 fi
