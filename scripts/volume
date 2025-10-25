@@ -10,11 +10,21 @@ get_volume() {
    wpctl get-volume @DEFAULT_SINK@ | awk '{printf $2*100}'
 }
 
+is_muted() {
+   wpctl get-volume @DEFAULT_SINK@ | grep -q "MUTED"
+}
+
 set_volume() {
    wpctl set-volume -l 1.0 @DEFAULT_SINK@ "$1"
-   volume="$(get_volume)"
+   local info
+   local volume
+   info="$(wpctl get-volume @DEFAULT_SINK@)"
    if [ "$2" != "--silent" ]; then
+      volume="$(echo "$info" | awk '{printf $2*100}')"
       notify-send "Volume $volume%" -a osd -h "int:value:$volume" -h string:x-canonical-private-synchronous:osd
+   fi
+   if [ "${1%-}" = "$1" ] && echo "$info" | grep -q "MUTED"; then
+      wpctl set-mute @DEFAULT_SINK@ 0
    fi
 }
 
@@ -41,6 +51,9 @@ fi
 
 if [ "$1" = "mute" ]; then
    wpctl set-mute @DEFAULT_SINK@ toggle
+   if [ "$2" != "--silent" ]; then
+      notify-send "$(is_muted && echo "Sound Muted" || echo "Sound Unmuted")" -a osd -h string:x-canonical-private-synchronous:osd
+   fi
    exit
 fi
 
