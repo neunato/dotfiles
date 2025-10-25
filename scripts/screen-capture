@@ -36,7 +36,7 @@ if [[ $audio == true ]]; then
 fi
 
 if [[ $selection == true ]]; then
-   args+=("--geometry=$(slurp)")
+   args+=("--geometry=$(slurp -b '#00000080' -c '#ffffff')")
 fi
 
 output="$(niri msg focused-output | grep Output | awk -F '[()]' '{print $2}')"
