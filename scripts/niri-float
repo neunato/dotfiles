@@ -1,34 +1,43 @@
 #!/bin/dash
 
-niri msg --json focused-window | jq -c -r '.id,.is_floating,.layout.window_size[0],.layout.window_size[1]' | {
+niri msg --json focused-window | jq -c -r '.id,.is_floating,.layout.window_size[0],.layout.window_size[1],.layout.tile_size[0],.layout.tile_size[1]' | {
    read id
    read floating
-   read window_width
-   read window_height
 
    path="/tmp/niri-float-$id"
    niri msg action toggle-window-floating
 
    # floating a window for the first time - center it
    if [ "$floating" = "false" ] && [ ! -f "$path" ]; then
-      niri msg --json focused-output | jq .logical.width,.logical.height | {
-         read width
-         read height
-         niri msg action set-window-width 50%
-         niri msg action set-window-height 50%
-         niri msg action move-floating-window -x "$((width / 4))" -y "$((height / 4))"
-      }
+      niri msg action set-window-width 60%
+      niri msg action set-window-height 60%
+      niri msg action move-floating-window -x 20% -y 20%
    fi
 
    # floating a window - store tiling size
    if [ "$floating" = "false" ]; then
-      echo -n "$window_width $window_height" > "$path"
+      read window_width
+      read window_height
+      read tile_width
+      read tile_height
+      tile_width=${tile_width%\.*}
+      tile_height=${tile_height%\.*}
+      # we don't distinguish between maximised and fullscreen (and if no status bar, we can't)
+      # so just check if borders are present, which would obviously break without any borders
+      if [ "$tile_width" = "$window_width" ] && [ "$tile_height" = "$window_height" ]; then
+         is_maximised=1
+      fi
+      echo -n "$window_width $window_height $is_maximised" > "$path"
    fi
 
    # unfloating a window - restore last known tiling size
    if [ "$floating" = "true" ] && [ -f "$path" ]; then
-      read width height < "$path"
-      niri msg action set-window-width "$width"
-      niri msg action set-window-height "$height"
+      read width height is_maximised < "$path"
+      if [ "$is_maximised" ]; then
+         niri msg action maximize-window-to-edges
+      else
+         niri msg action set-window-width "$width"
+         niri msg action set-window-height "$height"
+      fi
    fi
 }
