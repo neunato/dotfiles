@@ -39,7 +39,7 @@ if [[ $selection == true ]]; then
    args+=("--geometry=$(slurp -b '#00000080' -c '#ffffff')")
 fi
 
-output="$(niri msg focused-output | grep Output | awk -F '[()]' '{print $2}')"
+output="$(niri msg --json focused-output | jq -c -r '.name')"
 args=("--output=$output" "${args[@]}")
 
 mkdir -p "$dir"
