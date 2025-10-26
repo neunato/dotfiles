@@ -1,0 +1,22 @@
+#!/bin/dash
+
+niri msg --json focused-window | jq -c -r '.layout.window_size[0],.layout.window_size[1],.layout.tile_size[0],.layout.tile_size[1]' | {
+   read window_width
+   read window_height
+   read tile_width
+   read tile_height
+   tile_width=${tile_width%\.*}
+   tile_height=${tile_height%\.*}
+
+   # this is currently broken for fullscreen windows (they are undetectable)
+   # because changing the width does not exit fullscreen. so basically, it
+   # should be 'niri msg action fullscreen-window' in case of fullscreen
+   niri msg action maximize-window-to-edges
+
+   # maximised windows are not floated, so we check again after the command
+   floating="$(niri msg --json focused-window | jq -c -r '.is_floating')"
+
+   if [ "$floating" = "false" ] && [ "$tile_width" = "$window_width" ] && [ "$tile_height" = "$window_height" ]; then
+      niri msg action set-column-width 50%
+   fi
+}
