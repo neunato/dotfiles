@@ -101,16 +101,11 @@ overview {
 }
 
 layout {
-   gaps 8
+   gaps 6
    center-focused-column "never"
    always-center-single-column
    empty-workspace-above-first
    background-color "transparent"
-
-   preset-column-widths {
-      proportion 0.5
-      proportion 1.0
-   }
 
    default-column-width {
       proportion 0.5
@@ -134,7 +129,7 @@ layout {
       left 0
       right 0
       top 0
-      bottom -8
+      bottom -6
    }
 }
 
@@ -180,9 +175,15 @@ window-rule {
    match app-id="merge"
    match app-id="librewolf"
 
-   default-column-width {
-      proportion 1.0
-   }
+   open-maximized-to-edges true
+}
+
+window-rule {
+   match app-id="mpv"
+   match app-id="Mesen"
+   exclude app-id="Mesen" title="Settings"
+
+   open-fullscreen true
 }
 
 window-rule {
@@ -196,19 +197,12 @@ window-rule {
    open-focused true
 
    default-column-width {
-      proportion 0.5;
+      proportion 0.6;
    }
 
    default-window-height {
-      proportion 0.5;
+      proportion 0.6;
    }
-}
-
-window-rule {
-   match app-id="Mesen"
-   exclude app-id="Mesen" title="Settings"
-
-   open-fullscreen true
 }
 
 binds {
@@ -290,7 +284,7 @@ binds {
    Mod+Q                           repeat=false { close-window; }
    Mod+Shift+Q                     repeat=false { spawn "niri-close-other-windows" "--in-workspace"; }
    Mod+Shift+Ctrl+Q                repeat=false { spawn "niri-close-other-windows"; }
-   Mod+E                           repeat=false { switch-preset-column-width; }
+   Mod+E                           repeat=false { spawn "niri-maximize"; }
    Mod+Shift+E                     repeat=false { fullscreen-window; }
    Mod+R                           repeat=false { consume-window-into-column; }
    Mod+Shift+R                     repeat=false { expel-window-from-column; }
