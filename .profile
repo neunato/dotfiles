@@ -16,14 +16,14 @@ DOCKER_CONFIG="$XDG_CONFIG_HOME/docker"
 AWS_SHARED_CREDENTIALS_FILE="$XDG_CONFIG_HOME/aws/credentials"
 AWS_CONFIG_FILE="$XDG_CONFIG_HOME/aws/config"
 MPV_HOME="$XDG_CONFIG_HOME/mpv"
+ZED_WINDOW_DECORATIONS=server
 WGETRC="$XDG_CONFIG_HOME/wgetrc"
-CUDA_CACHE_PATH="$XDG_CACHE_HOME/nvidia"
+QT_QPA_PLATFORMTHEME=gtk3
 
 SSH_AUTH_SOCK="$XDG_RUNTIME_DIR/ssh-agent.socket"
 SSH_ASKPASS="$HOME/scripts/rofi-askpass"
 SSH_ASKPASS_REQUIRE="force"
 
-QT_QPA_PLATFORMTHEME=gtk3
 
 case ":$PATH:" in
    *":$HOME/scripts:"*) ;;
@@ -41,6 +41,7 @@ if [ ! -f /etc/udev/rules.d/no-nvidia.rules ]; then
    __GLX_VENDOR_LIBRARY_NAME=nvidia
    __NV_PRIME_RENDER_OFFLOAD=1
    __VK_LAYER_NV_optimus=NVIDIA_only
+   CUDA_CACHE_PATH="$XDG_CACHE_HOME/nvidia"
 fi
 
 set +a
