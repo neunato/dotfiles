@@ -124,6 +124,8 @@ function setup_system {
       echo '$username:$password' | chpasswd
    "
 
+   ln -sf ../run/systemd/resolve/stub-resolv.conf /mnt/etc/resolv.conf
+
    # system configuration and packages
    as_chroot setup_system_config "$username"
    as_chroot setup_packages "$username"
@@ -162,7 +164,7 @@ function setup_system {
    cat /tmp/arch_setup.log | as_chroot tee /var/tmp/arch_setup.log > /dev/null
 
    # reboot
-   reboot
+   # reboot
    } 2>&1 | tee /tmp/arch_setup.log
 }
 
@@ -206,7 +208,7 @@ function setup_system_config {
    cp "/home/$username/.bash_profile" /root
 
    # network
-   ln -sf /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
+   # ln -sf /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
 
    echo '[Match]'                   | tee          /etc/systemd/network/20-wired.network > /dev/null
    echo 'Kind=!*'                   | tee --append /etc/systemd/network/20-wired.network > /dev/null
@@ -257,6 +259,14 @@ function setup_system_config {
    echo ''                                                             | tee --append /etc/pacman.conf > /dev/null
    echo '[sublime-text]'                                               | tee --append /etc/pacman.conf > /dev/null
    echo 'Server = https://download.sublimetext.com/arch/stable/x86_64' | tee --append /etc/pacman.conf > /dev/null
+
+   if ! pacman -Q sublime-text &> /dev/null; then
+      curl -s -O https://download.sublimetext.com/sublimehq-pub.gpg && pacman-key --add sublimehq-pub.gpg && pacman-key --lsign-key 8A8F901A && rm sublimehq-pub.gpg
+   fi
+
+   if ! pacman -Q librewolf-bin &> /dev/null; then
+      gpg --recv-keys --keyserver hkps://keyserver.ubuntu.com 662E3CDD6FE329002D0CA5BB40339DD82B12EF16
+   fi
 
    # localisation
    echo 'arch' | tee /etc/hostname > /dev/null
@@ -330,14 +340,6 @@ function setup_packages {
    if [[ $mode != "no-install" ]]; then
       if [[ ! -x $(command -v paru) ]]; then
          install_paru
-      fi
-
-      if ! pacman -Q sublime-text &> /dev/null; then
-         curl -s -O https://download.sublimetext.com/sublimehq-pub.gpg && pacman-key --add sublimehq-pub.gpg && pacman-key --lsign-key 8A8F901A && rm sublimehq-pub.gpg
-      fi
-
-      if ! pacman -Q librewolf-bin &> /dev/null; then
-         gpg --recv-keys --keyserver hkps://keyserver.ubuntu.com 662E3CDD6FE329002D0CA5BB40339DD82B12EF16
       fi
 
       arch_packages=()
@@ -616,7 +618,7 @@ function setup_graphics {
 function install_paru {
    local url="https://aur.archlinux.org/cgit/aur.git/snapshot/paru.tar.gz"
    local dir="/var/tmp/paru"
-   pacman -S --needed --noconfirm git rustup
+   pacman -Sy --needed --noconfirm git rustup
    extract_tarball "$url" "$dir"
    chmod 777 "$dir"
    as_nobody /bin/bash -c "
@@ -648,7 +650,7 @@ function wrap_f {
 }
 
 function as_sudo {
-   sudo --askpass /bin/bash -c "$(wrap_f "$@")"
+   sudo /bin/bash -c "$(wrap_f "$@")"
 }
 
 function as_nobody {
