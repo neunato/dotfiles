@@ -85,10 +85,10 @@ function setup_system {
       echo "Repository github.com/$dotfiles_repo cannot be accessed" >&2
       exit 1
    fi
-   if ! diff -q -b <(cat $0) <(curl -s -L "$(github_repo_file_url "$dotfiles_repo" "scripts/setup")") > /dev/null; then
-      echo "A newer version of this script exists at github.com/$dotfiles_repo" >&2
-      exit 1
-   fi
+   # if ! diff -q -b <(cat $0) <(curl -s -L "$(github_repo_file_url "$dotfiles_repo" "scripts/setup")") > /dev/null; then
+   #    echo "A newer version of this script exists at github.com/$dotfiles_repo" >&2
+   #    exit 1
+   # fi
 
    # disk partitions
    echo -e "type=uefi, size=512M, bootable\ntype=linux, size=+\n" | sfdisk "/dev/$disk"
@@ -122,13 +122,10 @@ function setup_system {
       useradd -m '$username' -G wheel,video
       echo 'root:$root_password' | chpasswd
       echo '$username:$password' | chpasswd
+      chage -E -1 nobody
    "
 
    ln -sf ../run/systemd/resolve/stub-resolv.conf /mnt/etc/resolv.conf
-
-   # system configuration and packages
-   as_chroot setup_system_config "$username"
-   as_chroot setup_packages "$username"
 
    # user configuration
    local home="/home/$username"
@@ -160,6 +157,9 @@ function setup_system {
       chown root:root scripts/root-*
       chmod 744 scripts/root-*
    "
+
+   as_chroot setup_system_config "$username"
+   as_chroot setup_packages "$username"
 
    cat /tmp/arch_setup.log | as_chroot tee /var/tmp/arch_setup.log > /dev/null
 
