@@ -514,6 +514,9 @@ function setup_packages {
       user_packages+=("candy-icons-git")
       user_packages+=("bibata-cursor-theme-bin")
 
+      as_user $username rustup default stable
+      as_user $username rustup update
+
       # install packages
       if command -v rankmirrors > /dev/null; then
          curl -s "https://archlinux.org/mirrorlist/?country=DE&country=HR&protocol=https&use_mirror_status=on" | sed -e 's/^#Server/Server/' -e '/^#/d' | rankmirrors -n 5 -m 2 -w -p - > /etc/pacman.d/mirrorlist
@@ -573,9 +576,6 @@ function setup_packages {
       systemctl enable nvidia-suspend.service
       systemctl enable nvidia-resume.service
    fi
-
-   as_user $username rustup default stable
-   as_user $username rustup update
 
    sed -i 's/#unix_sock_group/unix_sock_group/g'                /etc/libvirt/libvirtd.conf
    sed -i 's/#unix_sock_rw_perms/unix_sock_rw_perms/g'          /etc/libvirt/libvirtd.conf
@@ -660,11 +660,11 @@ function as_nobody {
 function as_user {
    local user=$1
    shift
-   su "$user" -s /bin/bash -c "$(wrap_f "$@")"
+   su "$user" -l -s /bin/bash -c "$(wrap_f "$@")"
 }
 
 function as_chroot {
-   arch-chroot /mnt /bin/bash -c "$(wrap_f "$@")"
+   systemd-nspawn -D /mnt --bind-ro=/etc/resolv.conf:/etc/resolv.conf /bin/bash -c "$(wrap_f "$@")"
 }
 
 function nvidia_disabled {
