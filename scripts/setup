@@ -125,7 +125,7 @@ function setup_system {
       chage -E -1 nobody
    "
 
-   ln -sf ../run/systemd/resolve/stub-resolv.conf /mnt/etc/resolv.conf
+   # ln -sf ../run/systemd/resolve/stub-resolv.conf /mnt/etc/resolv.conf
 
    # user configuration
    local home="/home/$username"
@@ -208,7 +208,8 @@ function setup_system_config {
    cp "/home/$username/.bash_profile" /root
 
    # network
-   # ln -sf /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
+   # MISLIM DA BI OVO SAD TREBALO PROC JER SMO U SYSTEMD ENVIORNMENUT S NSPAWNOM
+   ln -sf /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
 
    echo '[Match]'                   | tee          /etc/systemd/network/20-wired.network > /dev/null
    echo 'Kind=!*'                   | tee --append /etc/systemd/network/20-wired.network > /dev/null
@@ -380,9 +381,11 @@ function setup_packages {
       arch_packages+=("tlp")
       arch_packages+=("acpid")
       arch_packages+=("polkit")
-      user_packages+=("backlight_control")
       arch_packages+=("wlsunset")
       arch_packages+=("wev")
+      if backlight_exists; then
+         user_packages+=("backlight_control")
+      fi
 
       # wayland
       user_packages+=("niri-git")
@@ -455,7 +458,7 @@ function setup_packages {
       arch_packages+=("docker")
       arch_packages+=("docker-compose")
       arch_packages+=("aws-cli")
-      arch_packages+=("ollama")
+      # arch_packages+=("ollama")
 
       # window applications
       arch_packages+=("foot")
@@ -484,7 +487,8 @@ function setup_packages {
       arch_packages+=("nautilus")
       arch_packages+=("imv")
       arch_packages+=("mpv")
-      user_packages+=("librewolf-bin")
+      # user_packages+=("librewolf-bin")
+      user_packages+=("brave-bin")
       arch_packages+=("chromium")
       arch_packages+=("calibre")
       arch_packages+=("transmission-gtk")
@@ -499,7 +503,8 @@ function setup_packages {
       arch_packages+=("wine-staging")
       deps_packages+=($(pacman -Si wine-staging | sed -n '/^Opt/,/^Conf/p' | sed '$d' | sed 's/^Opt.*://g' | sed 's/^\s*//g' | tr '\n' ' '))
       arch_packages+=("icoutils")
-      user_packages+=("mesen2-git")
+      # user_packages+=("mesen")
+      # user_packages+=("mesen2-git")
 
       # fonts, icons, cursor
       arch_packages+=("fontconfig")
@@ -664,7 +669,8 @@ function as_user {
 }
 
 function as_chroot {
-   systemd-nspawn -D /mnt --bind-ro=/etc/resolv.conf:/etc/resolv.conf /bin/bash -c "$(wrap_f "$@")"
+   systemd-nspawn -D /mnt --resolv-conf=replace-host /bin/bash -c "$(wrap_f "$@")"
+   # systemd-nspawn -D /mnt --bind-ro=/etc/resolv.conf:/etc/resolv.conf /bin/bash -c "$(wrap_f "$@")"
 }
 
 function nvidia_disabled {
@@ -675,6 +681,12 @@ function nvidia_disabled {
 
 function nvidia_gpu_exists {
    if ! lspci | grep -q '.* VGA .* NVIDIA .*' && ! pacman -Q nvidia &> /dev/null && ! nvidia_disabled; then
+      return 1
+   fi
+}
+
+function backlight_exists {
+   if [[ -z "$(ls -A /sys/class/backlight)" ]]; then
       return 1
    fi
 }
@@ -724,7 +736,7 @@ elif [[ $2 == "--reinstall" ]]; then
 fi
 
 case "$1" in
-   system)        setup_system && exit;;
+   system)        setup_system; exit;;
    system-config) as_sudo setup_system_config "$(whoami)";;
    firmware)      as_sudo setup_firmware;;
    graphics)      as_sudo setup_graphics "$(whoami)" "$graphics";;   # integrated|nvidia
