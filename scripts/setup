@@ -147,11 +147,11 @@ function setup_system {
       git config --global --unset safe.directory
       git config --global --unset init.defaultBranch
 
-      mkdir '$home/dev'
-      mkdir '$home/download'
-      mkdir '$home/torrents'
-      mkdir '$home/pictures'
-      mkdir '$home/videos'
+      mkdir -p '$home/dev'
+      mkdir -p '$home/download'
+      mkdir -p '$home/torrents'
+      mkdir -p '$home/pictures'
+      mkdir -p '$home/videos'
 
       chown -R '$username:$username' .
       chown root:root scripts/root-*
