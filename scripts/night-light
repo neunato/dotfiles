@@ -1,28 +1,32 @@
 #!/bin/dash
 
-# night-light on      - enable night light
-# night-light off     - disable night light
-# night-light auto    - automatically enable/disable night light
-# night-light toggle  - toggles between auto/off
+# night-light on     [--silent]    - enable night light
+# night-light off    [--silent]    - disable night light
+# night-light auto   [--silent]    - automatically enable/disable night light
+# night-light toggle [--silent]    - toggles between auto/off
 
 if [ "$1" = "on" ] && ! pgrep -f "wlsunset -S 00:00 -s 00:00" > /dev/null; then
    pkill wlsunset
    wlsunset -S 00:00 -s 00:00 > /dev/null 2>&1 &
-   notify-send "Night Light On (Forced)" -a osd -h string:x-canonical-private-synchronous:osd
+   notification="Night Light On (Forced)"
 fi
 if [ "$1" = "off" ]; then
    pkill wlsunset
-   notify-send "Night Light Off" -a osd -h string:x-canonical-private-synchronous:osd
+   notification="Night Light Off"
 fi
 if [ "$1" = "auto" ] && ! pgrep -f "wlsunset -l 45.8 -L 16.0" > /dev/null; then
    pkill wlsunset
    wlsunset -l 45.8 -L 16.0 > /dev/null 2>&1 &
-   notify-send "Night Light On" -a osd -h string:x-canonical-private-synchronous:osd
+   notification="Night Light On"
 fi
 if [ "$1" = "toggle" ]; then
    if pgrep "wlsunset" > /dev/null; then
-      night-light off
+      night-light off "$2"
    else
-      night-light auto
+      night-light auto "$2"
    fi
+fi
+
+if [ -n "$notification" ] && [ "$2" != "--silent" ]; then
+   notify-send "$notification" -a osd -h string:x-canonical-private-synchronous:osd
 fi
