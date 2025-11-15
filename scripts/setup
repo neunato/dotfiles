@@ -85,10 +85,10 @@ function setup_system {
       echo "Repository github.com/$dotfiles_repo cannot be accessed" >&2
       exit 1
    fi
-   if ! diff -q -b <(cat $0) <(curl -s -L "$(github_repo_file_url "$dotfiles_repo" "scripts/setup")") > /dev/null; then
-      echo "A newer version of this script exists at github.com/$dotfiles_repo" >&2
-      exit 1
-   fi
+   # if ! diff -q -b <(cat $0) <(curl -s -L "$(github_repo_file_url "$dotfiles_repo" "scripts/setup")") > /dev/null; then
+   #    echo "A newer version of this script exists at github.com/$dotfiles_repo" >&2
+   #    exit 1
+   # fi
 
    # disk partitions
    echo -e "type=uefi, size=512M, bootable\ntype=linux, size=+\n" | sfdisk "/dev/$disk"
@@ -115,6 +115,8 @@ function setup_system {
    pacstrap -K /mnt base base-devel linux linux-firmware
    genfstab -U /mnt >> /mnt/etc/fstab
 
+   ln -sf ../run/systemd/resolve/stub-resolv.conf /mnt/etc/resolv.conf
+
    # user accounts
    as_chroot bash -c "
       pacman -S --needed --noconfirm sudo
@@ -122,11 +124,8 @@ function setup_system {
       useradd -m '$username' -G wheel,video
       echo 'root:$root_password' | chpasswd
       echo '$username:$password' | chpasswd
+      chage -E -1 nobody
    "
-
-   # system configuration and packages
-   as_chroot setup_system_config "$username"
-   as_chroot setup_packages "$username"
 
    # user configuration
    local home="/home/$username"
@@ -148,21 +147,24 @@ function setup_system {
       git config --global --unset safe.directory
       git config --global --unset init.defaultBranch
 
-      mkdir '$home/dev'
-      mkdir '$home/download'
-      mkdir '$home/torrents'
-      mkdir '$home/pictures'
-      mkdir '$home/videos'
+      mkdir -p '$home/dev'
+      mkdir -p '$home/download'
+      mkdir -p '$home/torrents'
+      mkdir -p '$home/pictures'
+      mkdir -p '$home/videos'
 
       chown -R '$username:$username' .
       chown root:root scripts/root-*
       chmod 744 scripts/root-*
    "
 
+   as_chroot setup_system_config "$username"
+   as_chroot setup_packages "$username"
+
    cat /tmp/arch_setup.log | as_chroot tee /var/tmp/arch_setup.log > /dev/null
 
    # reboot
-   reboot
+   # reboot
    } 2>&1 | tee /tmp/arch_setup.log
 }
 
@@ -206,7 +208,7 @@ function setup_system_config {
    cp "/home/$username/.bash_profile" /root
 
    # network
-   ln -sf /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
+   ln -sf ../run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
 
    echo '[Match]'                   | tee          /etc/systemd/network/20-wired.network > /dev/null
    echo 'Kind=!*'                   | tee --append /etc/systemd/network/20-wired.network > /dev/null
@@ -257,6 +259,10 @@ function setup_system_config {
    echo ''                                                             | tee --append /etc/pacman.conf > /dev/null
    echo '[sublime-text]'                                               | tee --append /etc/pacman.conf > /dev/null
    echo 'Server = https://download.sublimetext.com/arch/stable/x86_64' | tee --append /etc/pacman.conf > /dev/null
+
+   if ! pacman -Q sublime-text &> /dev/null; then
+      curl -s -O https://download.sublimetext.com/sublimehq-pub.gpg && pacman-key --add sublimehq-pub.gpg && pacman-key --lsign-key 8A8F901A && rm sublimehq-pub.gpg
+   fi
 
    # localisation
    echo 'arch' | tee /etc/hostname > /dev/null
@@ -332,14 +338,6 @@ function setup_packages {
          install_paru
       fi
 
-      if ! pacman -Q sublime-text &> /dev/null; then
-         curl -s -O https://download.sublimetext.com/sublimehq-pub.gpg && pacman-key --add sublimehq-pub.gpg && pacman-key --lsign-key 8A8F901A && rm sublimehq-pub.gpg
-      fi
-
-      if ! pacman -Q librewolf-bin &> /dev/null; then
-         gpg --recv-keys --keyserver hkps://keyserver.ubuntu.com 662E3CDD6FE329002D0CA5BB40339DD82B12EF16
-      fi
-
       arch_packages=()
       user_packages=()
       deps_packages=()
@@ -378,9 +376,11 @@ function setup_packages {
       arch_packages+=("tlp")
       arch_packages+=("acpid")
       arch_packages+=("polkit")
-      user_packages+=("backlight_control")
       arch_packages+=("wlsunset")
       arch_packages+=("wev")
+      if backlight_exists; then
+         user_packages+=("backlight_control")
+      fi
 
       # wayland
       user_packages+=("niri-git")
@@ -453,7 +453,7 @@ function setup_packages {
       arch_packages+=("docker")
       arch_packages+=("docker-compose")
       arch_packages+=("aws-cli")
-      arch_packages+=("ollama")
+      # arch_packages+=("ollama")
 
       # window applications
       arch_packages+=("foot")
@@ -482,7 +482,8 @@ function setup_packages {
       arch_packages+=("nautilus")
       arch_packages+=("imv")
       arch_packages+=("mpv")
-      user_packages+=("librewolf-bin")
+      # user_packages+=("librewolf-bin")
+      user_packages+=("brave-bin")
       arch_packages+=("chromium")
       arch_packages+=("calibre")
       arch_packages+=("transmission-gtk")
@@ -497,7 +498,8 @@ function setup_packages {
       arch_packages+=("wine-staging")
       deps_packages+=($(pacman -Si wine-staging | sed -n '/^Opt/,/^Conf/p' | sed '$d' | sed 's/^Opt.*://g' | sed 's/^\s*//g' | tr '\n' ' '))
       arch_packages+=("icoutils")
-      user_packages+=("mesen2-git")
+      user_packages+=("mesen")
+      # user_packages+=("mesen2-git")
 
       # fonts, icons, cursor
       arch_packages+=("fontconfig")
@@ -511,6 +513,9 @@ function setup_packages {
       arch_packages+=("adobe-source-han-sans-kr-fonts")
       user_packages+=("candy-icons-git")
       user_packages+=("bibata-cursor-theme-bin")
+
+      as_user $username rustup default stable
+      as_user $username rustup update
 
       # install packages
       if command -v rankmirrors > /dev/null; then
@@ -572,9 +577,6 @@ function setup_packages {
       systemctl enable nvidia-resume.service
    fi
 
-   as_user $username rustup default stable
-   as_user $username rustup update
-
    sed -i 's/#unix_sock_group/unix_sock_group/g'                /etc/libvirt/libvirtd.conf
    sed -i 's/#unix_sock_rw_perms/unix_sock_rw_perms/g'          /etc/libvirt/libvirtd.conf
    sed -i 's/#user = "libvirt-qemu"/user = "'"$username"'"/g'   /etc/libvirt/qemu.conf
@@ -616,7 +618,7 @@ function setup_graphics {
 function install_paru {
    local url="https://aur.archlinux.org/cgit/aur.git/snapshot/paru.tar.gz"
    local dir="/var/tmp/paru"
-   pacman -S --needed --noconfirm git rustup
+   pacman -Sy --needed --noconfirm git rustup
    extract_tarball "$url" "$dir"
    chmod 777 "$dir"
    as_nobody /bin/bash -c "
@@ -648,7 +650,7 @@ function wrap_f {
 }
 
 function as_sudo {
-   sudo --askpass /bin/bash -c "$(wrap_f "$@")"
+   sudo /bin/bash -c "$(wrap_f "$@")"
 }
 
 function as_nobody {
@@ -658,7 +660,7 @@ function as_nobody {
 function as_user {
    local user=$1
    shift
-   su "$user" -s /bin/bash -c "$(wrap_f "$@")"
+   su "$user" -l -s /bin/bash -c "$(wrap_f "$@")"
 }
 
 function as_chroot {
@@ -673,6 +675,12 @@ function nvidia_disabled {
 
 function nvidia_gpu_exists {
    if ! lspci | grep -q '.* VGA .* NVIDIA .*' && ! pacman -Q nvidia &> /dev/null && ! nvidia_disabled; then
+      return 1
+   fi
+}
+
+function backlight_exists {
+   if [[ -z "$(ls -A /sys/class/backlight)" ]]; then
       return 1
    fi
 }
@@ -722,7 +730,7 @@ elif [[ $2 == "--reinstall" ]]; then
 fi
 
 case "$1" in
-   system)        setup_system && exit;;
+   system)        setup_system; exit;;
    system-config) as_sudo setup_system_config "$(whoami)";;
    firmware)      as_sudo setup_firmware;;
    graphics)      as_sudo setup_graphics "$(whoami)" "$graphics";;   # integrated|nvidia
