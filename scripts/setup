@@ -130,7 +130,7 @@ function setup_system {
    # user configuration
    local home="/home/$username"
    as_chroot bash -c "
-      pacman -S --needed --noconfirm git
+      pacman -S --needed --noconfirm git python
 
       rm -rf '$home/*' '$home/.*' 2> /dev/null
       cd '$home'
@@ -616,15 +616,14 @@ function setup_graphics {
 }
 
 function install_paru {
-   local url="https://aur.archlinux.org/cgit/aur.git/snapshot/paru.tar.gz"
    local dir="/var/tmp/paru"
    pacman -Sy --needed --noconfirm git rustup
-   extract_tarball "$url" "$dir"
    chmod 777 "$dir"
    as_nobody /bin/bash -c "
+      git clone https://aur.archlinux.org/paru.git $dir
       cd $dir
       RUSTUP_HOME=$dir rustup default stable
-      RUSTUP_HOME=$dir CARGO_HOME=$dir makepkg
+      RUSTUP_HOME=$dir CARGO_HOME=$dir makepkg -si
    "
    pacman -U --needed --noconfirm "$(ls $dir/*.tar.zst | grep -v debug)"
    rm -rf "$dir"
