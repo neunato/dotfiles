@@ -124,6 +124,7 @@ function setup_system {
       useradd -m '$username' -G wheel,video
       echo 'root:$root_password' | chpasswd
       echo '$username:$password' | chpasswd
+      chage -E -1 nobody
    "
 
    # system configuration and packages
