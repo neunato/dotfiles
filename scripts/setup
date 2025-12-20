@@ -75,6 +75,12 @@ function setup_system {
    while [[ -z $dotfiles_repo || $dotfiles_repo =~ " " ]]; do
       read -p "Enter dotfiles repository GitHub path: " -i "neunato/dotfiles" -e dotfiles_repo
    done
+   while [[ -z $ssh_repo || $ssh_repo =~ " " ]]; do
+      read -p "Enter SSH repository GitHub path: " -i "neunato/ssh" -e ssh_repo
+   done
+   while [[ -z $ssh_token || $ssh_token =~ " " ]]; do
+      read -p "Enter access token for SSH repository: " -i "github_pat_" -e ssh_token
+   done
    echo "================================================="
 
    if df | grep -q "^/dev/${disk}1 "; then
@@ -156,6 +162,13 @@ function setup_system {
       chown -R '$username:$username' .
       chown root:root scripts/root-*
       chmod 744 scripts/root-*
+   "
+
+   as_chroot bash -c "
+      git clone $(github_repo_url "$ssh_repo" "$ssh_token") '$home/.ssh'
+      cd '$home/.ssh'
+      bash hooks/post-checkout
+      git config core.hooksPath hooks
    "
 
    as_chroot setup_system_config "$username"
