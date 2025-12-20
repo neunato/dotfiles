@@ -261,6 +261,10 @@ function setup_system_config {
    echo '[sublime-text]'                                               | tee --append /etc/pacman.conf > /dev/null
    echo 'Server = https://download.sublimetext.com/arch/stable/x86_64' | tee --append /etc/pacman.conf > /dev/null
 
+   mkdir -p "/home/$username/.config/paru"
+   echo '[bin]'                                                   | tee          "/home/$username/.config/paru/paru.conf" > /dev/null
+   echo "PreBuildCommand = /home/$username/scripts/paru-prebuild" | tee --append "/home/$username/.config/paru/paru.conf" > /dev/null
+
    # localisation
    echo 'arch' | tee /etc/hostname > /dev/null
 
