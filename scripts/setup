@@ -373,7 +373,7 @@ function setup_packages {
       arch_packages+=("mesa-utils")
       arch_packages+=("intel-media-driver")
       if nvidia_gpu_exists; then
-         arch_packages+=("nvidia")
+         arch_packages+=("nvidia-open")
          arch_packages+=("nvidia-prime")
          arch_packages+=("nvidia-utils")
          arch_packages+=("nvidia-settings")
