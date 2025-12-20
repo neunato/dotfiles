@@ -663,7 +663,7 @@ function as_nobody {
 function as_user {
    local user=$1
    shift
-   su "$user" -s /bin/bash -c "$(wrap_f "$@")"
+   su "$user" -l -s /bin/bash -c "$(wrap_f "$@")"
 }
 
 function as_chroot {
