@@ -410,7 +410,7 @@ function setup_packages {
       fi
 
       # wayland
-      user_packages+=("niri-git")
+      user_packages+=("niri")
       arch_packages+=("xwayland-satellite")
       user_packages+=("yambar-git")
       deps_packages+=("xcb-util-errors")
@@ -426,7 +426,7 @@ function setup_packages {
       arch_packages+=("xdg-desktop-portal")
       arch_packages+=("xdg-desktop-portal-gnome")
 
-      arch_packages+=("flatpak")
+      # arch_packages+=("flatpak")
       # utilities
       arch_packages+=("dash")
       arch_packages+=("zsh")
@@ -523,9 +523,9 @@ function setup_packages {
       arch_packages+=("imv")
       arch_packages+=("mpv")
       # user_packages+=("librewolf-bin")
-      user_packages+=("brave-bin")
-      arch_packages+=("chromium")
-      arch_packages+=("calibre")
+      # user_packages+=("brave-bin")
+      # arch_packages+=("chromium")
+      # arch_packages+=("calibre")
       arch_packages+=("transmission-gtk")
       arch_packages+=("gnome-system-monitor")
 
@@ -548,9 +548,9 @@ function setup_packages {
       arch_packages+=("noto-fonts-emoji")
       arch_packages+=("ttf-jetbrains-mono")
       arch_packages+=("ttf-nerd-fonts-symbols-mono")
-      arch_packages+=("adobe-source-han-sans-cn-fonts")
-      arch_packages+=("adobe-source-han-sans-jp-fonts")
-      arch_packages+=("adobe-source-han-sans-kr-fonts")
+      # arch_packages+=("adobe-source-han-sans-cn-fonts")
+      # arch_packages+=("adobe-source-han-sans-jp-fonts")
+      # arch_packages+=("adobe-source-han-sans-kr-fonts")
       user_packages+=("candy-icons-git")
       user_packages+=("bibata-cursor-theme-bin")
 
