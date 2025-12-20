@@ -75,6 +75,12 @@ function setup_system {
    while [[ -z $dotfiles_repo || $dotfiles_repo =~ " " ]]; do
       read -p "Enter dotfiles repository GitHub path: " -i "neunato/dotfiles" -e dotfiles_repo
    done
+   while [[ -z $ssh_repo || $ssh_repo =~ " " ]]; do
+      read -p "Enter SSH repository GitHub path: " -i "neunato/ssh" -e ssh_repo
+   done
+   while [[ -z $ssh_token || $ssh_token =~ " " ]]; do
+      read -p "Enter access token for SSH repository: " -i "github_pat_" -e ssh_token
+   done
    echo "================================================="
 
    if df | grep -q "^/dev/${disk}1 "; then
@@ -115,7 +121,7 @@ function setup_system {
    pacstrap -K /mnt base base-devel linux linux-firmware
    genfstab -U /mnt >> /mnt/etc/fstab
 
-   # ln -sf ../run/systemd/resolve/stub-resolv.conf /mnt/etc/resolv.conf
+   ln -sf ../run/systemd/resolve/stub-resolv.conf /mnt/etc/resolv.conf
 
    # user accounts
    as_chroot bash -c "
@@ -138,6 +144,7 @@ function setup_system {
       git config --global safe.directory '$home'
       git config --global init.defaultBranch master
       git init
+      # IMAMO ERROR TU env: python no such file or directory hmmm vjerojatno treamo tu gore instalirat python
       git config core.hooksPath .hooks
       git remote add g $(github_repo_url "$dotfiles_repo")
       git fetch g
@@ -156,6 +163,13 @@ function setup_system {
       chown -R '$username:$username' .
       chown root:root scripts/root-*
       chmod 744 scripts/root-*
+   "
+
+   as_chroot bash -c "
+      git clone $(github_repo_url "$ssh_repo" "$ssh_token") '$home/.ssh'
+      cd '$home/.ssh'
+      bash hooks/post-checkout
+      git config core.hooksPath hooks
    "
 
    as_chroot setup_system_config "$username"
@@ -260,12 +274,17 @@ function setup_system_config {
    echo '[sublime-text]'                                               | tee --append /etc/pacman.conf > /dev/null
    echo 'Server = https://download.sublimetext.com/arch/stable/x86_64' | tee --append /etc/pacman.conf > /dev/null
 
-   echo '[bin]'                                                   | tee          /home/neueu/.config/paru/paru.conf > /dev/null
-   echo "PreBuildCommand = /home/$username/scripts/paru-prebuild" | tee --append /home/neueu/.config/paru/paru.conf > /dev/null
+   mkdir -p "/home/$username/.config/paru"
+   echo '[bin]'                                                   | tee          "/home/$username/.config/paru/paru.conf" > /dev/null
+   echo "PreBuildCommand = /home/$username/scripts/paru-prebuild" | tee --append "/home/$username/.config/paru/paru.conf" > /dev/null
 
    if ! pacman -Q sublime-text &> /dev/null; then
       curl -s -O https://download.sublimetext.com/sublimehq-pub.gpg && pacman-key --add sublimehq-pub.gpg && pacman-key --lsign-key 8A8F901A && rm sublimehq-pub.gpg
    fi
+
+   # if ! pacman -Q librewolf-bin &> /dev/null; then
+   #    gpg --recv-keys --keyserver hkps://keyserver.ubuntu.com 662E3CDD6FE329002D0CA5BB40339DD82B12EF16
+   # fi
 
    # localisation
    echo 'arch' | tee /etc/hostname > /dev/null
@@ -287,6 +306,7 @@ function setup_system_config {
    as_user $username fc-cache
 
    echo 'LANG=en_GB.UTF-8'       | tee          /etc/locale.conf   > /dev/null
+   # OVDJE ERRORI??? file not found vconsole
    echo 'KEYMAP=croat'           | tee          /etc/vconsole.conf > /dev/null
    echo 'FONT=latarcyrheb-sun32' | tee --append /etc/vconsole.conf > /dev/null
 
@@ -306,10 +326,10 @@ function setup_system_config {
    mkinitcpio -P
 
    grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=GRUB
-   sed -i 's/^GRUB_DEFAULT=.*/GRUB_DEFAULT=0/'                  /etc/default/grub
-   sed -i 's/^GRUB_TIMEOUT=.*/GRUB_TIMEOUT=0/'                  /etc/default/grub
-   sed -i 's/^GRUB_TIMEOUT_STYLE=.*/GRUB_TIMEOUT_STYLE=hidden/' /etc/default/grub
-   sed -i "s/^GRUB_CMDLINE_LINUX_DEFAULT=.*/GRUB_CMDLINE_LINUX_DEFAULT=\"quiet splash nowatchdog modprobe.blacklist=iTCO_wdt rd.luks.name=$part_root_uuid=root rd.luks.options=$part_root_uuid=timeout=0,tries=0,password-echo=no rootflags=x-systemd.device-timeout=0\"/" /etc/default/grub
+   sed -i    's/^GRUB_DEFAULT=.*/GRUB_DEFAULT=0/'                         /etc/default/grub
+   sed -i    's/^GRUB_TIMEOUT=.*/GRUB_TIMEOUT=0/'                         /etc/default/grub
+   sed -i    's/^GRUB_TIMEOUT_STYLE=.*/GRUB_TIMEOUT_STYLE=hidden/'        /etc/default/grub
+   sed -i    "s/^GRUB_CMDLINE_LINUX_DEFAULT=.*/GRUB_CMDLINE_LINUX_DEFAULT=\"quiet splash nowatchdog modprobe.blacklist=iTCO_wdt rd.luks.name=$part_root_uuid=root rd.luks.options=$part_root_uuid=timeout=0,tries=0,password-echo=no rootflags=x-systemd.device-timeout=0\"/" /etc/default/grub
    grub-mkconfig -o /boot/grub/grub.cfg
    sed -i 's/echo\t/#echo\t/g' /boot/grub/grub.cfg
 
@@ -330,6 +350,8 @@ function setup_system_config {
    else
       rm -f /etc/udev/rules.d/no-nvidia.rules
    fi
+   # echo 'ACTION=="add", SUBSYSTEM=="usb", DRIVERS=="usb", ATTR{power/wakeup}="enabled"' | tee /etc/udev/rules.d/wakeup.rules > /dev/null
+   # echo 'ACTION=="add", SUBSYSTEM=="usb", DRIVERS=="usb", ATTR{power/wakeup}="enabled"' | tee /etc/udev/rules.d/wakeup.rules > /dev/null
 }
 
 function setup_packages {
@@ -375,6 +397,8 @@ function setup_packages {
       arch_packages+=("pipewire-jack")
       arch_packages+=("wireplumber")
       arch_packages+=("alsa-utils")
+      # arch_packages+=("bluez")
+      # arch_packages+=("bluez-utils")
       arch_packages+=("iwd")
       arch_packages+=("tlp")
       arch_packages+=("acpid")
@@ -402,9 +426,12 @@ function setup_packages {
       arch_packages+=("xdg-desktop-portal")
       arch_packages+=("xdg-desktop-portal-gnome")
 
+      arch_packages+=("flatpak")
       # utilities
       arch_packages+=("dash")
       arch_packages+=("zsh")
+      arch_packages+=("fish")
+      arch_packages+=("starship")
       arch_packages+=("sudo")
       arch_packages+=("nano")
       arch_packages+=("bat")
@@ -480,6 +507,16 @@ function setup_packages {
          jq
          git
       )
+
+      # TU SAM STAO, RECIMO
+      # DAKLE, POD 1 TREBA KOD IDUĆEG INSTALA MAKNUT LIBREWOLF JER FAILA BUILD. NADAJMO SE DA BRAVE PROLAZI
+      # DRUGO, I VALJDA BITNIJE JE DA IMAMO ERROR SA SUBLIME INSTALLOM JER PACMAN.CONF SE NE UPDATA UNUTAR NSPAWNA
+      # TO JE MOŽDA ZBOG KEYRINGA KOJI SE MOŽDA TREBA UNUTAR NSPAWNA SETUPAT. NISAM SIGURAN I DOSTA MI JE SAD
+      # OK MOZDA IPAK SAMO OVO TREBA # systemd-nspawn --bind=/var/cache/pacman/pkg
+
+      # ISTO TAKO PADAJU MI NEKE IDEJE DA BI SE DALO ODMAH NAKON PACSTRAPA SAMO OKINUT OVAJ NSPAWN I UNUTAR NJEGA SVE NORMALNO
+      # TO ZVUČI OBEĆAVAJUĆE, NE ZNAM ŠTA TOČNO DOBIVAM TREBA VIDJET JOŠ MALO (SVAKAKO MISLIM DA SE AUTOLOGIN DA IZVEST PA DA
+      # NE TREBA PASSOWRD)
       arch_packages+=("sublime-text")
       arch_packages+=("sublime-merge")
       arch_packages+=("nautilus")
@@ -501,7 +538,7 @@ function setup_packages {
       arch_packages+=("wine-staging")
       deps_packages+=($(pacman -Si wine-staging | sed -n '/^Opt/,/^Conf/p' | sed '$d' | sed 's/^Opt.*://g' | sed 's/^\s*//g' | tr '\n' ' '))
       arch_packages+=("icoutils")
-      user_packages+=("mesen")
+      # user_packages+=("mesen")
       # user_packages+=("mesen2-git")
 
       # fonts, icons, cursor
@@ -517,11 +554,13 @@ function setup_packages {
       user_packages+=("candy-icons-git")
       user_packages+=("bibata-cursor-theme-bin")
 
+      # arch_packages+=("strace")
       as_user $username rustup default stable
       as_user $username rustup update
 
       # install packages
       if command -v rankmirrors > /dev/null; then
+         # ABORT IF WE GET NOTHING BACK
          curl -s "https://archlinux.org/mirrorlist/?country=DE&country=HR&protocol=https&use_mirror_status=on" | sed -e 's/^#Server/Server/' -e '/^#/d' | rankmirrors -n 5 -m 2 -w -p - > /etc/pacman.d/mirrorlist
       fi
       echo "$username ALL=(ALL:ALL) NOPASSWD: ALL" | EDITOR="tee --append" visudo > /dev/null
@@ -567,10 +606,11 @@ function setup_packages {
    systemctl enable $start iwd.service
    systemctl enable $start acpid.service
    systemctl enable $start tlp.service
+   # systemctl enable $start bluetooth.service
    systemctl mask systemd-rfkill.service  # tlp
    systemctl mask systemd-rfkill.socket   # tlp
-   systemctl disable docker.service   2> /dev/null
-   systemctl disable libvirtd.service 2> /dev/null
+   systemctl enable $start docker.service   2> /dev/null
+   systemctl enable $start libvirtd.service 2> /dev/null
    systemctl disable ollama           2> /dev/null
    if nvidia_disabled; then
       systemctl disable nvidia-suspend.service
@@ -627,7 +667,7 @@ function install_paru {
       git clone https://aur.archlinux.org/paru.git $dir
       cd $dir
       RUSTUP_HOME=$dir rustup default stable
-      RUSTUP_HOME=$dir CARGO_HOME=$dir makepkg -si
+      RUSTUP_HOME=$dir CARGO_HOME=$dir makepkg -s
    "
    pacman -U --needed --noconfirm "$(ls $dir/*.tar.zst | grep -v debug)"
    rm -rf "$dir"
