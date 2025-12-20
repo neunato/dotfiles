@@ -640,7 +640,7 @@ function setup_packages {
    update-mime-database -n /usr/share/mime
 
    mkdir -p "/home/$username/.local/share/applications/"
-   touch ""/home/$username/.local/share/applications/mimeapps.list"
+   touch "/home/$username/.local/share/applications/mimeapps.list"
    ln -sf "/home/$username/.config/mimeapps.list" "/home/$username/.local/share/applications/mimeapps.list"
 }
 
