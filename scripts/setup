@@ -458,7 +458,6 @@ function setup_packages {
       arch_packages+=("docker")
       arch_packages+=("docker-compose")
       arch_packages+=("aws-cli")
-      arch_packages+=("ollama")
 
       # window applications
       arch_packages+=("foot")
@@ -568,7 +567,6 @@ function setup_packages {
    systemctl mask systemd-rfkill.socket   # tlp
    systemctl disable docker.service   2> /dev/null
    systemctl disable libvirtd.service 2> /dev/null
-   systemctl disable ollama           2> /dev/null
    if nvidia_disabled; then
       systemctl disable nvidia-suspend.service
       systemctl disable nvidia-resume.service
