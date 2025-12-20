@@ -115,6 +115,8 @@ function setup_system {
    pacstrap -K /mnt base base-devel linux linux-firmware
    genfstab -U /mnt >> /mnt/etc/fstab
 
+   ln -sf ../run/systemd/resolve/stub-resolv.conf /mnt/etc/resolv.conf
+
    # user accounts
    as_chroot bash -c "
       pacman -S --needed --noconfirm sudo
@@ -206,7 +208,7 @@ function setup_system_config {
    cp "/home/$username/.bash_profile" /root
 
    # network
-   ln -sf /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
+   ln -sf ../run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
 
    echo '[Match]'                   | tee          /etc/systemd/network/20-wired.network > /dev/null
    echo 'Kind=!*'                   | tee --append /etc/systemd/network/20-wired.network > /dev/null
