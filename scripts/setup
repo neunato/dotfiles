@@ -619,15 +619,15 @@ function setup_graphics {
 }
 
 function install_paru {
-   local url="https://aur.archlinux.org/cgit/aur.git/snapshot/paru.tar.gz"
    local dir="/var/tmp/paru"
-   pacman -S --needed --noconfirm git rustup
-   extract_tarball "$url" "$dir"
+   pacman -Sy --needed --noconfirm git rustup
+   mkdir -p "$dir"
    chmod 777 "$dir"
    as_nobody /bin/bash -c "
+      git clone https://aur.archlinux.org/paru.git $dir
       cd $dir
       RUSTUP_HOME=$dir rustup default stable
-      RUSTUP_HOME=$dir CARGO_HOME=$dir makepkg
+      RUSTUP_HOME=$dir CARGO_HOME=$dir makepkg -s
    "
    pacman -U --needed --noconfirm "$(ls $dir/*.tar.zst | grep -v debug)"
    rm -rf "$dir"
