@@ -514,7 +514,7 @@ function setup_packages {
       arch_packages+=("wine-staging")
       deps_packages+=($(pacman -Si wine-staging | sed -n '/^Opt/,/^Conf/p' | sed '$d' | sed 's/^Opt.*://g' | sed 's/^\s*//g' | tr '\n' ' '))
       arch_packages+=("icoutils")
-      user_packages+=("mesen2-git")
+      user_packages+=("mesen")
 
       # fonts, icons, cursor
       arch_packages+=("fontconfig")
