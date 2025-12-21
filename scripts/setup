@@ -380,6 +380,7 @@ function setup_packages {
       fi
       arch_packages+=("vulkan-icd-loader")
       arch_packages+=("vulkan-intel")
+      arch_packages+=("vulkan-radeon")
       arch_packages+=("alsa-firmware")
       arch_packages+=("sof-firmware")
       arch_packages+=("pipewire")
