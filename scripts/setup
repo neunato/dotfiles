@@ -401,7 +401,7 @@ function setup_packages {
       fi
 
       # wayland
-      user_packages+=("niri-git")
+      arch_packages+=("niri")
       arch_packages+=("xwayland-satellite")
       user_packages+=("yambar-git")
       deps_packages+=("xcb-util-errors")
