@@ -203,6 +203,29 @@ function setup_system_config {
    pacman -S --needed --noconfirm plymouth
    pacman -S --needed --noconfirm dash
 
+   # localisation
+   echo 'arch' | tee /etc/hostname > /dev/null
+
+   ln -sf /usr/share/zoneinfo/Europe/Zagreb /etc/localtime
+   hwclock --systohc
+   systemctl enable systemd-timesyncd.service
+
+   sed -i 's/^#en_GB\.UTF-8/en_GB.UTF-8/'          /etc/locale.gen
+   sed -i 's/^#en_US\.UTF-8/en_US.UTF-8/'          /etc/locale.gen
+   sed -i 's/^d_t_fmt .*/d_t_fmt "%d-%m-%Y %T"/'   /usr/share/i18n/locales/en_GB
+   sed -i 's/^d_t_fmt .*/d_t_fmt "%d-%m-%Y %T"/'   /usr/share/i18n/locales/en_US
+   sed -i 's/^date_fmt .*/date_fmt "%d-%m-%Y %T"/' /usr/share/i18n/locales/en_GB
+   sed -i 's/^date_fmt .*/date_fmt "%d-%m-%Y %T"/' /usr/share/i18n/locales/en_US
+   locale-gen
+
+   echo 'LANG=en_GB.UTF-8'       | tee          /etc/locale.conf   > /dev/null
+   echo 'KEYMAP=croat'           | tee          /etc/vconsole.conf > /dev/null
+   echo 'FONT=latarcyrheb-sun32' | tee --append /etc/vconsole.conf > /dev/null
+
+   # bash
+   cp "/home/$username/.bashrc" /root
+   cp "/home/$username/.bash_profile" /root
+
    # sudo
    echo "Path askpass /home/$username/scripts/rofi-askpass" | tee /etc/sudo.conf > /dev/null
 
@@ -214,40 +237,6 @@ function setup_system_config {
    echo '%wheel ALL=(ALL:ALL) ALL'                                     | EDITOR='tee --append' visudo > /dev/null
    echo "$username ALL=(root) NOPASSWD: /usr/bin/openvpn"              | EDITOR='tee --append' visudo > /dev/null
    echo "$username ALL=(root) NOPASSWD: /usr/bin/killall -INT openvpn" | EDITOR='tee --append' visudo > /dev/null
-
-   # shell
-   cp "/home/$username/.bashrc" /root
-   cp "/home/$username/.bash_profile" /root
-
-   # network
-   ln -sf ../run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
-
-   echo '[Match]'                   | tee          /etc/systemd/network/20-wired.network > /dev/null
-   echo 'Kind=!*'                   | tee --append /etc/systemd/network/20-wired.network > /dev/null
-   echo 'Type=ether'                | tee --append /etc/systemd/network/20-wired.network > /dev/null
-   echo ''                          | tee --append /etc/systemd/network/20-wired.network > /dev/null
-   echo '[Network]'                 | tee --append /etc/systemd/network/20-wired.network > /dev/null
-   echo 'DHCP=yes'                  | tee --append /etc/systemd/network/20-wired.network > /dev/null
-   echo ''                          | tee --append /etc/systemd/network/20-wired.network > /dev/null
-   echo '[DHCPv4]'                  | tee --append /etc/systemd/network/20-wired.network > /dev/null
-   echo 'RouteMetric=100'           | tee --append /etc/systemd/network/20-wired.network > /dev/null
-   echo ''                          | tee --append /etc/systemd/network/20-wired.network > /dev/null
-   echo '[IPv6AcceptRA]'            | tee --append /etc/systemd/network/20-wired.network > /dev/null
-   echo 'RouteMetric=100'           | tee --append /etc/systemd/network/20-wired.network > /dev/null
-
-   echo '[Match]'                   | tee          /etc/systemd/network/25-wireless.network > /dev/null
-   echo 'Type=wlan'                 | tee --append /etc/systemd/network/25-wireless.network > /dev/null
-   echo 'WLANInterfaceType=station' | tee --append /etc/systemd/network/25-wireless.network > /dev/null
-   echo 'SSID=*'                    | tee --append /etc/systemd/network/25-wireless.network > /dev/null
-   echo ''                          | tee --append /etc/systemd/network/25-wireless.network > /dev/null
-   echo '[Network]'                 | tee --append /etc/systemd/network/25-wireless.network > /dev/null
-   echo 'DHCP=yes'                  | tee --append /etc/systemd/network/25-wireless.network > /dev/null
-   echo ''                          | tee --append /etc/systemd/network/25-wireless.network > /dev/null
-   echo '[DHCPv4]'                  | tee --append /etc/systemd/network/25-wireless.network > /dev/null
-   echo 'RouteMetric=200'           | tee --append /etc/systemd/network/25-wireless.network > /dev/null
-   echo ''                          | tee --append /etc/systemd/network/25-wireless.network > /dev/null
-   echo '[IPv6AcceptRA]'            | tee --append /etc/systemd/network/25-wireless.network > /dev/null
-   echo 'RouteMetric=200'           | tee --append /etc/systemd/network/25-wireless.network > /dev/null
 
    # pacman
    echo '[options]'                                                    | tee          /etc/pacman.conf > /dev/null
@@ -280,28 +269,53 @@ function setup_system_config {
       curl -s -O https://download.sublimetext.com/sublimehq-pub.gpg && pacman-key --add sublimehq-pub.gpg && pacman-key --lsign-key 8A8F901A && rm sublimehq-pub.gpg
    fi
 
-   # localisation
-   echo 'arch' | tee /etc/hostname > /dev/null
+   # systemd
+   ln -sf ../run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
 
-   ln -sf /usr/share/zoneinfo/Europe/Zagreb /etc/localtime
-   hwclock --systohc
-   systemctl enable systemd-timesyncd.service
+   echo '[Match]'                   | tee          /etc/systemd/network/20-wired.network > /dev/null
+   echo 'Kind=!*'                   | tee --append /etc/systemd/network/20-wired.network > /dev/null
+   echo 'Type=ether'                | tee --append /etc/systemd/network/20-wired.network > /dev/null
+   echo ''                          | tee --append /etc/systemd/network/20-wired.network > /dev/null
+   echo '[Network]'                 | tee --append /etc/systemd/network/20-wired.network > /dev/null
+   echo 'DHCP=yes'                  | tee --append /etc/systemd/network/20-wired.network > /dev/null
+   echo ''                          | tee --append /etc/systemd/network/20-wired.network > /dev/null
+   echo '[DHCPv4]'                  | tee --append /etc/systemd/network/20-wired.network > /dev/null
+   echo 'RouteMetric=100'           | tee --append /etc/systemd/network/20-wired.network > /dev/null
+   echo ''                          | tee --append /etc/systemd/network/20-wired.network > /dev/null
+   echo '[IPv6AcceptRA]'            | tee --append /etc/systemd/network/20-wired.network > /dev/null
+   echo 'RouteMetric=100'           | tee --append /etc/systemd/network/20-wired.network > /dev/null
 
-   sed -i 's/^#en_GB\.UTF-8/en_GB.UTF-8/'          /etc/locale.gen
-   sed -i 's/^#en_US\.UTF-8/en_US.UTF-8/'          /etc/locale.gen
-   sed -i 's/^d_t_fmt .*/d_t_fmt "%d-%m-%Y %T"/'   /usr/share/i18n/locales/en_GB
-   sed -i 's/^d_t_fmt .*/d_t_fmt "%d-%m-%Y %T"/'   /usr/share/i18n/locales/en_US
-   sed -i 's/^date_fmt .*/date_fmt "%d-%m-%Y %T"/' /usr/share/i18n/locales/en_GB
-   sed -i 's/^date_fmt .*/date_fmt "%d-%m-%Y %T"/' /usr/share/i18n/locales/en_US
-   locale-gen
+   echo '[Match]'                   | tee          /etc/systemd/network/25-wireless.network > /dev/null
+   echo 'Type=wlan'                 | tee --append /etc/systemd/network/25-wireless.network > /dev/null
+   echo 'WLANInterfaceType=station' | tee --append /etc/systemd/network/25-wireless.network > /dev/null
+   echo 'SSID=*'                    | tee --append /etc/systemd/network/25-wireless.network > /dev/null
+   echo ''                          | tee --append /etc/systemd/network/25-wireless.network > /dev/null
+   echo '[Network]'                 | tee --append /etc/systemd/network/25-wireless.network > /dev/null
+   echo 'DHCP=yes'                  | tee --append /etc/systemd/network/25-wireless.network > /dev/null
+   echo ''                          | tee --append /etc/systemd/network/25-wireless.network > /dev/null
+   echo '[DHCPv4]'                  | tee --append /etc/systemd/network/25-wireless.network > /dev/null
+   echo 'RouteMetric=200'           | tee --append /etc/systemd/network/25-wireless.network > /dev/null
+   echo ''                          | tee --append /etc/systemd/network/25-wireless.network > /dev/null
+   echo '[IPv6AcceptRA]'            | tee --append /etc/systemd/network/25-wireless.network > /dev/null
+   echo 'RouteMetric=200'           | tee --append /etc/systemd/network/25-wireless.network > /dev/null
 
-   as_user $username mkdir -p "/home/$username/.config/fontconfig/conf.d"
-   as_user $username ln -sf /usr/share/fontconfig/conf.avail/50-user.conf "/home/$username/.config/fontconfig/conf.d"
-   as_user $username fc-cache
+   mkdir -p /etc/systemd/system/getty@tty1.service.d
+   echo '[Service]'                                                                                           | tee          /etc/systemd/system/getty@tty1.service.d/skip-prompt.conf > /dev/null
+   echo 'ExecStart='                                                                                          | tee --append /etc/systemd/system/getty@tty1.service.d/skip-prompt.conf > /dev/null
+   echo "ExecStart=-/bin/agetty --skip-login --nonewline --noissue --autologin $username --noclear %I \$TERM" | tee --append /etc/systemd/system/getty@tty1.service.d/skip-prompt.conf > /dev/null
 
-   echo 'LANG=en_GB.UTF-8'       | tee          /etc/locale.conf   > /dev/null
-   echo 'KEYMAP=croat'           | tee          /etc/vconsole.conf > /dev/null
-   echo 'FONT=latarcyrheb-sun32' | tee --append /etc/vconsole.conf > /dev/null
+   echo '[Login]'                | tee          /etc/systemd/logind.conf > /dev/null
+   echo 'HandleLidSwitch=ignore' | tee --append /etc/systemd/logind.conf > /dev/null
+
+   # udev
+   if [[ $graphics == "integrated" ]]; then
+      echo 'ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{class}=="0x0c0330",   ATTR{power/control}="auto", ATTR{remove}="1"' | tee          /etc/udev/rules.d/no-nvidia.rules > /dev/null
+      echo 'ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{class}=="0x0c8000",   ATTR{power/control}="auto", ATTR{remove}="1"' | tee --append /etc/udev/rules.d/no-nvidia.rules > /dev/null
+      echo 'ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{class}=="0x040300",   ATTR{power/control}="auto", ATTR{remove}="1"' | tee --append /etc/udev/rules.d/no-nvidia.rules > /dev/null
+      echo 'ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{class}=="0x03[0-9]*", ATTR{power/control}="auto", ATTR{remove}="1"' | tee --append /etc/udev/rules.d/no-nvidia.rules > /dev/null
+   else
+      rm -f /etc/udev/rules.d/no-nvidia.rules
+   fi
 
    # boot process
    local url=$(github_repo_archive_url "neunato/plymouth-theme-silence" "master")
@@ -325,24 +339,6 @@ function setup_system_config {
    sed -i "s/^GRUB_CMDLINE_LINUX_DEFAULT=.*/GRUB_CMDLINE_LINUX_DEFAULT=\"quiet splash nowatchdog modprobe.blacklist=iTCO_wdt rd.luks.name=$part_root_uuid=root rd.luks.options=$part_root_uuid=timeout=0,tries=0,password-echo=no rootflags=x-systemd.device-timeout=0\"/" /etc/default/grub
    grub-mkconfig -o /boot/grub/grub.cfg
    sed -i 's/echo\t/#echo\t/g' /boot/grub/grub.cfg
-
-   mkdir -p /etc/systemd/system/getty@tty1.service.d
-   echo '[Service]'                                                                                           | tee          /etc/systemd/system/getty@tty1.service.d/skip-prompt.conf > /dev/null
-   echo 'ExecStart='                                                                                          | tee --append /etc/systemd/system/getty@tty1.service.d/skip-prompt.conf > /dev/null
-   echo "ExecStart=-/bin/agetty --skip-login --nonewline --noissue --autologin $username --noclear %I \$TERM" | tee --append /etc/systemd/system/getty@tty1.service.d/skip-prompt.conf > /dev/null
-
-   echo '[Login]'                | tee          /etc/systemd/logind.conf > /dev/null
-   echo 'HandleLidSwitch=ignore' | tee --append /etc/systemd/logind.conf > /dev/null
-
-   # udev rules
-   if [[ $graphics == "integrated" ]]; then
-      echo 'ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{class}=="0x0c0330",   ATTR{power/control}="auto", ATTR{remove}="1"' | tee          /etc/udev/rules.d/no-nvidia.rules > /dev/null
-      echo 'ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{class}=="0x0c8000",   ATTR{power/control}="auto", ATTR{remove}="1"' | tee --append /etc/udev/rules.d/no-nvidia.rules > /dev/null
-      echo 'ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{class}=="0x040300",   ATTR{power/control}="auto", ATTR{remove}="1"' | tee --append /etc/udev/rules.d/no-nvidia.rules > /dev/null
-      echo 'ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{class}=="0x03[0-9]*", ATTR{power/control}="auto", ATTR{remove}="1"' | tee --append /etc/udev/rules.d/no-nvidia.rules > /dev/null
-   else
-      rm -f /etc/udev/rules.d/no-nvidia.rules
-   fi
 }
 
 function setup_packages {
@@ -559,15 +555,27 @@ function setup_packages {
       pacman -Qdtq | ifne pacman -Rns --noconfirm -
    fi
 
-   # groups, services, configuration
+   # package configuration
+   as_user $username mkdir -p "/home/$username/.config/fontconfig/conf.d"
+   as_user $username ln -sf /usr/share/fontconfig/conf.avail/50-user.conf "/home/$username/.config/fontconfig/conf.d"
+   as_user $username fc-cache
+
+   as_user $username dbus-launch --exit-with-session "/home/$username/.config/nautilus/config"
+
+   sed -i 's/#unix_sock_group/unix_sock_group/g'                /etc/libvirt/libvirtd.conf
+   sed -i 's/#unix_sock_rw_perms/unix_sock_rw_perms/g'          /etc/libvirt/libvirtd.conf
+   sed -i 's/#user = "libvirt-qemu"/user = "'"$username"'"/g'   /etc/libvirt/qemu.conf
+   sed -i 's/#group = "libvirt-qemu"/group = "'"$username"'"/g' /etc/libvirt/qemu.conf
+
+   # groups
    usermod -aG input "$username"
    usermod -aG docker "$username"
    usermod -aG libvirt "$username"
 
+   # services
    if [[ $(stat -c %d:%i /) == $(stat -c %d:%i /proc/1/root/.) ]]; then
       start="--now"
    fi
-
    systemctl --user --machine="$username@" enable $start pipewire-pulse.service
    systemctl --user --machine="$username@" enable $start ssh-agent.service
    systemctl mask systemd-networkd-wait-online.service
@@ -588,13 +596,6 @@ function setup_packages {
       systemctl enable nvidia-suspend.service
       systemctl enable nvidia-resume.service
    fi
-
-   sed -i 's/#unix_sock_group/unix_sock_group/g'                /etc/libvirt/libvirtd.conf
-   sed -i 's/#unix_sock_rw_perms/unix_sock_rw_perms/g'          /etc/libvirt/libvirtd.conf
-   sed -i 's/#user = "libvirt-qemu"/user = "'"$username"'"/g'   /etc/libvirt/qemu.conf
-   sed -i 's/#group = "libvirt-qemu"/group = "'"$username"'"/g' /etc/libvirt/qemu.conf
-
-   as_user $username dbus-launch --exit-with-session "/home/$username/.config/nautilus/config"
 
    # default applications
    echo '' | as_user $username tee "/home/$username/.config/mimeapps.list" > /dev/null
