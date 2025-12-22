@@ -125,7 +125,7 @@ function setup_system {
 
    # user accounts
    as_chroot bash -c "
-      pacman -S --needed --noconfirm sudo dash
+      pacman -S --needed --noconfirm dash
 
       useradd -m '$username' -G wheel,video
       echo 'root:$root_password' | chpasswd
@@ -419,7 +419,6 @@ function setup_packages {
       # utilities
       arch_packages+=("dash")
       arch_packages+=("zsh")
-      arch_packages+=("sudo")
       arch_packages+=("nano")
       arch_packages+=("bat")
       arch_packages+=("zip")
