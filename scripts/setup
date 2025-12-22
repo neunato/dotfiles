@@ -492,6 +492,10 @@ function setup_system_config {
       as_user $username rustup default stable
       as_user $username rustup update
 
+      # disable initramfs hook
+      mkdir -p /etc/pacman.d/hooks/
+      touch /etc/pacman.d/hooks/90-mkinitcpio-install.hook
+
       # install packages
       if command -v rankmirrors > /dev/null; then
          curl -s "https://archlinux.org/mirrorlist/?country=DE&country=HR&protocol=https&use_mirror_status=on" | sed -e 's/^#Server/Server/' -e '/^#/d' | rankmirrors -n 5 -m 2 -w -p - > /etc/pacman.d/mirrorlist
@@ -519,6 +523,9 @@ function setup_system_config {
       done
       printf "%b" "${unlisted_packages[@]/%/\\n}" | ifne pacman -D --asdeps -
       pacman -Qdtq | ifne pacman -Rns --noconfirm -
+
+      # enable initramfs hook
+      rm /etc/pacman.d/hooks/90-mkinitcpio-install.hook
    fi
 
    # package configuration
