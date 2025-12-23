@@ -36,6 +36,8 @@ if [[ $EUID != 0 ]]; then
    source "$HOME/.profile"
 
    # aliases
-   alias sudo='sudo --askpass'
+   if [[ -n "$WAYLAND_DISPLAY" ]]; then
+      alias sudo='sudo --askpass'
+   fi
    alias wget="wget --hsts-file='$XDG_CACHE_HOME/wget-hsts'"
 fi
