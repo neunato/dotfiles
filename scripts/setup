@@ -39,7 +39,7 @@ function setup_system {
    fi
 
    loadkeys croat
-   setfont latarcyrheb-sun32
+   setfont latarcyrheb-sun16
 
    local bitness=$(cat /sys/firmware/efi/fw_platform_size)
    if [[ $bitness -ne 64 ]]; then
