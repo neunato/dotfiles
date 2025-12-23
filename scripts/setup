@@ -726,7 +726,7 @@ elif [[ $2 == "--reinstall" ]]; then
 fi
 
 case "$1" in
-   system)        setup_system && exit;;
+   system)        setup_system; exit;;
    system-config) as_sudo setup_system_config "$(whoami)" "$mode";;  # reinstall|
    firmware)      as_sudo setup_firmware;;
    graphics)      as_sudo setup_graphics "$(whoami)" "$graphics";;   # integrated|nvidia
