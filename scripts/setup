@@ -2,11 +2,11 @@
 
 set -e
 
-if [[ ! " system system-config firmware graphics packages " =~ " $1 " ]]; then
-   echo "Expected 'setup system|system-config|firmware|graphics|packages'" >&2
+if [[ ! " system firmware graphics packages " =~ " $1 " ]]; then
+   echo "Expected 'setup system|firmware|graphics|packages'" >&2
    exit 1
 elif [[ $1 != "graphics" && $1 != "packages" && $# -ne 1 ]]; then
-   echo "Expected 'setup system|system-config|firmware|graphics|packages'" >&2
+   echo "Expected 'setup system|firmware|graphics|packages'" >&2
    exit 1
 elif [[ $1 == "graphics" && ($# -gt 2 || ! " integrated nvidia " =~ " $2 " ) ]]; then
    echo "Expected 'setup graphics integrated|nvidia'" >&2
@@ -17,16 +17,13 @@ elif [[ $1 == "packages" && ($# -gt 2 || ! "--reinstall" =~ "$2" ) ]]; then
 elif [[ $1 == "system" && $EUID -ne 0 ]]; then
    echo "'setup system' must be run as root" >&2
    exit 1
-elif [[ $1 == "system-config" && $EUID -eq 0 ]]; then
-   echo "'setup system-config' must not be run as root" >&2
-   exit 1
 elif [[ $1 == "firmware" && $EUID -eq 0 ]]; then
    echo "'setup firmware' must not be run as root" >&2
    exit 1
 elif [[ $1 == "packages" && $EUID -eq 0 ]]; then
    echo "'setup packages' must not be run as root" >&2
    exit 1
-elif [[ $1 == "system-config" || $1 == "packages" ]]; then
+elif [[ $1 == "packages" ]]; then
    while [[ $continue != "y" && $continue != "yes" ]]; do
       read -p "Running as $(whoami), continue? " -i "yes" -e continue
    done
@@ -159,7 +156,7 @@ function setup_system {
       chmod 744 scripts/root-*
    "
 
-   as_chroot setup_system_config "$username"
+   as_chroot setup_packages "$username"
 
    cat /tmp/arch_setup.log | as_chroot tee /var/tmp/arch_setup.log > /dev/null
 
@@ -168,7 +165,7 @@ function setup_system {
    } 2>&1 | tee /tmp/arch_setup.log
 }
 
-function setup_system_config {
+function setup_packages {
    local username=$1
    local mode="$2"              # reinstall|no-install|
    local graphics=$3            # integrated|nvidia|
@@ -608,7 +605,7 @@ function setup_graphics {
       echo "GPU not detected, aborting" >&2
       exit 1
    fi
-   setup_system_config "$username" "no-install" "$graphics"
+   setup_packages "$username" "no-install" "$graphics"
 }
 
 function install_paru {
@@ -726,10 +723,10 @@ elif [[ $2 == "--reinstall" ]]; then
 fi
 
 case "$1" in
-   system)        setup_system; exit;;
-   system-config) as_sudo setup_system_config "$(whoami)" "$mode";;  # reinstall|
-   firmware)      as_sudo setup_firmware;;
-   graphics)      as_sudo setup_graphics "$(whoami)" "$graphics";;   # integrated|nvidia
+   system)   setup_system; exit;;
+   packages) as_sudo setup_packages "$(whoami)" "$mode";;       # reinstall|
+   firmware) as_sudo setup_firmware;;
+   graphics) as_sudo setup_graphics "$(whoami)" "$graphics";;   # integrated|nvidia
 esac
 
 play-sound warcraft-jobs-done
