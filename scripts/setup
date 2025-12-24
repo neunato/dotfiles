@@ -146,10 +146,11 @@ function setup_system {
       git config --global --unset init.defaultBranch
 
       mkdir -p '$home/dev'
-      mkdir -p '$home/download'
+      mkdir -p '$home/downloads'
       mkdir -p '$home/torrents'
       mkdir -p '$home/pictures'
       mkdir -p '$home/videos'
+      mkdir -p '$home/games'
 
       chown -R '$username:$username' .
       chown root:root scripts/root-*
