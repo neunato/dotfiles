@@ -454,7 +454,9 @@ function setup_packages {
       arch_packages+=("wine-staging")
       deps_packages+=($(pacman -Si wine-staging | sed -n '/^Opt/,/^Conf/p' | sed '$d' | sed 's/^Opt.*://g' | sed 's/^\s*//g' | tr '\n' ' '))
       arch_packages+=("icoutils")
-      user_packages+=("mesen")
+      if ! in_chroot; then
+         user_packages+=("mesen")
+      fi
 
       # fonts, icons, cursor
       arch_packages+=("fontconfig")
@@ -526,7 +528,7 @@ function setup_packages {
    usermod -aG libvirt "$username"
 
    # services
-   if [[ $(stat -c %d:%i /) == $(stat -c %d:%i /proc/1/root/.) ]]; then
+   if ! in_chroot; then
       start="--now"
    fi
    systemctl --user --machine="$username@" enable $start pipewire-pulse.service
@@ -654,6 +656,12 @@ function as_user {
 
 function as_chroot {
    arch-chroot /mnt /bin/bash -c "$(wrap_f "$@")"
+}
+
+function in_chroot {
+   if [[ $(stat -c %d:%i /) == $(stat -c %d:%i /proc/1/root/.) ]]; then
+      return 1
+   fi
 }
 
 function nvidia_disabled {
