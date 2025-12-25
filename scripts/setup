@@ -563,8 +563,8 @@ function setup_packages {
    as_user $username xdg-mime default transmission-gtk.desktop   $(cat /usr/share/applications/transmission-gtk.desktop | grep MimeType= | sed 's/MimeType=\(.*\)/\1/' | sed 's/;/ /g')
    update-desktop-database /usr/share/applications
    update-mime-database -n /usr/share/mime
-   mkdir -p "/home/$username/.local/share/applications"
-   ln -sf "/home/$username/.config/mimeapps.list" "/home/$username/.local/share/applications/mimeapps.list"
+   as_user $username mkdir -p "/home/$username/.local/share/applications"
+   as_user $username ln -sf "/home/$username/.config/mimeapps.list" "/home/$username/.local/share/applications/mimeapps.list"
 
    # boot process
    local url=$(github_repo_archive_url "neunato/plymouth-theme-silence" "master")
