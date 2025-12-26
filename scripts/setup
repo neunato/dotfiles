@@ -158,6 +158,7 @@ function setup_system {
    "
 
    as_chroot setup_packages "$username"
+   as_chroot rm "/home/$username/.bash_logout"
 
    cat /tmp/arch_setup.log | as_chroot tee /var/tmp/arch_setup.log > /dev/null
 
