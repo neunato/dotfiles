@@ -481,7 +481,7 @@ function setup_packages {
 
       # install packages
       if command -v rankmirrors > /dev/null; then
-         curl -s "https://archlinux.org/mirrorlist/?country=DE&country=HR&protocol=https&use_mirror_status=on" | sed -e 's/^#Server/Server/' -e '/^#/d' | rankmirrors -n 5 -m 2 -w -p - > /etc/pacman.d/mirrorlist
+         curl -s "https://archlinux.org/mirrorlist/?country=DE&country=HR&protocol=https&use_mirror_status=on" | sed -e 's/^#Server/Server/' -e '/^#/d' | rankmirrors -n 5 -m 2 -w -p - | ifne tee /etc/pacman.d/mirrorlist
       fi
       echo "$username ALL=(ALL:ALL) NOPASSWD: ALL" | EDITOR="tee --append" visudo > /dev/null
       as_user $username git config --global --rename-section "url.git@github.com:" "url-.git@github.com:"
