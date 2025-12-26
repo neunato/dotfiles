@@ -368,6 +368,7 @@ function setup_packages {
       arch_packages+=("jq")
       arch_packages+=("bc")
       arch_packages+=("parallel")
+      arch_packages+=("flatpak")
       arch_packages+=("pacman-contrib")
       user_packages+=("xurls")
       arch_packages+=("wl-clipboard")
@@ -505,6 +506,9 @@ function setup_packages {
       done
       printf "%b" "${unlisted_packages[@]/%/\\n}" | ifne pacman -D --asdeps -
       pacman -Qdtq | ifne pacman -Rns --noconfirm -
+
+      # flatpak packages
+      as_user $username flatpak update -y
 
       # enable initramfs hook
       rm /etc/pacman.d/hooks/90-mkinitcpio-install.hook
