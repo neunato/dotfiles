@@ -493,7 +493,7 @@ function setup_packages {
       as_user $username rustup update
 
       # install packages
-      pacman -Sy --needed --noconfirm pacman-contrib
+      pacman -Sy --needed --noconfirm pacman-contrib moreutils
       curl -s "https://archlinux.org/mirrorlist/?country=DE&country=HR&protocol=https&use_mirror_status=on" | sed -e 's/^#Server/Server/' -e '/^#/d' | rankmirrors -n 5 -m 2 -w -p - | ifne tee /etc/pacman.d/mirrorlist || true
 
       if [[ ! -x $(command -v paru) ]]; then
