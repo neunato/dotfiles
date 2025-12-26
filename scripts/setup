@@ -522,7 +522,9 @@ function setup_packages {
       pacman -Qdtq | ifne pacman -Rns --noconfirm - || true
 
       # flatpak packages
-      as_user $username flatpak update -y
+      if ! in_chroot; then
+         as_user $username flatpak update -y
+      fi
 
       # enable initramfs hook
       rm /etc/pacman.d/hooks/90-mkinitcpio-install.hook
