@@ -292,10 +292,6 @@ function setup_packages {
 
    # packages
    if [[ $mode != "no-install" ]]; then
-      if [[ ! -x $(command -v paru) ]]; then
-         install_paru
-      fi
-
       arch_packages=()
       user_packages=()
       deps_packages=()
@@ -491,6 +487,7 @@ function setup_packages {
       pre_install "$username"
 
       # rust
+      pacman -Sy --needed --noconfirm rustup
       as_user $username rustup default stable
       as_user $username rustup update
 
@@ -498,6 +495,11 @@ function setup_packages {
       if command -v rankmirrors > /dev/null; then
          curl -s "https://archlinux.org/mirrorlist/?country=DE&country=HR&protocol=https&use_mirror_status=on" | sed -e 's/^#Server/Server/' -e '/^#/d' | rankmirrors -n 5 -m 2 -w -p - | ifne tee /etc/pacman.d/mirrorlist || true
       fi
+
+      if [[ ! -x $(command -v paru) ]]; then
+         install_paru
+      fi
+
       echo "$username ALL=(ALL:ALL) NOPASSWD: ALL" | EDITOR="tee --append" visudo > /dev/null
       as_user $username paru -Syu --devel --noconfirm &&
       as_user $username paru -S --useask --ask 4 --noconfirm --asexplicit $([[ $mode != "reinstall" ]] && echo "--needed") "${arch_packages[@]}" "${user_packages[@]}" &&
