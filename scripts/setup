@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
+set -Eeo pipefail
 
 if [[ ! " system firmware graphics packages " =~ " $1 " ]]; then
    echo "Expected 'setup system|firmware|graphics|packages'" >&2
@@ -30,6 +30,7 @@ elif [[ $1 == "packages" ]]; then
 fi
 
 function setup_system {
+   {
    if ! command -v arch-chroot > /dev/null; then
       echo "Must be run from an installation medium" >&2
       exit 1
@@ -43,12 +44,11 @@ function setup_system {
       echo "System must be in 64 bit UEFI mode" >&2
       exit 1
    fi
-   if ! dmesg | grep -q "Secure boot disabled"; then
+   if ! { dmesg | grep -q "Secure boot disabled" || true; }; then
        echo "Secure Boot must be disabled" >&2
        exit 1
    fi
 
-   {
    lsblk
    echo "================================================="
    while [[ -z $disk || $disk =~ " " ]]; do
@@ -481,7 +481,7 @@ function setup_packages {
 
       # install packages
       if command -v rankmirrors > /dev/null; then
-         curl -s "https://archlinux.org/mirrorlist/?country=DE&country=HR&protocol=https&use_mirror_status=on" | sed -e 's/^#Server/Server/' -e '/^#/d' | rankmirrors -n 5 -m 2 -w -p - | ifne tee /etc/pacman.d/mirrorlist
+         curl -s "https://archlinux.org/mirrorlist/?country=DE&country=HR&protocol=https&use_mirror_status=on" | sed -e 's/^#Server/Server/' -e '/^#/d' | rankmirrors -n 5 -m 2 -w -p - | ifne tee /etc/pacman.d/mirrorlist || true
       fi
       echo "$username ALL=(ALL:ALL) NOPASSWD: ALL" | EDITOR="tee --append" visudo > /dev/null
       as_user $username git config --global --rename-section "url.git@github.com:" "url-.git@github.com:"
@@ -504,8 +504,8 @@ function setup_packages {
             unlisted_packages+=("$package")
          fi
       done
-      printf "%b" "${unlisted_packages[@]/%/\\n}" | ifne pacman -D --asdeps -
-      pacman -Qdtq | ifne pacman -Rns --noconfirm -
+      printf "%b" "${unlisted_packages[@]/%/\\n}" | ifne pacman -D --asdeps - || true
+      pacman -Qdtq | ifne pacman -Rns --noconfirm - || true
 
       # flatpak packages
       as_user $username flatpak update -y
@@ -637,7 +637,7 @@ function extract_tarball {
 
 function wrap_f {
    local args=("$@")
-   local str="set -e; $(declare -f);"
+   local str="set -Eeo pipefail; $(declare -f);"
    for i in "${args[@]}"; do
        str+=" \"$(echo "$i" | sed 's/"/\\"/g')\""
    done
