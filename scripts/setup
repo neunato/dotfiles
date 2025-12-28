@@ -318,7 +318,9 @@ function setup_packages {
       fi
       arch_packages+=("vulkan-icd-loader")
       arch_packages+=("vulkan-intel")
-      arch_packages+=("vulkan-radeon")
+      if amd_gpu_exists; then
+         arch_packages+=("vulkan-radeon")
+      fi
       arch_packages+=("alsa-firmware")
       arch_packages+=("sof-firmware")
       arch_packages+=("pipewire")
@@ -694,6 +696,12 @@ function nvidia_disabled {
 
 function nvidia_gpu_exists {
    if ! lspci | grep -q '.* VGA .* NVIDIA .*' && ! pacman -Q nvidia &> /dev/null && ! nvidia_disabled; then
+      return 1
+   fi
+}
+
+function amd_gpu_exists {
+   if ! lspci | grep -q '.* VGA .* AMD .*'; then
       return 1
    fi
 }
