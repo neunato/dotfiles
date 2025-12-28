@@ -298,6 +298,7 @@ binds {
    Mod+Shift+F                     repeat=false { switch-focus-between-floating-and-tiling; }
    Mod+Escape                      repeat=false { toggle-overview; }
    Mod+F5                          repeat=false { spawn "yambar-toggle"; }
+   Mod+F12                         repeat=false { spawn "niri-toggle-laptop-screen"; }
    Mod+Grave                       repeat=false { spawn "toggle" "rofi -show combi -config ~/.config/rofi/launcher.rasi"; }
    Mod+Return                      repeat=false { spawn "foot"; }
    Mod+Shift+Return                repeat=false { spawn-sh "foot --working-directory=\"$(ycwd $(niri msg --json focused-window | jq -c -r .pid))\""; }
