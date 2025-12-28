@@ -171,9 +171,16 @@ window-rule {
 }
 
 window-rule {
+   match is-floating=true
+   exclude is-focused=true
+
+   opacity 0.85
+}
+
+window-rule {
    match app-id="zed"
    match app-id="merge"
-   match app-id="librewolf"
+   match app-id="brave"
 
    open-maximized-to-edges true
 }
@@ -190,7 +197,6 @@ window-rule {
    match app-id="org.gnome.Nautilus"
    match app-id="org.gnome.SystemMonitor"
    match app-id="calendar"
-   match app-id="librewolf" title="Library"
    match app-id="Mesen" title="Settings"
 
    open-floating true
@@ -299,8 +305,8 @@ binds {
    Mod+Shift+Less                  repeat=false { spawn "foot"; }
    Mod+Y                           repeat=false { spawn "niri-open" "nautilus" "org.gnome.Nautilus"; }
    Mod+Shift+Y                     repeat=false { spawn "nautilus" "--new-window"; }
-   Mod+X                           repeat=false { spawn "niri-open" "librewolf"; }
-   Mod+Shift+X                     repeat=false { spawn "librewolf"; }
+   Mod+X                           repeat=false { spawn "niri-open" "brave" "brave-browser"; }
+   Mod+Shift+X                     repeat=false { spawn "brave"; }
    Mod+C                           repeat=false { spawn "niri-open" "zeditor" "dev.zed.Zed"; }
    Mod+Shift+C                     repeat=false { spawn "zeditor"; }
    Mod+V                           repeat=false { spawn "niri-open" "smerge" "sublime_merge"; }
