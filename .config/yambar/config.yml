@@ -73,6 +73,8 @@ bar:
           battery_icon: &battery_icon
             map:
               conditions:
+                state == unknown:
+                  empty: {}
                 state == charging || state == full:
                   string: { text:  }
                 state != charging:
@@ -90,6 +92,8 @@ bar:
         content:
           map:
             conditions:
+              state == unknown:
+                empty: {}
               state != charging && capacity <= 20:
                 list:
                   foreground: "${color_red}"
@@ -116,6 +120,8 @@ bar:
                       - string: { text: 󰢽 }
                       - string: { text: 󰢾 }
                 - string: { text: "{quality:3}%", left-margin: "${margin_icon}", right-margin: "${double_spacing}" }
+              name == wlan0 && state != up && quality == 0:
+                empty: {}
               name == wlan0 && state != up:
                 list:
                   foreground: "${color_red}"
@@ -152,25 +158,6 @@ bar:
             conditions:
               recording:
                 string: { text: , foreground: "${color_red}" }
-
-    - removables:
-        content:
-          map:
-            conditions:
-              ~mounted:
-                string:
-                  on-click:
-                    left: udisksctl mount -b {device}
-                    right: udisksctl power-off -b {device}
-                  text: 󱊞
-              mounted:
-                string:
-                  on-click:
-                    left: udisksctl unmount -b {device}
-                    right: sh -c "udisksctl unmount -b {device} && udisksctl power-off -b {device}"
-                  text: 󱊞
-                  foreground: ${color_main_bright}
-                  <<: *underline
 
     - script:
         path: ~/scripts/yambar-vpn
