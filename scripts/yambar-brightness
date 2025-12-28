@@ -1,0 +1,15 @@
+#!/bin/bash
+
+function refresh {
+   echo -e "percent|int|$(brightness)\n"
+}
+
+refresh
+trap refresh USR1
+
+while :; do
+   sleep infinity &
+   pid="$!"
+   wait $pid
+   kill $pid
+done

@@ -4,7 +4,7 @@ if [[ $# -ne 2 ]]; then
    exit
 fi
 
-if [[ $2 == "on" ]]; then
+if [[ $2 == "on" || $2 == "refresh" ]]; then
    pgrep -f "yambar-$1" | xargs -r kill -USR1
 fi
 

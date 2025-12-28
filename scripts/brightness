@@ -6,10 +6,43 @@
 # brightness <n>  [--silent]    - set brightness to wanted %
 # brightness detect-buses       - detect external monitors
 
-config="/tmp/external-monitor-buses"
+dir="$HOME/.local/state/brightness"
+config="$dir/external-monitor-buses"
+backlight="$dir/backlight"
+
+get_brightness() {
+   if command -v backlight_control > /dev/null; then
+      backlight_control
+   elif [ -s "$backlight" ]; then
+      cat "$backlight"
+   else
+      echo 0
+   fi
+}
 
 set_brightness() {
-   brightness="$(backlight_control "$1")"
+   if command -v backlight_control > /dev/null; then
+      brightness="$(backlight_control "$1")"
+   else
+      brightness=0
+      if [ -s "$backlight" ]; then
+         brightness="$(cat "$backlight")"
+      fi
+      case "$1" in
+         +*) brightness=$((brightness + ${1#+}));;
+         -*) brightness=$((brightness - ${1#-}));;
+         *)  brightness=$1;;
+      esac
+      if [ "$brightness" -lt 0 ]; then
+         brightness=0;
+      elif [ "$brightness" -gt 100 ]; then
+         brightness=100;
+      fi
+      mkdir -p "$dir"
+      echo "$brightness" > "$backlight"
+   fi
+
+   yambar-signal brightness refresh
 
    if [ "$2" != "--silent" ]; then
       notify-send "Brightness $brightness%" -a osd -h "int:value:$brightness" -h string:x-canonical-private-synchronous:osd
@@ -31,7 +64,7 @@ set_brightness() {
 }
 
 if [ -z "$1" ]; then
-   backlight_control
+   get_brightness
    exit
 fi
 
@@ -51,6 +84,7 @@ if [ "$1" -eq "$1" ] 2> /dev/null; then
 fi
 
 if [ "$1" = "detect-buses" ]; then
+   mkdir -p "$dir"
    echo -n "" > "$config"
    ddcutil detect --brief 2> /dev/null | grep -A2 "^Display " | grep -v "^Display " | grep -v "^--" | while read -r line; do
       bus="${line#*-}"

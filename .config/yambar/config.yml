@@ -53,8 +53,8 @@ bar:
                     - *volume_icon
                     - string: { text: "{cubic_volume:3}%", left-margin: "${margin_icon}" }
 
-    - backlight:
-        name: intel_backlight
+    - script:
+        path: ~/scripts/yambar-brightness
         foreground: ${color_main_bright}
         content:
           list:
