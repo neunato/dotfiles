@@ -305,6 +305,7 @@ function setup_packages {
       arch_packages+=("grub")
       arch_packages+=("efibootmgr")
       arch_packages+=("intel-ucode")
+      arch_packages+=("amd-ucode")
       arch_packages+=("plymouth")
       arch_packages+=("fwupd")
       arch_packages+=("mesa")
