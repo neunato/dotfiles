@@ -1,7 +1,14 @@
 #!/bin/dash
 
-gsettings set org.gtk.gtk4.Settings.FileChooser sort-directories-first true
-gsettings set org.gtk.gtk4.Settings.FileChooser show-hidden true
+gsettings set org.gnome.desktop.interface color-scheme prefer-dark
+gsettings set org.gnome.desktop.interface gtk-theme Adwaita
+gsettings set org.gnome.desktop.interface icon-theme Adwaita
+gsettings set org.gnome.desktop.interface font-name 'Sans 11'
+gsettings set org.gnome.desktop.interface enable-animations false
+gsettings set org.gnome.desktop.interface gtk-enable-primary-paste false
+gsettings set org.gnome.desktop.interface cursor-blink false
+gsettings set org.gnome.desktop.privacy remember-recent-files false
+gsettings set org.gnome.desktop.wm.preferences button-layout menu:close
 gsettings set org.gnome.nautilus.compression default-compression-format 'zip'
 gsettings set org.gnome.nautilus.icon-view captions "['size', 'none', 'none']"
 gsettings set org.gnome.nautilus.icon-view default-zoom-level 'small'
@@ -33,3 +40,5 @@ gsettings set org.gnome.nautilus.preferences thumbnail-limit "uint64 50"
 gsettings set org.gnome.nautilus.window-state initial-size "(1100, 650)"
 gsettings set org.gnome.nautilus.window-state initial-size-file-chooser "(1100, 650)"
 gsettings set org.gnome.nautilus.window-state maximized false
+gsettings set org.gtk.gtk4.Settings.FileChooser sort-directories-first true
+gsettings set org.gtk.gtk4.Settings.FileChooser show-hidden true

@@ -539,7 +539,7 @@ function setup_packages {
    as_user $username ln -sf /usr/share/fontconfig/conf.avail/50-user.conf "/home/$username/.config/fontconfig/conf.d"
    as_user $username fc-cache
 
-   as_user $username dbus-launch --exit-with-session "/home/$username/.config/nautilus/config"
+   as_user $username dbus-launch --exit-with-session "/home/$username/.config/dconf/gsettings"
 
    sed -i 's/#unix_sock_group/unix_sock_group/g'                /etc/libvirt/libvirtd.conf
    sed -i 's/#unix_sock_rw_perms/unix_sock_rw_perms/g'          /etc/libvirt/libvirtd.conf
