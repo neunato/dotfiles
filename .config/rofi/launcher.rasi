@@ -2,6 +2,6 @@
 @theme "_theme.rasi"
 
 configuration {
-   combi-modes: [drun, run, ssh];
+   combi-modes: [drun, ssh];
    show-icons: true;
 }

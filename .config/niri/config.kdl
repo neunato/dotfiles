@@ -139,16 +139,6 @@ layer-rule {
     place-within-backdrop true
 }
 
-layer-rule {
-   match namespace="rofi"
-
-   geometry-corner-radius 15
-
-   shadow {
-      on
-   }
-}
-
 window-rule {
    draw-border-with-background false
    geometry-corner-radius 12

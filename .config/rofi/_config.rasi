@@ -1,7 +1,7 @@
 configuration {
    modes: [combi, ssh];
-   combi-display-format: "{text} <span size='small' fgalpha='40%'><i>{mode}</i></span>";
-   drun-display-format: "{name} <span size='small' fgalpha='65%'><i>{exec}</i></span>";
+   combi-display-format: "{text} <span size='small' fgalpha='40%'></span>";
+   drun-display-format: "{name} <span size='small' fgalpha='75%'><i>{exec}</i></span>";
    hover-select: true;
    monitor: "primary";
    terminal: "foot";
@@ -64,7 +64,7 @@ configuration {
    kb-ellipsize: "";
    kb-toggle-case-sensitivity: "";
    kb-toggle-sort: "";
-   kb-cancel: "Escape,Ctrl+c";
+   kb-cancel: "Escape,Ctrl+c,MousePrimary";
    kb-custom-1: "";
    kb-custom-2: "";
    kb-custom-3: "";
