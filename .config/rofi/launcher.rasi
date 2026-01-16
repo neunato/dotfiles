@@ -1,4 +1,5 @@
-@import "config.rasi"
+@import "_config.rasi"
+@theme "_theme.rasi"
 
 configuration {
    combi-modes: [drun, run, ssh];
