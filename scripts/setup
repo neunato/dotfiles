@@ -476,7 +476,7 @@ function setup_packages {
          local username=$1
          mkdir -p /etc/pacman.d/hooks/
          touch /etc/pacman.d/hooks/90-mkinitcpio-install.hook
-         as_user $username git config --global --rename-section "url.git@github.com:" "url-.git@github.com:"
+         export GIT_CONFIG_GLOBAL=/dev/null
       }
       function post_install {
          local username=$1
@@ -484,7 +484,7 @@ function setup_packages {
             return
          fi
          rm /etc/pacman.d/hooks/90-mkinitcpio-install.hook
-         as_user $username git config --global --rename-section "url-.git@github.com:" "url.git@github.com:"
+         unset GIT_CONFIG_GLOBAL
       }
       trap "post_install $username" EXIT
       pre_install "$username"
