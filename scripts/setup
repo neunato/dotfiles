@@ -504,7 +504,7 @@ function setup_packages {
 
       echo "$username ALL=(ALL:ALL) NOPASSWD: ALL" | EDITOR="tee --append" visudo > /dev/null
       as_user $username paru -Syu --devel --noconfirm &&
-      as_user $username paru -S --useask --ask 4 --noconfirm --asexplicit $([[ $mode != "reinstall" ]] && echo "--needed") "${arch_packages[@]}" "${user_packages[@]}" &&
+      as_user $username paru -S --useask --ask 4 --noconfirm --skipreview --asexplicit $([[ $mode != "reinstall" ]] && echo "--needed") "${arch_packages[@]}" "${user_packages[@]}" &&
       as_user $username paru -S --useask --ask 4 --noconfirm --asdeps     $([[ $mode != "reinstall" ]] && echo "--needed") "${deps_packages[@]}" || failed=true
       sed "/$username ALL=(ALL:ALL) NOPASSWD: ALL/d" /etc/sudoers | EDITOR="tee" visudo > /dev/null
 
