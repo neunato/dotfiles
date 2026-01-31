@@ -529,9 +529,6 @@ function setup_packages {
          as_user $username flatpak update -y
       fi
 
-      # enable initramfs hook
-      rm /etc/pacman.d/hooks/90-mkinitcpio-install.hook
-
       post_install "$username"
    fi
 
