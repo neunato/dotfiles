@@ -304,13 +304,21 @@ function setup_packages {
       arch_packages+=("linux-firmware")
       arch_packages+=("grub")
       arch_packages+=("efibootmgr")
-      arch_packages+=("intel-ucode")
-      arch_packages+=("amd-ucode")
       arch_packages+=("plymouth")
       arch_packages+=("fwupd")
       arch_packages+=("mesa")
       arch_packages+=("mesa-utils")
-      arch_packages+=("intel-media-driver")
+      if amd_cpu_exists; then
+         arch_packages+=("amd-ucode")
+      fi
+      if amd_gpu_exists; then
+         arch_packages+=("vulkan-radeon")
+      fi
+      if intel_cpu_exists; then
+         arch_packages+=("intel-ucode")
+         arch_packages+=("intel-media-driver")
+         arch_packages+=("vulkan-intel")
+      fi
       if nvidia_gpu_exists; then
          arch_packages+=("nvidia-open")
          arch_packages+=("nvidia-prime")
@@ -318,10 +326,6 @@ function setup_packages {
          arch_packages+=("nvidia-settings")
       fi
       arch_packages+=("vulkan-icd-loader")
-      arch_packages+=("vulkan-intel")
-      if amd_gpu_exists; then
-         arch_packages+=("vulkan-radeon")
-      fi
       arch_packages+=("alsa-firmware")
       arch_packages+=("sof-firmware")
       arch_packages+=("pipewire")
@@ -700,6 +704,18 @@ function nvidia_gpu_exists {
 
 function amd_gpu_exists {
    if ! lspci | grep -q '.* VGA .* AMD .*'; then
+      return 1
+   fi
+}
+
+function amd_cpu_exists {
+   if ! cat /proc/cpuinfo | grep -q "AuthenticAMD"; then
+      return 1
+   fi
+}
+
+function intel_cpu_exists {
+   if ! cat /proc/cpuinfo | grep -q "GenuineIntel"; then
       return 1
    fi
 }
