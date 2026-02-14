@@ -32,9 +32,9 @@ input {
    }
 }
 
-output "Lenovo Group Limited LEN Y27q-20 0x01010101" {
-   mode "2560x1440"
-   scale 1.0
+output "GIGA-BYTE TECHNOLOGY CO., LTD. M32UP Unknown" {
+   mode "3840x2160@160.000"
+   scale 1.5
    position x=-2560 y=0
    focus-at-startup
 }
@@ -100,6 +100,22 @@ overview {
    }
 }
 
+recent-windows {
+   open-delay-ms 125
+
+   highlight {
+      active-color "#b7bdf8"             // https://catppuccin.com/palette - Macchiato Lavender
+      urgent-color "#ed8796"             // https://catppuccin.com/palette - Macchiato Red
+      padding 8
+      corner-radius 8
+   }
+
+   previews {
+      max-height 216
+      max-scale 0.2
+   }
+}
+
 layout {
    gaps 6
    center-focused-column "never"
@@ -151,8 +167,8 @@ window-rule {
    match is-floating=true
 
    border {
-      active-color "#c6a0f6c8"                  // https://catppuccin.com/palette - Macchiato Mauve
-      inactive-color "#c6a0f664"                // https://catppuccin.com/palette - Macchiato Mauve
+      active-color "#eed49f"                  // https://catppuccin.com/palette - Macchiato Yellow
+      inactive-color "#eed49f64"              // https://catppuccin.com/palette - Macchiato Yellow
    }
 
    shadow {
@@ -181,6 +197,13 @@ window-rule {
    exclude app-id="Mesen" title="Settings"
 
    open-fullscreen true
+}
+
+window-rule {
+   match title="meet.google.com"
+
+   open-floating true
+   default-floating-position x=5 y=5 relative-to="bottom-left"
 }
 
 window-rule {
