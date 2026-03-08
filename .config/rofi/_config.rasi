@@ -25,7 +25,7 @@ configuration {
    }
 
    kb-primary-paste: "";
-   kb-secondary-paste: "";
+   kb-secondary-paste: "Control+v";
    kb-secondary-copy: "";
    kb-clear-line: "Control+BackSpace,Delete";
    kb-move-front: "";
