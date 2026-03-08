@@ -36,7 +36,7 @@ else
    EDITOR="/usr/bin/nano"
 fi
 
-if [ ! -f /etc/udev/rules.d/no-nvidia.rules ]; then
+if lspci | grep -q '.* VGA .* NVIDIA .*'; then
    GBM_BACKEND=nvidia-drm
    __GLX_VENDOR_LIBRARY_NAME=nvidia
    __NV_PRIME_RENDER_OFFLOAD=1
