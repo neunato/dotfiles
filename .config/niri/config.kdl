@@ -186,7 +186,7 @@ window-rule {
 window-rule {
    match app-id="zed"
    match app-id="merge"
-   match app-id="brave"
+   match app-id="librewolf"
 
    open-maximized-to-edges true
 }
@@ -319,8 +319,8 @@ binds {
    Mod+Shift+Less                  repeat=false { spawn "foot"; }
    Mod+Y                           repeat=false { spawn "niri-open" "nautilus" "org.gnome.Nautilus"; }
    Mod+Shift+Y                     repeat=false { spawn "nautilus" "--new-window"; }
-   Mod+X                           repeat=false { spawn "niri-open" "brave" "brave-browser"; }
-   Mod+Shift+X                     repeat=false { spawn "brave"; }
+   Mod+X                           repeat=false { spawn "niri-open" "librewolf"; }
+   Mod+Shift+X                     repeat=false { spawn "librewolf"; }
    Mod+C                           repeat=false { spawn "niri-open" "zeditor" "dev.zed.Zed"; }
    Mod+Shift+C                     repeat=false { spawn "zeditor"; }
    Mod+V                           repeat=false { spawn "niri-open" "smerge" "sublime_merge"; }
