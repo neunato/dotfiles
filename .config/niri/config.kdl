@@ -84,6 +84,10 @@ gestures {
       delay-ms 0
       max-speed 6000
    }
+
+   hot-corners {
+      bottom-right
+   }
 }
 
 debug {
@@ -193,8 +197,6 @@ window-rule {
 
 window-rule {
    match app-id="mpv"
-   match app-id="Mesen"
-   exclude app-id="Mesen" title="Settings"
 
    open-fullscreen true
 }
@@ -305,6 +307,7 @@ binds {
    Mod+Shift+Ctrl+Q                repeat=false { spawn "niri-close-other-windows"; }
    Mod+E                           repeat=false { spawn "niri-maximize"; }
    Mod+Shift+E                     repeat=false { fullscreen-window; }
+   Mod+Ctrl+Shift+E                repeat=false { toggle-windowed-fullscreen; }
    Mod+R                           repeat=false { consume-window-into-column; }
    Mod+Shift+R                     repeat=false { expel-window-from-column; }
    Mod+F                           repeat=false { spawn "niri-float"; }
