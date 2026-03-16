@@ -286,6 +286,8 @@ function setup_packages {
    echo 'HandleLidSwitch=ignore' | tee --append /etc/systemd/logind.conf > /dev/null
 
    # udev
+   echo 'ACTION=="add", SUBSYSTEM=="usb", ATTRS{idVendor}=="046d", ATTRS{idProduct}=="c547", ATTR{power/wakeup}="disabled"' | tee /etc/udev/rules.d/no-mouse-wakeup.rules > /dev/null
+
    if [[ $graphics == "integrated" ]]; then
       echo 'ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{class}=="0x0c0330",   ATTR{power/control}="auto", ATTR{remove}="1"' | tee          /etc/udev/rules.d/no-nvidia.rules > /dev/null
       echo 'ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{class}=="0x0c8000",   ATTR{power/control}="auto", ATTR{remove}="1"' | tee --append /etc/udev/rules.d/no-nvidia.rules > /dev/null
