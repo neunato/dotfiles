@@ -23,7 +23,6 @@ gsettings set org.gnome.nautilus.preferences default-folder-viewer 'list-view'
 gsettings set org.gnome.nautilus.preferences default-sort-in-reverse-order false
 gsettings set org.gnome.nautilus.preferences default-sort-order 'name'
 gsettings set org.gnome.nautilus.preferences fts-enabled true
-gsettings set org.gnome.nautilus.preferences install-mime-activation false
 gsettings set org.gnome.nautilus.preferences migrated-gtk-settings false
 gsettings set org.gnome.nautilus.preferences mouse-back-button "uint32 8"
 gsettings set org.gnome.nautilus.preferences mouse-forward-button "uint32 9"
