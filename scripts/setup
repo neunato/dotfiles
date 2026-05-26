@@ -244,7 +244,7 @@ function setup_packages {
    fi
 
    if ! pacman -Q librewolf-bin &> /dev/null; then
-      gpg --recv-keys --keyserver hkps://keyserver.ubuntu.com 662E3CDD6FE329002D0CA5BB40339DD82B12EF16
+      as_user $username gpg --recv-key 662E3CDD6FE329002D0CA5BB40339DD82B12EF16
    fi
 
    # systemd
