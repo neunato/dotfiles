@@ -1,8 +1,8 @@
 diff --git a/PKGBUILD b/PKGBUILD
-index 0a17b57..f2cc0c3 100644
+index 0a17b57..418ef86 100644
 --- a/PKGBUILD
 +++ b/PKGBUILD
-@@ -29,6 +29,11 @@ pkgver() {
+@@ -29,9 +29,15 @@ pkgver() {
    git describe --long --tags | sed 's/[^-]*-g/r&/;s/-/./g'
  }
  
@@ -14,3 +14,7 @@ index 0a17b57..f2cc0c3 100644
  build() {
    meson setup --buildtype=release --prefix=/usr \
      --wrap-mode=nofallback \
++    -Dc_args='-Wno-unused-but-set-variable' \
+     -Db_lto=true \
+     -Dbackend-x11=enabled -Dbackend-wayland=enabled \
+     ${_pkgname} build
