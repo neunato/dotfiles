@@ -611,6 +611,7 @@ function setup_packages {
    echo 'default_image="/boot/initramfs-linux.img"'                                                                                     | tee --append /etc/mkinitcpio.d/linux.preset > /dev/null
    echo 'default_config="/etc/mkinitcpio.conf"'                                                                                         | tee --append /etc/mkinitcpio.d/linux.preset > /dev/null
    echo 'default_options="-A systemd,plymouth,autodetect,microcode,modconf,kms,keyboard,sd-vconsole,block,sd-encrypt,filesystems,fsck"' | tee --append /etc/mkinitcpio.d/linux.preset > /dev/null
+   install -Dm644 $(ls /usr/lib/modules/*/vmlinuz | head -1) /boot/vmlinuz-linux
    mkinitcpio -P
 
    grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=GRUB
