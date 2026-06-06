@@ -493,14 +493,14 @@ def setup_packages(username, reinstall=False, skip_install=False, graphics=None)
             install_paru()
 
          try:
-            visudo(f"{username} ALL=(ALL:ALL) NOPASSWD: ALL", append=True)
+            visudo(f"{username} ALL=(ALL:ALL) NOPASSWD: /usr/bin/paru, /usr/bin/pacman", append=True)
             run_as(username, "paru -Syu --devel --noconfirm")
             run_as(username, f"paru -S --useask --ask 4 --noconfirm --skipreview --asexplicit {"" if reinstall else "--needed"} {shlex.join(arch_packages)} {shlex.join(user_packages)}")
             run_as(username, f"paru -S --useask --ask 4 --noconfirm --asdeps                  {"" if reinstall else "--needed"} {shlex.join(deps_packages)}")
          except:
             raise error("Failed to update packages, aborting")
          finally:
-            visudo(f"{username} ALL=(ALL:ALL) NOPASSWD: ALL", remove=True)
+            visudo(f"{username} ALL=(ALL:ALL) NOPASSWD: /usr/bin/paru, /usr/bin/pacman", remove=True)
 
          # clean up unused packages
          all_packages = ["paru"] + arch_packages + user_packages
