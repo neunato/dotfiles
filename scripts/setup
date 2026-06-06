@@ -451,8 +451,7 @@ def setup_packages(username, reinstall=False, skip_install=False, graphics=None)
       arch_packages += ["wine-staging"]
       deps_packages += run_stdout("pacman -Si wine-staging | sed -n '/^Opt/,/^Conf/p' | sed '$d' | sed 's/^Opt.*://g' | sed '/^[^ ]/d' | sed 's/^ *//g'").split()
       arch_packages += ["icoutils"]
-      if not in_chroot():
-         user_packages += ["mesen"]
+      user_packages += ["mesen"]
 
       # fonts, icons, cursor
       arch_packages += ["fontconfig"]
