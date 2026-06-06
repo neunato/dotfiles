@@ -1,787 +1,858 @@
-#!/bin/bash
+#!/usr/bin/env python3
 
-set -Eeo pipefail
+import getpass
+import json
+import os
+import re
+import shlex
+import shutil
+import subprocess
+import sys
+import threading
+import urllib.request
+import pwd
+from contextlib import contextmanager
+from pathlib import Path
 
-if [[ ! " system firmware graphics packages " =~ " $1 " ]]; then
-   echo "Expected 'setup system|firmware|graphics|packages'" >&2
-   exit 1
-elif [[ $1 != "graphics" && $1 != "packages" && $# -ne 1 ]]; then
-   echo "Expected 'setup system|firmware|graphics|packages'" >&2
-   exit 1
-elif [[ $1 == "graphics" && ($# -gt 2 || ! " integrated nvidia " =~ " $2 " ) ]]; then
-   echo "Expected 'setup graphics integrated|nvidia'" >&2
-   exit 1
-elif [[ $1 == "packages" && ($# -gt 2 || ! "--reinstall" =~ "$2" ) ]]; then
-   echo "Expected 'setup packages [--reinstall]'" >&2
-   exit 1
-elif [[ $1 == "system" && $EUID -ne 0 ]]; then
-   echo "'setup system' must be run as root" >&2
-   exit 1
-elif [[ $1 == "firmware" && $EUID -eq 0 ]]; then
-   echo "'setup firmware' must not be run as root" >&2
-   exit 1
-elif [[ $1 == "packages" && $EUID -eq 0 ]]; then
-   echo "'setup packages' must not be run as root" >&2
-   exit 1
-elif [[ $1 == "packages" ]]; then
-   while [[ $continue != "y" && $continue != "yes" ]]; do
-      read -p "Running as $(whoami), continue? " -i "yes" -e continue
-   done
-fi
+def main():
+   command = sys.argv[1] if len(sys.argv) > 1 else None
+   args = sys.argv[2:]
+   args_count = len(args)
 
-function setup_system {
-   {
-   if ! command -v arch-chroot > /dev/null; then
-      echo "Must be run from an installation medium" >&2
-      exit 1
-   fi
+   if command not in ("system", "firmware", "graphics", "packages"):
+      raise error("Expected 'setup system|firmware|graphics|packages'")
+   if command == "system" and args:
+      raise error("Expected 'setup system'")
+   if command == "firmware" and args:
+      raise error("Expected 'setup firmware'")
+   if command == "graphics" and (args_count != 1 or args[0] not in ("integrated", "nvidia")):
+      raise error("Expected 'setup graphics integrated|nvidia'")
+   if command == "packages" and (args_count > 2 or (args_count == 1 and args[0] != "--reinstall")):
+      raise error("Expected 'setup packages [--reinstall]'")
+   if command == "system" and not is_root():
+      raise error("'setup system' must be run as root")
+   if command == "firmware" and is_root():
+      raise error("'setup firmware' must not be run as root")
+   if command == "packages" and is_root():
+      raise error("'setup packages' must not be run as root")
 
-   loadkeys croat
-   setfont latarcyrheb-sun16
+   if command == "system":
+      setup_system()
+   elif command == "packages":
+      username = whoami()
+      reinstall = "--reinstall" in args
+      call_as_sudo(setup_packages, username=username, reinstall=reinstall)
+      run("play-sound warcraft-jobs-done")
+   elif command == "firmware":
+      call_as_sudo(setup_firmware)
+   elif command == "graphics":
+      username = whoami()
+      graphics = args[0]
+      call_as_sudo(setup_graphics, username=username, graphics=graphics)
 
-   local bitness=$(cat /sys/firmware/efi/fw_platform_size)
-   if [[ $bitness -ne 64 ]]; then
-      echo "System must be in 64 bit UEFI mode" >&2
-      exit 1
-   fi
-   if ! { dmesg | grep -q "Secure boot disabled" || true; }; then
-       echo "Secure Boot must be disabled" >&2
-       exit 1
-   fi
+def setup_system():
+   with log("/tmp/arch_setup.log"):
+      if not command_exists("arch-chroot"):
+         raise error("Must be run from an installation medium")
 
-   lsblk
-   echo "================================================="
-   while [[ -z $disk || $disk =~ " " ]]; do
-      read -p "Enter disk: " disk
-   done
-   while [[ -z $disk_password || $disk_password =~ " " ]]; do
-      read -p "Enter disk encryption password: " -s disk_password
-      echo ""
-   done
-   while [[ -z $root_password || $root_password =~ " " ]]; do
-      read -p "Enter root password: " -s root_password
-      echo ""
-   done
-   while [[ -z $username || $username =~ " " ]]; do
-      read -p "Enter username: " username
-   done
-   while [[ -z $password || $password =~ " " ]]; do
-      read -p "Enter password: " -s password
-      echo ""
-   done
-   while [[ -z $dotfiles_repo || $dotfiles_repo =~ " " ]]; do
-      read -p "Enter dotfiles repository GitHub path: " -i "neunato/dotfiles" -e dotfiles_repo
-   done
-   echo "================================================="
+      run("loadkeys croat")
+      run("setfont latarcyrheb-sun16")
 
-   if df | grep -q "^/dev/${disk}1 "; then
-      echo "Already installed" >&2
-      exit 1
-   fi
-   if [[ -n $dotfiles_repo ]] && ! github_repo_exists "$dotfiles_repo"; then
-      echo "Repository github.com/$dotfiles_repo cannot be accessed" >&2
-      exit 1
-   fi
-   if ! diff -q -b <(cat $0) <(curl -s -L "$(github_repo_file_url "$dotfiles_repo" "scripts/setup")") > /dev/null; then
-      echo "A newer version of this script exists at github.com/$dotfiles_repo" >&2
-      exit 1
-   fi
+      bitness = read("/sys/firmware/efi/fw_platform_size")
+      if bitness != "64":
+         raise error("System must be in 64 bit UEFI mode")
 
-   # disk partitions
-   echo -e "type=uefi, size=512M, bootable\ntype=linux, size=+\n" | sfdisk "/dev/$disk"
+      if "Secure boot disabled" not in run_stdout("dmesg"):
+         raise error("Secure Boot must be disabled")
 
-   local part_boot=$(lsblk -l | grep part | grep "$disk" | head -1 | tail -1 | awk '{print $1;}')
-   local part_root=$(lsblk -l | grep part | grep "$disk" | head -2 | tail -1 | awk '{print $1;}')
+      run("lsblk")
+      print("=================================================")
+      disk = prompt("Enter disk")
+      disk_password = prompt("Enter disk encryption password", secret=True)
+      root_password = prompt("Enter root password", secret=True)
+      username = prompt("Enter username")
+      password = prompt("Enter password", secret=True)
+      dotfiles_repo = prompt("Enter dotfiles repository GitHub path", default="neunato/dotfiles")
+      print("=================================================")
 
-   echo -n "$disk_password" | cryptsetup -v luksFormat "/dev/$part_root" -
-   echo -n "$disk_password" | cryptsetup open "/dev/$part_root" root -
-   mkfs.ext4 /dev/mapper/root
-   mount /dev/mapper/root /mnt
+      if command_succeeds(f"df | grep -q '^/dev/{disk}'"):
+         raise error("Already installed")
 
-   fallocate -l 16G /mnt/swapfile
-   chmod 600 /mnt/swapfile
-   mkswap -U clear /mnt/swapfile
-   swapon /mnt/swapfile
+      if not github_repo_exists(dotfiles_repo):
+         raise error(f"Repository github.com/{dotfiles_repo} cannot be accessed")
 
-   mkfs.fat -F 32 "/dev/$part_boot"
-   mount --mkdir "/dev/$part_boot" /mnt/boot
+      if not script_up_to_date(dotfiles_repo):
+         raise error(f"A newer version of this script exists at github.com/{dotfiles_repo}")
 
-   # essential packages
-   sed -i "s/#ParallelDownloads/ParallelDownloads/" /etc/pacman.conf
-   pacman -Sy --needed --noconfirm archlinux-keyring
-   pacstrap -K /mnt base base-devel linux linux-firmware
-   genfstab -U /mnt >> /mnt/etc/fstab
+      # disk partitions
+      run(f"sfdisk /dev/{disk}", input="type=uefi, size=512M, bootable\ntype=linux, size=+\n")
 
-   ln -sf ../run/systemd/resolve/stub-resolv.conf /mnt/etc/resolv.conf
+      part_boot = run_stdout(f"lsblk -l | grep part | grep '{disk}' | head -1 | tail -1 | awk '{{print $1}}'").strip()
+      part_root = run_stdout(f"lsblk -l | grep part | grep '{disk}' | head -2 | tail -1 | awk '{{print $1}}'").strip()
 
-   # user accounts
-   as_chroot bash -c "
-      pacman -S --needed --noconfirm dash
+      run(f"cryptsetup -v luksFormat /dev/{part_root} -", input=disk_password)
+      run(f"cryptsetup open /dev/{part_root} root -", input=disk_password)
+      run("mkfs.ext4 /dev/mapper/root")
+      run("mount /dev/mapper/root /mnt")
 
-      useradd -m '$username' -G wheel,video
-      echo 'root:$root_password' | chpasswd
-      echo '$username:$password' | chpasswd
-      chage -E -1 nobody
-      chsh -s /bin/dash "$username"
-   "
+      run("fallocate -l 16G /mnt/swapfile")
+      run("chmod 600 /mnt/swapfile")
+      run("mkswap -U clear /mnt/swapfile")
+      run("swapon /mnt/swapfile")
 
-   # user configuration
-   local home="/home/$username"
-   as_chroot bash -c "
-      pacman -S --needed --noconfirm git python
-
-      rm -rf '$home/*' '$home/.*' 2> /dev/null
-      cd '$home'
-      git config --global user.name root
-      git config --global safe.directory '$home'
-      git config --global init.defaultBranch master
-      git init
-      git config core.hooksPath .hooks
-      git remote add g $(github_repo_url "$dotfiles_repo")
-      git fetch g
-      git reset --hard g/master
-      git branch -u g/master
-      git config --global --unset user.name
-      git config --global --unset safe.directory
-      git config --global --unset init.defaultBranch
-
-      mkdir -p '$home/dev'
-      mkdir -p '$home/downloads'
-      mkdir -p '$home/torrents'
-      mkdir -p '$home/pictures'
-      mkdir -p '$home/videos'
-      mkdir -p '$home/games'
-
-      chown -R '$username:$username' .
-      chown root:root scripts/root-*
-      chmod 744 scripts/root-*
-   "
-
-   as_chroot setup_packages "$username"
-   as_chroot rm "/home/$username/.bash_logout"
-
-   cat /tmp/arch_setup.log | as_chroot tee /var/tmp/arch_setup.log > /dev/null
-
-   reboot
-   } 2>&1 | tee /tmp/arch_setup.log
-}
-
-function setup_packages {
-   local username=$1
-   local mode="$2"              # reinstall|no-install|
-   local graphics=$3            # integrated|nvidia|
-   local part_root_uuid=$(dmsetup info -c --noheadings -o uuid /dev/mapper/root 2> /dev/null)
-   if [[ ! $part_root_uuid =~ ^CRYPT-LUKS2-(.{8})(.{4})(.{4})(.{4})(.{12})-root$ ]]; then
-      echo "Root partition not found" >&2
-      exit 1
-   fi
-   part_root_uuid="${BASH_REMATCH[1]}-${BASH_REMATCH[2]}-${BASH_REMATCH[3]}-${BASH_REMATCH[4]}-${BASH_REMATCH[5]}"
-
-   if [[ -z $graphics ]] && nvidia_disabled; then
-      graphics="integrated"
-   fi
-
-   # localisation
-   echo 'arch' | tee /etc/hostname > /dev/null
-
-   ln -sf /usr/share/zoneinfo/Europe/Zagreb /etc/localtime
-   hwclock --systohc
-   systemctl enable systemd-timesyncd.service
-
-   sed -i 's/^#en_GB\.UTF-8/en_GB.UTF-8/'          /etc/locale.gen
-   sed -i 's/^#en_US\.UTF-8/en_US.UTF-8/'          /etc/locale.gen
-   sed -i 's/^d_t_fmt .*/d_t_fmt "%d-%m-%Y %T"/'   /usr/share/i18n/locales/en_GB
-   sed -i 's/^d_t_fmt .*/d_t_fmt "%d-%m-%Y %T"/'   /usr/share/i18n/locales/en_US
-   sed -i 's/^date_fmt .*/date_fmt "%d-%m-%Y %T"/' /usr/share/i18n/locales/en_GB
-   sed -i 's/^date_fmt .*/date_fmt "%d-%m-%Y %T"/' /usr/share/i18n/locales/en_US
-   locale-gen
-
-   echo 'LANG=en_GB.UTF-8'       | tee          /etc/locale.conf   > /dev/null
-   echo 'KEYMAP=croat'           | tee          /etc/vconsole.conf > /dev/null
-   echo 'FONT=latarcyrheb-sun32' | tee --append /etc/vconsole.conf > /dev/null
-
-   # bash
-   cp "/home/$username/.bashrc" /root
-   cp "/home/$username/.bash_profile" /root
-
-   # sudo
-   echo "Path askpass /home/$username/scripts/rofi-askpass" | tee /etc/sudo.conf > /dev/null
-
-   echo 'Defaults env_reset'                                           | EDITOR='tee'          visudo > /dev/null
-   echo 'Defaults passwd_timeout=0'                                    | EDITOR='tee --append' visudo > /dev/null
-   echo 'Defaults passwd_tries=10'                                     | EDITOR='tee --append' visudo > /dev/null
-   echo 'Defaults timestamp_timeout=-1'                                | EDITOR='tee --append' visudo > /dev/null
-   echo ''                                                             | EDITOR='tee --append' visudo > /dev/null
-   echo '%wheel ALL=(ALL:ALL) ALL'                                     | EDITOR='tee --append' visudo > /dev/null
-   echo "$username ALL=(root) NOPASSWD: /usr/bin/openvpn"              | EDITOR='tee --append' visudo > /dev/null
-   echo "$username ALL=(root) NOPASSWD: /usr/bin/killall -INT openvpn" | EDITOR='tee --append' visudo > /dev/null
-
-   # pacman
-   echo '[options]'                                                    | tee          /etc/pacman.conf > /dev/null
-   echo 'HoldPkg = pacman glibc'                                       | tee --append /etc/pacman.conf > /dev/null
-   echo 'Architecture = auto'                                          | tee --append /etc/pacman.conf > /dev/null
-   echo 'Color'                                                        | tee --append /etc/pacman.conf > /dev/null
-   echo 'CheckSpace'                                                   | tee --append /etc/pacman.conf > /dev/null
-   echo 'VerbosePkgLists'                                              | tee --append /etc/pacman.conf > /dev/null
-   echo 'ParallelDownloads = 10'                                       | tee --append /etc/pacman.conf > /dev/null
-   echo 'SigLevel = Required DatabaseOptional'                         | tee --append /etc/pacman.conf > /dev/null
-   echo 'LocalFileSigLevel = Optional'                                 | tee --append /etc/pacman.conf > /dev/null
-   echo ''                                                             | tee --append /etc/pacman.conf > /dev/null
-   echo '[core]'                                                       | tee --append /etc/pacman.conf > /dev/null
-   echo 'Include = /etc/pacman.d/mirrorlist'                           | tee --append /etc/pacman.conf > /dev/null
-   echo ''                                                             | tee --append /etc/pacman.conf > /dev/null
-   echo '[extra]'                                                      | tee --append /etc/pacman.conf > /dev/null
-   echo 'Include = /etc/pacman.d/mirrorlist'                           | tee --append /etc/pacman.conf > /dev/null
-   echo ''                                                             | tee --append /etc/pacman.conf > /dev/null
-   echo '[multilib]'                                                   | tee --append /etc/pacman.conf > /dev/null
-   echo 'Include = /etc/pacman.d/mirrorlist'                           | tee --append /etc/pacman.conf > /dev/null
-   echo ''                                                             | tee --append /etc/pacman.conf > /dev/null
-   echo '[sublime-text]'                                               | tee --append /etc/pacman.conf > /dev/null
-   echo 'Server = https://download.sublimetext.com/arch/stable/x86_64' | tee --append /etc/pacman.conf > /dev/null
-
-   if ! pacman -Q sublime-text &> /dev/null; then
-      curl -s -O https://download.sublimetext.com/sublimehq-pub.gpg && pacman-key --add sublimehq-pub.gpg && pacman-key --lsign-key 8A8F901A && rm sublimehq-pub.gpg
-   fi
-
-   if ! pacman -Q librewolf-bin &> /dev/null; then
-      as_user $username gpg --recv-key 662E3CDD6FE329002D0CA5BB40339DD82B12EF16
-   fi
-
-   # systemd
-   ln -sf ../run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
-
-   echo '[Match]'                   | tee          /etc/systemd/network/20-wired.network > /dev/null
-   echo 'Kind=!*'                   | tee --append /etc/systemd/network/20-wired.network > /dev/null
-   echo 'Type=ether'                | tee --append /etc/systemd/network/20-wired.network > /dev/null
-   echo ''                          | tee --append /etc/systemd/network/20-wired.network > /dev/null
-   echo '[Network]'                 | tee --append /etc/systemd/network/20-wired.network > /dev/null
-   echo 'DHCP=yes'                  | tee --append /etc/systemd/network/20-wired.network > /dev/null
-   echo ''                          | tee --append /etc/systemd/network/20-wired.network > /dev/null
-   echo '[DHCPv4]'                  | tee --append /etc/systemd/network/20-wired.network > /dev/null
-   echo 'RouteMetric=100'           | tee --append /etc/systemd/network/20-wired.network > /dev/null
-   echo ''                          | tee --append /etc/systemd/network/20-wired.network > /dev/null
-   echo '[IPv6AcceptRA]'            | tee --append /etc/systemd/network/20-wired.network > /dev/null
-   echo 'RouteMetric=100'           | tee --append /etc/systemd/network/20-wired.network > /dev/null
-
-   echo '[Match]'                   | tee          /etc/systemd/network/25-wireless.network > /dev/null
-   echo 'Type=wlan'                 | tee --append /etc/systemd/network/25-wireless.network > /dev/null
-   echo 'WLANInterfaceType=station' | tee --append /etc/systemd/network/25-wireless.network > /dev/null
-   echo 'SSID=*'                    | tee --append /etc/systemd/network/25-wireless.network > /dev/null
-   echo ''                          | tee --append /etc/systemd/network/25-wireless.network > /dev/null
-   echo '[Network]'                 | tee --append /etc/systemd/network/25-wireless.network > /dev/null
-   echo 'DHCP=yes'                  | tee --append /etc/systemd/network/25-wireless.network > /dev/null
-   echo ''                          | tee --append /etc/systemd/network/25-wireless.network > /dev/null
-   echo '[DHCPv4]'                  | tee --append /etc/systemd/network/25-wireless.network > /dev/null
-   echo 'RouteMetric=200'           | tee --append /etc/systemd/network/25-wireless.network > /dev/null
-   echo ''                          | tee --append /etc/systemd/network/25-wireless.network > /dev/null
-   echo '[IPv6AcceptRA]'            | tee --append /etc/systemd/network/25-wireless.network > /dev/null
-   echo 'RouteMetric=200'           | tee --append /etc/systemd/network/25-wireless.network > /dev/null
-
-   mkdir -p /etc/systemd/system/getty@tty1.service.d
-   echo '[Service]'                                                                                           | tee          /etc/systemd/system/getty@tty1.service.d/skip-prompt.conf > /dev/null
-   echo 'ExecStart='                                                                                          | tee --append /etc/systemd/system/getty@tty1.service.d/skip-prompt.conf > /dev/null
-   echo "ExecStart=-/bin/agetty --skip-login --nonewline --noissue --autologin $username --noclear %I \$TERM" | tee --append /etc/systemd/system/getty@tty1.service.d/skip-prompt.conf > /dev/null
-
-   echo '[Login]'                | tee          /etc/systemd/logind.conf > /dev/null
-   echo 'HandleLidSwitch=ignore' | tee --append /etc/systemd/logind.conf > /dev/null
-
-   # udev
-   echo 'ACTION=="add", SUBSYSTEM=="usb", ATTRS{idVendor}=="046d", ATTRS{idProduct}=="c547", ATTR{power/wakeup}="disabled"' | tee /etc/udev/rules.d/no-mouse-wakeup.rules > /dev/null
-
-   if [[ $graphics == "integrated" ]]; then
-      echo 'ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{class}=="0x0c0330",   ATTR{power/control}="auto", ATTR{remove}="1"' | tee          /etc/udev/rules.d/no-nvidia.rules > /dev/null
-      echo 'ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{class}=="0x0c8000",   ATTR{power/control}="auto", ATTR{remove}="1"' | tee --append /etc/udev/rules.d/no-nvidia.rules > /dev/null
-      echo 'ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{class}=="0x040300",   ATTR{power/control}="auto", ATTR{remove}="1"' | tee --append /etc/udev/rules.d/no-nvidia.rules > /dev/null
-      echo 'ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{class}=="0x03[0-9]*", ATTR{power/control}="auto", ATTR{remove}="1"' | tee --append /etc/udev/rules.d/no-nvidia.rules > /dev/null
-   else
-      rm -f /etc/udev/rules.d/no-nvidia.rules
-   fi
-
-   # packages
-   if [[ $mode != "no-install" ]]; then
-      arch_packages=()
-      user_packages=()
-      deps_packages=()
+      run(f"mkfs.fat -F 32 /dev/{part_boot}")
+      run(f"mount --mkdir /dev/{part_boot} /mnt/boot")
 
       # essential packages
-      arch_packages+=("base")
-      arch_packages+=("base-devel")
-      arch_packages+=("linux")
-      arch_packages+=("linux-firmware")
-      arch_packages+=("grub")
-      arch_packages+=("efibootmgr")
-      arch_packages+=("plymouth")
-      arch_packages+=("fwupd")
-      arch_packages+=("mesa")
-      arch_packages+=("mesa-utils")
-      if amd_cpu_exists; then
-         arch_packages+=("amd-ucode")
-      fi
-      if amd_gpu_exists; then
-         arch_packages+=("vulkan-radeon")
-      fi
-      if intel_cpu_exists; then
-         arch_packages+=("intel-ucode")
-         arch_packages+=("intel-media-driver")
-         arch_packages+=("vulkan-intel")
-      fi
-      if nvidia_gpu_exists; then
-         arch_packages+=("nvidia-open")
-         arch_packages+=("nvidia-prime")
-         arch_packages+=("nvidia-utils")
-         arch_packages+=("nvidia-settings")
-      fi
-      arch_packages+=("vulkan-icd-loader")
-      arch_packages+=("alsa-firmware")
-      arch_packages+=("sof-firmware")
-      arch_packages+=("pipewire")
-      arch_packages+=("pipewire-audio")
-      arch_packages+=("pipewire-alsa")
-      arch_packages+=("pipewire-pulse")
-      arch_packages+=("pipewire-jack")
-      arch_packages+=("wireplumber")
-      arch_packages+=("alsa-utils")
-      arch_packages+=("iwd")
-      arch_packages+=("tlp")
-      arch_packages+=("acpid")
-      arch_packages+=("polkit")
-      arch_packages+=("wlsunset")
-      arch_packages+=("wev")
-      if backlight_exists; then
-         user_packages+=("backlight_control")
-      fi
+      run("sed -i s/#ParallelDownloads/ParallelDownloads/ /etc/pacman.conf")
+      run("pacman -Sy --needed --noconfirm archlinux-keyring")
+      run("pacstrap -K /mnt base base-devel linux linux-firmware")
+      run("genfstab -U /mnt >> /mnt/etc/fstab")
+
+      run("ln -sf ../run/systemd/resolve/stub-resolv.conf /mnt/etc/resolv.conf")
+
+      # user accounts
+      run_in_chroot(f"""
+         pacman -S --needed --noconfirm dash
+
+         useradd -m '{username}' -G wheel,video
+         echo 'root:{root_password}' | chpasswd
+         echo '{username}:{password}' | chpasswd
+         chage -E -1 nobody
+         chsh -s /bin/dash '{username}'
+      """)
+
+      # user configuration
+      home = f"/home/{username}"
+      run_in_chroot(f"""
+         pacman -S --needed --noconfirm git python
+
+         rm -rf '{home}/'* '{home}/.'*
+         cd '{home}'
+         git config --global user.name root
+         git config --global safe.directory '{home}'
+         git config --global init.defaultBranch master
+         git init
+         git config core.hooksPath .hooks
+         git remote add g {github_repo_url(dotfiles_repo)}
+         git fetch g
+         git reset --hard g/master
+         git branch -u g/master
+         git config --global --unset user.name
+         git config --global --unset safe.directory
+         git config --global --unset init.defaultBranch
+
+         mkdir -p '{home}/dev'
+         mkdir -p '{home}/downloads'
+         mkdir -p '{home}/torrents'
+         mkdir -p '{home}/pictures'
+         mkdir -p '{home}/videos'
+         mkdir -p '{home}/games'
+
+         chown -R '{username}:{username}' .
+         chown root:root scripts/root-*
+         chmod 744 scripts/root-*
+      """)
+
+      call_in_chroot(setup_packages, username=username)
+      run_in_chroot(f"rm {home}/.bash_logout")
+
+      run("cp /tmp/arch_setup.log /mnt/var/tmp/arch_setup.log")
+
+      run("reboot")
+
+def setup_packages(username, reinstall=False, skip_install=False, graphics=None):
+   graphics = None
+
+   try:
+      part_root_uuid = run_stdout("dmsetup info -c --noheadings -o uuid /dev/mapper/root")
+   except:
+      part_root_uuid = ""
+   match = re.match(r"^CRYPT-LUKS2-(.{8})(.{4})(.{4})(.{4})(.{12})-root$", part_root_uuid.strip())
+   if not match:
+      raise error("Root partition not found")
+   part_root_uuid = "-".join(match.groups())
+
+   if not graphics and nvidia_disabled():
+      graphics = "integrated"
+
+   # localisation
+   write("/etc/hostname", "arch")
+
+   run("ln -sf /usr/share/zoneinfo/Europe/Zagreb /etc/localtime")
+   run("hwclock --systohc")
+   run("systemctl enable systemd-timesyncd.service")
+
+   run("sed -i 's/^#en_GB\\.UTF-8/en_GB.UTF-8/'           /etc/locale.gen")
+   run("sed -i 's/^#en_US\\.UTF-8/en_US.UTF-8/'           /etc/locale.gen")
+   run("""sed -i 's/^d_t_fmt .*/d_t_fmt "%d-%m-%Y %T"/'   /usr/share/i18n/locales/en_GB""")
+   run("""sed -i 's/^d_t_fmt .*/d_t_fmt "%d-%m-%Y %T"/'   /usr/share/i18n/locales/en_US""")
+   run("""sed -i 's/^date_fmt .*/date_fmt "%d-%m-%Y %T"/' /usr/share/i18n/locales/en_GB""")
+   run("""sed -i 's/^date_fmt .*/date_fmt "%d-%m-%Y %T"/' /usr/share/i18n/locales/en_US""")
+   run("locale-gen")
+
+   write("/etc/locale.conf", """
+      LANG=en_GB.UTF-8
+   """)
+   write("/etc/vconsole.conf", """
+      KEYMAP=croat
+      FONT=latarcyrheb-sun32
+   """)
+
+   # bash
+   run(f"cp /home/{username}/.bashrc       /root/.bashrc")
+   run(f"cp /home/{username}/.bash_profile /root/.bash_profile")
+
+   # sudo
+   write("/etc/sudo.conf", f"Path askpass /home/{username}/scripts/rofi-askpass")
+
+   visudo(f"""
+      Defaults env_reset
+      Defaults passwd_timeout=0
+      Defaults passwd_tries=10
+      Defaults timestamp_timeout=-1
+
+      %wheel ALL=(ALL:ALL) ALL
+      {username} ALL=(root) NOPASSWD: /usr/bin/openvpn
+      {username} ALL=(root) NOPASSWD: /usr/bin/killall -INT openvpn
+   """)
+
+   # pacman
+   write("/etc/pacman.conf", """
+      [options]
+      HoldPkg = pacman glibc
+      Architecture = auto
+      Color
+      CheckSpace
+      VerbosePkgLists
+      ParallelDownloads = 10
+      SigLevel = Required DatabaseOptional
+      LocalFileSigLevel = Optional
+
+      [core]
+      Include = /etc/pacman.d/mirrorlist
+
+      [extra]
+      Include = /etc/pacman.d/mirrorlist
+
+      [multilib]
+      Include = /etc/pacman.d/mirrorlist
+
+      [sublime-text]
+      Server = https://download.sublimetext.com/arch/stable/x86_64
+   """)
+   if not package_exists("sublime-text"):
+      run("curl -s -O https://download.sublimetext.com/sublimehq-pub.gpg && pacman-key --add sublimehq-pub.gpg && pacman-key --lsign-key 8A8F901A && rm sublimehq-pub.gpg")
+   if not package_exists("librewolf-bin"):
+      run_as(username, "gpg --recv-key 662E3CDD6FE329002D0CA5BB40339DD82B12EF16")
+
+   # systemd
+   if not in_chroot():
+      run("ln -sf ../run/systemd/resolve/stub-resolv.conf /etc/resolv.conf")
+
+   write("/etc/systemd/network/20-wired.network", """
+      [Match]
+      Kind=!*
+      Type=ether
+
+      [Network]
+      DHCP=yes
+
+      [DHCPv4]
+      RouteMetric=100
+
+      [IPv6AcceptRA]
+      RouteMetric=100
+   """)
+
+   write("/etc/systemd/network/25-wireless.network", """
+      [Match]
+      Type=wlan
+      WLANInterfaceType=station
+      SSID=*
+
+      [Network]
+      DHCP=yes
+
+      [DHCPv4]
+      RouteMetric=200
+
+      [IPv6AcceptRA]
+      RouteMetric=200
+   """)
+
+   run("mkdir -p /etc/systemd/system/getty@tty1.service.d")
+   write("/etc/systemd/system/getty@tty1.service.d/skip-prompt.conf", f"""
+      [Service]
+      ExecStart=
+      ExecStart=-/bin/agetty --skip-login --nonewline --noissue --autologin {username} --noclear %I $TERM
+   """)
+
+   write("/etc/systemd/logind.conf", """
+      [Login]
+      HandleLidSwitch=ignore
+   """)
+
+   # udev
+   write("/etc/udev/rules.d/no-mouse-wakeup.rules",
+      'ACTION=="add", SUBSYSTEM=="usb", ATTRS{idVendor}=="046d", ATTRS{idProduct}=="c547", ATTR{power/wakeup}="disabled"'
+   )
+   if graphics == "integrated":
+      write("/etc/udev/rules.d/no-nvidia.rules", """
+         ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{class}=="0x0c0330",   ATTR{power/control}="auto", ATTR{remove}="1"
+         ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{class}=="0x0c8000",   ATTR{power/control}="auto", ATTR{remove}="1"
+         ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{class}=="0x040300",   ATTR{power/control}="auto", ATTR{remove}="1"
+         ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{class}=="0x03[0-9]*", ATTR{power/control}="auto", ATTR{remove}="1"
+      """)
+   else:
+      run("rm -f /etc/udev/rules.d/no-nvidia.rules")
+
+   # packages
+   if not skip_install:
+      arch_packages = []
+      user_packages = []
+      deps_packages = []
+
+      # essential packages
+      arch_packages += ["base"]
+      arch_packages += ["base-devel"]
+      arch_packages += ["linux"]
+      arch_packages += ["linux-firmware"]
+      arch_packages += ["grub"]
+      arch_packages += ["efibootmgr"]
+      arch_packages += ["plymouth"]
+      arch_packages += ["fwupd"]
+      arch_packages += ["mesa"]
+      arch_packages += ["mesa-utils"]
+      if amd_cpu_exists():
+         arch_packages += ["amd-ucode"]
+      if amd_gpu_exists():
+         arch_packages += ["vulkan-radeon"]
+      if intel_cpu_exists():
+         arch_packages += ["intel-ucode"]
+         arch_packages += ["intel-media-driver"]
+         arch_packages += ["vulkan-intel"]
+      if nvidia_gpu_exists():
+         arch_packages += ["nvidia-open"]
+         arch_packages += ["nvidia-prime"]
+         arch_packages += ["nvidia-utils"]
+         arch_packages += ["nvidia-settings"]
+      arch_packages += ["vulkan-icd-loader"]
+      arch_packages += ["alsa-firmware"]
+      arch_packages += ["sof-firmware"]
+      arch_packages += ["pipewire"]
+      arch_packages += ["pipewire-audio"]
+      arch_packages += ["pipewire-alsa"]
+      arch_packages += ["pipewire-pulse"]
+      arch_packages += ["pipewire-jack"]
+      arch_packages += ["wireplumber"]
+      arch_packages += ["alsa-utils"]
+      arch_packages += ["iwd"]
+      arch_packages += ["tlp"]
+      arch_packages += ["acpid"]
+      arch_packages += ["polkit"]
+      arch_packages += ["wlsunset"]
+      arch_packages += ["wev"]
+      if backlight_exists():
+         user_packages += ["backlight_control"]
 
       # wayland
-      arch_packages+=("niri")
-      arch_packages+=("xwayland-satellite")
-      user_packages+=("yambar-git")
-      deps_packages+=("xcb-util-errors")
-      deps_packages+=("libmpdclient")
-      arch_packages+=("waylock")
-      arch_packages+=("swayidle")
-      arch_packages+=("swaybg")
-      user_packages+=("sway-audio-idle-inhibit-git")
+      arch_packages += ["niri"]
+      arch_packages += ["xwayland-satellite"]
+      user_packages += ["yambar-git"]
+      deps_packages += ["xcb-util-errors", "libmpdclient"]
+      arch_packages += ["waylock"]
+      arch_packages += ["swayidle"]
+      arch_packages += ["swaybg"]
+      user_packages += ["sway-audio-idle-inhibit-git"]
 
       # default applications
-      arch_packages+=("perl-file-mimeinfo")
-      arch_packages+=("xdg-utils")
-      arch_packages+=("xdg-desktop-portal")
-      arch_packages+=("xdg-desktop-portal-gnome")
+      arch_packages += ["perl-file-mimeinfo"]
+      arch_packages += ["xdg-utils"]
+      arch_packages += ["xdg-desktop-portal"]
+      arch_packages += ["xdg-desktop-portal-gnome"]
 
       # utilities
-      arch_packages+=("dash")
-      arch_packages+=("zsh")
-      arch_packages+=("nano")
-      arch_packages+=("bat")
-      arch_packages+=("zip")
-      arch_packages+=("unzip")
-      arch_packages+=("jq")
-      arch_packages+=("bc")
-      arch_packages+=("parallel")
-      arch_packages+=("flatpak")
-      arch_packages+=("pacman-contrib")
-      user_packages+=("xurls")
-      arch_packages+=("wl-clipboard")
-      arch_packages+=("wgetpaste")
-      arch_packages+=("dotool")
-      arch_packages+=("moreutils")
-      user_packages+=("ycwd-git")
-      arch_packages+=("ncdu")
-      arch_packages+=("ddcutil")
-      arch_packages+=("mako")
-      arch_packages+=("libnotify")
-      arch_packages+=("rofi")
-      arch_packages+=("khal")
-      arch_packages+=("slurp")
-      arch_packages+=("wf-recorder")
-      arch_packages+=("imagemagick")
-      arch_packages+=("yt-dlp")
-      arch_packages+=("id3v2")
-      arch_packages+=("bash-completion")
-      arch_packages+=("man-db")
-      arch_packages+=("man-pages")
+      arch_packages += ["dash"]
+      arch_packages += ["zsh"]
+      arch_packages += ["nano"]
+      arch_packages += ["bat"]
+      arch_packages += ["zip"]
+      arch_packages += ["unzip"]
+      arch_packages += ["jq"]
+      arch_packages += ["bc"]
+      arch_packages += ["parallel"]
+      arch_packages += ["flatpak"]
+      arch_packages += ["pacman-contrib"]
+      user_packages += ["xurls"]
+      arch_packages += ["wl-clipboard"]
+      arch_packages += ["wgetpaste"]
+      arch_packages += ["dotool"]
+      arch_packages += ["moreutils"]
+      user_packages += ["ycwd-git"]
+      arch_packages += ["ncdu"]
+      arch_packages += ["ddcutil"]
+      arch_packages += ["mako"]
+      arch_packages += ["libnotify"]
+      arch_packages += ["rofi"]
+      arch_packages += ["khal"]
+      arch_packages += ["slurp"]
+      arch_packages += ["wf-recorder"]
+      arch_packages += ["imagemagick"]
+      arch_packages += ["yt-dlp"]
+      arch_packages += ["id3v2"]
+      arch_packages += ["bash-completion"]
+      arch_packages += ["man-db"]
+      arch_packages += ["man-pages"]
 
       # ssh, vpn
-      arch_packages+=("openssh")
-      arch_packages+=("openvpn")
-      user_packages+=("openvpn-update-systemd-resolved")
+      arch_packages += ["openssh"]
+      arch_packages += ["openvpn"]
+      user_packages += ["openvpn-update-systemd-resolved"]
 
       # developer tooling
-      arch_packages+=("git")
-      arch_packages+=("git-delta")
-      arch_packages+=("python")
-      arch_packages+=("python-pip")
-      arch_packages+=("deno")
-      arch_packages+=("nodejs")
-      user_packages+=("volta-bin")
-      arch_packages+=("npm")
-      arch_packages+=("rustup")
-      arch_packages+=("go")
-      arch_packages+=("meson")
-      arch_packages+=("docker")
-      arch_packages+=("docker-compose")
-      arch_packages+=("aws-cli")
+      arch_packages += ["git"]
+      arch_packages += ["git-delta"]
+      arch_packages += ["python"]
+      arch_packages += ["python-pip"]
+      arch_packages += ["deno"]
+      arch_packages += ["nodejs"]
+      user_packages += ["volta-bin"]
+      arch_packages += ["npm"]
+      arch_packages += ["rustup"]
+      arch_packages += ["go"]
+      arch_packages += ["meson"]
+      arch_packages += ["docker"]
+      arch_packages += ["docker-compose"]
+      arch_packages += ["github-cli"]
+      arch_packages += ["aws-cli"]
 
       # window applications
-      arch_packages+=("foot")
-      arch_packages+=("zed")
-      arch_packages+=(
-         gcc
-         clang
-         musl
-         cmake
-         alsa-lib
-         fontconfig
-         wayland
-         libgit2
-         libxcb
-         libxkbcommon-x11
-         openssl
-         zstd
-         pkgconf
-         mold
-         sqlite
-         jq
-         git
-      )
-      arch_packages+=("sublime-text")
-      arch_packages+=("sublime-merge")
-      arch_packages+=("nautilus")
-      arch_packages+=("imv")
-      arch_packages+=("mpv")
-      user_packages+=("librewolf-bin")
-      arch_packages+=("chromium")
-      arch_packages+=("calibre")
-      arch_packages+=("transmission-gtk")
-      arch_packages+=("gnome-system-monitor")
+      arch_packages += ["foot"]
+      arch_packages += ["zed"]
+      arch_packages += ["gcc", "clang", "musl", "cmake", "alsa-lib", "fontconfig", "wayland", "libgit2", "libxcb", "libxkbcommon-x11", "openssl", "zstd", "pkgconf", "mold", "sqlite", "jq", "git"]
+      arch_packages += ["sublime-text"]
+      arch_packages += ["sublime-merge"]
+      arch_packages += ["nautilus"]
+      arch_packages += ["imv"]
+      arch_packages += ["mpv"]
+      user_packages += ["librewolf-bin"]
+      arch_packages += ["chromium"]
+      arch_packages += ["calibre"]
+      arch_packages += ["transmission-gtk"]
+      arch_packages += ["gnome-system-monitor"]
 
       # virtualisation, emulation
-      arch_packages+=("libvirt")
-      arch_packages+=("qemu-base")
-      arch_packages+=("virt-manager")
-      arch_packages+=("dnsmasq")
-      arch_packages+=("iptables-nft")
-      arch_packages+=("wine-staging")
-      deps_packages+=($(pacman -Si wine-staging | sed -n '/^Opt/,/^Conf/p' | sed '$d' | sed 's/^Opt.*://g' | sed 's/^\s*//g' | tr '\n' ' '))
-      arch_packages+=("icoutils")
-      if ! in_chroot; then
-         user_packages+=("mesen")
-      fi
+      arch_packages += ["libvirt"]
+      arch_packages += ["qemu-base"]
+      arch_packages += ["virt-manager"]
+      arch_packages += ["dnsmasq"]
+      arch_packages += ["iptables-nft"]
+      arch_packages += ["wine-staging"]
+      deps_packages += run_stdout("pacman -Si wine-staging | sed -n '/^Opt/,/^Conf/p' | sed '$d' | sed 's/^Opt.*://g' | sed '/^[^ ]/d' | sed 's/^ *//g'").split()
+      arch_packages += ["icoutils"]
+      if not in_chroot():
+         user_packages += ["mesen"]
 
       # fonts, icons, cursor
-      arch_packages+=("fontconfig")
-      arch_packages+=("adwaita-fonts")
-      arch_packages+=("noto-fonts")
-      arch_packages+=("noto-fonts-emoji")
-      arch_packages+=("ttf-jetbrains-mono")
-      arch_packages+=("ttf-nerd-fonts-symbols-mono")
-      arch_packages+=("adobe-source-han-sans-cn-fonts")
-      arch_packages+=("adobe-source-han-sans-jp-fonts")
-      arch_packages+=("adobe-source-han-sans-kr-fonts")
-      user_packages+=("candy-icons-git")
-      user_packages+=("bibata-cursor-theme-bin")
+      arch_packages += ["fontconfig"]
+      arch_packages += ["adwaita-fonts"]
+      arch_packages += ["noto-fonts"]
+      arch_packages += ["noto-fonts-emoji"]
+      arch_packages += ["ttf-jetbrains-mono"]
+      arch_packages += ["ttf-nerd-fonts-symbols-mono"]
+      arch_packages += ["adobe-source-han-sans-cn-fonts"]
+      arch_packages += ["adobe-source-han-sans-jp-fonts"]
+      arch_packages += ["adobe-source-han-sans-kr-fonts"]
+      user_packages += ["candy-icons-git"]
+      user_packages += ["bibata-cursor-theme-bin"]
 
       # disable initramfs hook and git ssh
-      function pre_install {
-         local username=$1
-         mkdir -p /etc/pacman.d/hooks/
-         touch /etc/pacman.d/hooks/90-mkinitcpio-install.hook
-         export GIT_CONFIG_GLOBAL=/dev/null
-      }
-      function post_install {
-         local username=$1
-         if [[ ! -f /etc/pacman.d/hooks/90-mkinitcpio-install.hook ]]; then
-            return
-         fi
-         rm /etc/pacman.d/hooks/90-mkinitcpio-install.hook
-         unset GIT_CONFIG_GLOBAL
-      }
-      trap "post_install $username" EXIT
-      pre_install "$username"
+      def pre_install():
+         run("mkdir -p /etc/pacman.d/hooks")
+         run("ln -sf /dev/null /etc/pacman.d/hooks/90-mkinitcpio-install.hook")
+         os.environ["GIT_CONFIG_GLOBAL"] = "/dev/null"
 
-      # rust
-      pacman -Sy --needed --noconfirm rustup
-      as_user $username rustup default stable
-      as_user $username rustup update
+      def post_install():
+         run("rm /etc/pacman.d/hooks/90-mkinitcpio-install.hook")
+         os.environ.pop("GIT_CONFIG_GLOBAL", None)
 
-      # install packages
-      pacman -Sy --needed --noconfirm pacman-contrib moreutils
-      curl -s "https://archlinux.org/mirrorlist/?country=DE&country=HR&protocol=https&use_mirror_status=on" | sed -e 's/^#Server/Server/' -e '/^#/d' | rankmirrors -n 5 -m 2 -w -p - | ifne tee /etc/pacman.d/mirrorlist || true
+      try:
+         pre_install()
 
-      if [[ ! -x $(command -v paru) ]]; then
-         install_paru
-      fi
+         # rust
+         run("pacman -Sy --needed --noconfirm rustup")
+         run_as(username, "rustup default stable")
+         run_as(username, "rustup update")
 
-      echo "$username ALL=(ALL:ALL) NOPASSWD: ALL" | EDITOR="tee --append" visudo > /dev/null
-      as_user $username paru -Syu --devel --noconfirm &&
-      as_user $username paru -S --useask --ask 4 --noconfirm --skipreview --asexplicit $([[ $mode != "reinstall" ]] && echo "--needed") "${arch_packages[@]}" "${user_packages[@]}" &&
-      as_user $username paru -S --useask --ask 4 --noconfirm --asdeps     $([[ $mode != "reinstall" ]] && echo "--needed") "${deps_packages[@]}" || failed=true
-      sed "/$username ALL=(ALL:ALL) NOPASSWD: ALL/d" /etc/sudoers | EDITOR="tee" visudo > /dev/null
+         # install packages
+         run("pacman -Sy --needed --noconfirm pacman-contrib moreutils")
+         run("""curl -s "https://archlinux.org/mirrorlist/?country=DE&country=HR&protocol=https&use_mirror_status=on" | sed -e 's/^#Server/Server/' -e '/^#/d' | rankmirrors -n 5 -m 2 -w -p - | ifne tee /etc/pacman.d/mirrorlist || true""")
 
-      if [[ $failed == "true" ]]; then
-         echo "Failed to update packages, aborting" >&2
-         exit 1
-      fi
+         if not package_exists("paru"):
+            install_paru()
 
-      # clean up unused packages
-      all_packages="paru ${arch_packages[@]} ${user_packages[@]} "
-      unlisted_packages=()
-      for package in $(pacman -Qqe); do
-         if [[ ! " ${all_packages[@]} " =~ " ${package} " ]]; then
-            unlisted_packages+=("$package")
-         fi
-      done
-      printf "%b" "${unlisted_packages[@]/%/\\n}" | ifne pacman -D --asdeps - || true
-      pacman -Qdtq | ifne pacman -Rns --noconfirm - || true
+         try:
+            visudo(f"{username} ALL=(ALL:ALL) NOPASSWD: ALL", append=True)
+            run_as(username, "paru -Syu --devel --noconfirm")
+            run_as(username, f"paru -S --useask --ask 4 --noconfirm --skipreview --asexplicit {"" if reinstall else "--needed"} {shlex.join(arch_packages)} {shlex.join(user_packages)}")
+            run_as(username, f"paru -S --useask --ask 4 --noconfirm --asdeps                  {"" if reinstall else "--needed"} {shlex.join(deps_packages)}")
+         except:
+            raise error("Failed to update packages, aborting")
+         finally:
+            visudo(f"{username} ALL=(ALL:ALL) NOPASSWD: ALL", remove=True)
 
-      # flatpak packages
-      if ! in_chroot; then
-         as_user $username flatpak update -y
-      fi
+         # clean up unused packages
+         all_packages = ["paru"] + arch_packages + user_packages
+         unlisted = run_stdout("pacman -Qqe").splitlines()
+         unlisted = [pkg for pkg in unlisted if pkg not in all_packages]
+         if unlisted:
+            run(f"pacman -D --asdeps {shlex.join(unlisted)}")
+         run("pacman -Qdtq | ifne pacman -Rns --noconfirm -")
 
-      post_install "$username"
-   fi
+         if not in_chroot():
+            run_as(username, "flatpak update -y")
+
+      finally:
+         post_install()
 
    # package configuration
-   as_user $username mkdir -p "/home/$username/.config/fontconfig/conf.d"
-   as_user $username ln -sf /usr/share/fontconfig/conf.avail/50-user.conf "/home/$username/.config/fontconfig/conf.d"
-   as_user $username fc-cache
+   run_as(username, f"""
+      mkdir -p /home/{username}/.config/fontconfig/conf.d
+      ln -sf /usr/share/fontconfig/conf.avail/50-user.conf /home/{username}/.config/fontconfig/conf.d
+      fc-cache
+   """)
 
-   as_user $username dbus-launch --exit-with-session "/home/$username/.config/dconf/gsettings"
+   run_as(username, f"dbus-launch --exit-with-session /home/{username}/.config/dconf/gsettings")
 
-   sed -i 's/#unix_sock_group/unix_sock_group/g'                /etc/libvirt/libvirtd.conf
-   sed -i 's/#unix_sock_rw_perms/unix_sock_rw_perms/g'          /etc/libvirt/libvirtd.conf
-   sed -i 's/#user = "libvirt-qemu"/user = "'"$username"'"/g'   /etc/libvirt/qemu.conf
-   sed -i 's/#group = "libvirt-qemu"/group = "'"$username"'"/g' /etc/libvirt/qemu.conf
+   run("sed -i 's/#unix_sock_group/unix_sock_group/g'                  /etc/libvirt/libvirtd.conf")
+   run("sed -i 's/#unix_sock_rw_perms/unix_sock_rw_perms/g'            /etc/libvirt/libvirtd.conf")
+   run(f"sed -i 's/#user = \"libvirt-qemu\"/user = \"{username}\"/g'   /etc/libvirt/qemu.conf")
+   run(f"sed -i 's/#group = \"libvirt-qemu\"/group = \"{username}\"/g' /etc/libvirt/qemu.conf")
 
    # groups
-   usermod -aG input "$username"
-   usermod -aG docker "$username"
-   usermod -aG libvirt "$username"
+   run(f"usermod -aG input {username}")
+   run(f"usermod -aG docker {username}")
+   run(f"usermod -aG libvirt {username}")
 
    # services
-   if ! in_chroot; then
-      start="--now"
-   fi
-   systemctl --user --machine="$username@" enable $start pipewire-pulse.service
-   systemctl --user --machine="$username@" enable $start ssh-agent.service
-   systemctl mask systemd-networkd-wait-online.service
-   systemctl mask systemd-backlight@backlight:intel_backlight.service
-   systemctl enable $start systemd-networkd
-   systemctl enable $start systemd-resolved
-   systemctl enable $start iwd.service
-   systemctl enable $start acpid.service
-   systemctl enable $start tlp.service
-   systemctl mask systemd-rfkill.service  # tlp
-   systemctl mask systemd-rfkill.socket   # tlp
-   systemctl disable docker.service   2> /dev/null
-   systemctl disable libvirtd.service 2> /dev/null
-   if nvidia_disabled; then
-      systemctl disable nvidia-suspend.service
-      systemctl disable nvidia-resume.service
-   elif nvidia_gpu_exists; then
-      systemctl enable nvidia-suspend.service
-      systemctl enable nvidia-resume.service
-   fi
+   enable_service("pipewire-pulse.service", user=username, start=True)
+   enable_service("ssh-agent.service", user=username, start=True)
+   disable_service("systemd-networkd-wait-online.service", mask=True)
+   disable_service("systemd-backlight@backlight:intel_backlight.service", mask=True)
+   enable_service("systemd-networkd", start=True)
+   enable_service("systemd-resolved", start=True)
+   enable_service("iwd.service", start=True)
+   enable_service("acpid.service", start=True)
+   enable_service("tlp.service", start=True)
+   disable_service("systemd-rfkill.service", mask=True)
+   disable_service("systemd-rfkill.socket", mask=True)
+   disable_service("docker.service")
+   disable_service("libvirtd.service")
+   if nvidia_disabled():
+      disable_service("nvidia-suspend.service")
+      disable_service("nvidia-resume.service")
+   elif nvidia_gpu_exists():
+      enable_service("nvidia-suspend.service")
+      enable_service("nvidia-resume.service")
 
    # default applications
-   echo '' | as_user $username tee "/home/$username/.config/mimeapps.list" > /dev/null
-   as_user $username xdg-mime default dev.zed.Zed.desktop        text/plain
-   as_user $username xdg-mime default foot.desktop               x-scheme-handler/terminal
-   as_user $username xdg-mime default org.gnome.Nautilus.desktop inode/directory
-   as_user $username xdg-mime default librewolf.desktop          $(cat /usr/share/applications/librewolf.desktop    | grep MimeType= | sed 's/MimeType=\(.*\)/\1/' | sed 's/;/ /g')
-   as_user $username xdg-mime default imv.desktop                $(cat /usr/share/applications/imv.desktop              | grep MimeType= | sed 's/MimeType=\(.*\)/\1/' | sed 's/;/ /g')
-   as_user $username xdg-mime default mpv.desktop                $(cat /usr/share/applications/mpv.desktop              | grep MimeType= | sed 's/MimeType=\(.*\)/\1/' | sed 's/;/ /g')
-   as_user $username xdg-mime default transmission-gtk.desktop   $(cat /usr/share/applications/transmission-gtk.desktop | grep MimeType= | sed 's/MimeType=\(.*\)/\1/' | sed 's/;/ /g')
-   update-desktop-database /usr/share/applications
-   update-mime-database -n /usr/share/mime
-   as_user $username mkdir -p "/home/$username/.local/share/applications"
-   as_user $username ln -sf "/home/$username/.config/mimeapps.list" "/home/$username/.local/share/applications/mimeapps.list"
+   run_as(username, f"echo '' | tee /home/{username}/.config/mimeapps.list > /dev/null")
+   run_as(username, "xdg-mime default dev.zed.Zed.desktop        text/plain")
+   run_as(username, "xdg-mime default foot.desktop               x-scheme-handler/terminal")
+   run_as(username, "xdg-mime default org.gnome.Nautilus.desktop inode/directory")
+   run_as(username, "xdg-mime default librewolf.desktop          $(cat /usr/share/applications/librewolf.desktop        | grep MimeType= | sed 's/MimeType=\\(.*\\)/\\1/' | sed 's/;/ /g')")
+   run_as(username, "xdg-mime default imv.desktop                $(cat /usr/share/applications/imv.desktop              | grep MimeType= | sed 's/MimeType=\\(.*\\)/\\1/' | sed 's/;/ /g')")
+   run_as(username, "xdg-mime default mpv.desktop                $(cat /usr/share/applications/mpv.desktop              | grep MimeType= | sed 's/MimeType=\\(.*\\)/\\1/' | sed 's/;/ /g')")
+   run_as(username, "xdg-mime default transmission-gtk.desktop   $(cat /usr/share/applications/transmission-gtk.desktop | grep MimeType= | sed 's/MimeType=\\(.*\\)/\\1/' | sed 's/;/ /g')")
+   run("update-desktop-database /usr/share/applications")
+   run("update-mime-database -n /usr/share/mime")
+   run_as(username, f"mkdir -p /home/{username}/.local/share/applications")
+   run_as(username, f"ln -sf /home/{username}/.config/mimeapps.list /home/{username}/.local/share/applications/mimeapps.list")
 
    # boot process
-   local url=$(github_repo_archive_url "neunato/plymouth-theme-silence" "master")
-   local dir="/usr/share/plymouth/themes/silence"
-   extract_tarball "$url" "$dir"
-   chmod 644 "$dir/"*
-   plymouth-set-default-theme silence
+   url = github_repo_archive_url("neunato/plymouth-theme-silence", "master")
+   path = "/usr/share/plymouth/themes/silence"
+   run(f"rm -rf '{path}'")
+   extract_tarball(url, path)
+   run(f"chmod 644 '{path}/'*")
+   run("plymouth-set-default-theme silence")
 
-   cat /dev/null > /etc/mkinitcpio.conf
-   echo 'PRESETS=("default")'                                                                                                           | tee          /etc/mkinitcpio.d/linux.preset > /dev/null
-   echo 'default_kver="/boot/vmlinuz-linux"'                                                                                            | tee --append /etc/mkinitcpio.d/linux.preset > /dev/null
-   echo 'default_image="/boot/initramfs-linux.img"'                                                                                     | tee --append /etc/mkinitcpio.d/linux.preset > /dev/null
-   echo 'default_config="/etc/mkinitcpio.conf"'                                                                                         | tee --append /etc/mkinitcpio.d/linux.preset > /dev/null
-   echo 'default_options="-A systemd,plymouth,autodetect,microcode,modconf,kms,keyboard,sd-vconsole,block,sd-encrypt,filesystems,fsck"' | tee --append /etc/mkinitcpio.d/linux.preset > /dev/null
-   install -Dm644 $(ls /usr/lib/modules/*/vmlinuz | head -1) /boot/vmlinuz-linux
-   mkinitcpio -P
+   write("/etc/mkinitcpio.conf", "")
+   write("/etc/mkinitcpio.d/linux.preset", """
+      PRESETS=("default")
+      default_kver="/boot/vmlinuz-linux"
+      default_image="/boot/initramfs-linux.img"
+      default_config="/etc/mkinitcpio.conf"
+      default_options="-A systemd,plymouth,autodetect,microcode,modconf,kms,keyboard,sd-vconsole,block,sd-encrypt,filesystems,fsck"
+   """)
+   run("install -Dm644 $(ls /usr/lib/modules/*/vmlinuz | head -1) /boot/vmlinuz-linux")
+   run("mkinitcpio -P")
 
-   grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=GRUB
-   sed -i 's/^GRUB_DEFAULT=.*/GRUB_DEFAULT=0/'                  /etc/default/grub
-   sed -i 's/^GRUB_TIMEOUT=.*/GRUB_TIMEOUT=0/'                  /etc/default/grub
-   sed -i 's/^GRUB_TIMEOUT_STYLE=.*/GRUB_TIMEOUT_STYLE=hidden/' /etc/default/grub
-   sed -i "s/^GRUB_CMDLINE_LINUX_DEFAULT=.*/GRUB_CMDLINE_LINUX_DEFAULT=\"quiet splash nowatchdog modprobe.blacklist=iTCO_wdt rd.luks.name=$part_root_uuid=root rd.luks.options=$part_root_uuid=timeout=0,tries=0,password-echo=no rootflags=x-systemd.device-timeout=0\"/" /etc/default/grub
-   grub-mkconfig -o /boot/grub/grub.cfg
-   sed -i 's/echo\t/#echo\t/g' /boot/grub/grub.cfg
-}
+   cmdline = f"quiet splash nowatchdog modprobe.blacklist=iTCO_wdt rd.luks.name={part_root_uuid}=root rd.luks.options={part_root_uuid}=timeout=0,tries=0,password-echo=no rootflags=x-systemd.device-timeout=0"
+   run("grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=GRUB")
+   run("sed -i 's/^GRUB_DEFAULT=.*/GRUB_DEFAULT=0/'                                          /etc/default/grub")
+   run("sed -i 's/^GRUB_TIMEOUT=.*/GRUB_TIMEOUT=0/'                                          /etc/default/grub")
+   run("sed -i 's/^GRUB_TIMEOUT_STYLE=.*/GRUB_TIMEOUT_STYLE=hidden/'                         /etc/default/grub")
+   run(f"sed -i 's/^GRUB_CMDLINE_LINUX_DEFAULT=.*/GRUB_CMDLINE_LINUX_DEFAULT=\"{cmdline}\"/' /etc/default/grub")
+   run("grub-mkconfig -o /boot/grub/grub.cfg")
+   run("sed -i 's/^\\(\\s*\\)echo\\b/\\1#echo/g' /boot/grub/grub.cfg")
 
-function setup_firmware {
-   pacman -S --needed --noconfirm fwupd
-   fwupdmgr --no-reboot-check --force refresh
-   fwupdmgr --no-reboot-check update
-}
+def setup_firmware():
+   run("pacman -S --needed --noconfirm fwupd")
+   run("fwupdmgr --no-reboot-check --force refresh")
+   run("fwupdmgr --no-reboot-check update")
 
-function setup_graphics {
-   local username="$1"
-   local graphics="$2"
-   if ! nvidia_gpu_exists; then
-      echo "GPU not detected, aborting" >&2
-      exit 1
-   fi
-   setup_packages "$username" "no-install" "$graphics"
-}
+def setup_graphics(username, graphics):
+   if not nvidia_gpu_exists():
+      raise error("GPU not detected, aborting")
+   setup_packages(username=username, skip_install=True, graphics=graphics)
 
-function install_paru {
-   local dir="/var/tmp/paru"
-   pacman -Sy --needed --noconfirm git rustup
-   mkdir -p "$dir"
-   chmod 777 "$dir"
-   as_nobody /bin/bash -c "
-      git clone https://aur.archlinux.org/paru.git $dir
-      cd $dir
-      RUSTUP_HOME=$dir rustup default stable
-      RUSTUP_HOME=$dir CARGO_HOME=$dir makepkg -s
-   "
-   pacman -U --needed --noconfirm "$(ls $dir/*.tar.zst | grep -v debug)"
-   rm -rf "$dir"
-}
+def install_paru():
+   path = "/var/tmp/paru"
 
-function extract_tarball {
-   local url="$1"
-   local dir="$2"
-   mkdir -p "$dir"
-   if [[ -n $dir ]]; then
-      rm -rf "$dir/"*
-   fi
-   curl -s -L "$url" | tar xz -C "$dir" --strip-components 1
-}
+   try:
+      run("pacman -Sy --needed --noconfirm git rustup")
+      run(f"mkdir -p {path}")
+      run(f"chmod 777 {path}")
+      run_as("nobody", f"git clone https://aur.archlinux.org/paru.git {path}")
+      run_as("nobody", f"RUSTUP_HOME={path} rustup default stable")
+      run_as("nobody", f"cd {path} && RUSTUP_HOME={path} CARGO_HOME={path} makepkg -s")
+      pkg = next(p for p in Path(path).glob("*.tar.zst") if "debug" not in p.name)
+      run(f"pacman -U --needed --noconfirm {pkg}")
+   except:
+      raise error("Failed to install paru, aborting")
+   finally:
+      run(f"rm -rf {path}")
 
-function wrap_f {
-   local args=("$@")
-   local str="set -Eeo pipefail; $(declare -f);"
-   for i in "${args[@]}"; do
-       str+=" \"$(echo "$i" | sed 's/"/\\"/g')\""
-   done
-   echo "$str"
-}
+def error(message):
+   print(message, file=sys.stderr)
+   sys.exit(1)
 
-function as_sudo {
-   sudo --askpass /bin/bash -c "$(wrap_f "$@")"
-}
+def read(path):
+   return Path(path).read_text().strip()
 
-function as_nobody {
-   su nobody -s /bin/bash -c "$(wrap_f "$@")"
-}
+def write(path, text):
+   if text != "":
+      lines = text.lstrip("\n").splitlines()
+      text = "\n".join(line.strip() for line in lines).rstrip("\n") + "\n"
+   Path(path).write_text(text)
 
-function as_user {
-   local user=$1
-   shift
-   su "$user" -l -s /bin/bash -c "$(wrap_f "$@")"
-}
+def run(cmd, input=None, silent=False):
+   cmd = f"set -e\n{cmd}"
+   if isinstance(input, str):
+      input = input.encode()
+   stdout = subprocess.DEVNULL if silent else None
+   return subprocess.run(["sh", "-c", cmd], check=True, input=input, stdout=stdout)
 
-function as_chroot {
-   arch-chroot /mnt /bin/bash -c "$(wrap_f "$@")"
-}
+def run_stdout(cmd, input=None):
+   cmd = f"set -e\n{cmd}"
+   if isinstance(input, str):
+      input = input.encode()
+   return subprocess.run(["sh", "-c", cmd], check=True, input=input, capture_output=True).stdout.decode()
 
-function in_chroot {
-   if [[ $(stat -c %d:%i /) == $(stat -c %d:%i /proc/1/root/.) ]]; then
-      return 1
-   fi
-}
+def run_as(user, cmd, input=None, silent=False):
+   cmd = f"set -e\n{cmd}"
+   if isinstance(input, str):
+      input = input.encode()
+   stdout = subprocess.DEVNULL if silent else None
+   cwd = pwd.getpwnam(user).pw_dir
+   env = {**os.environ.copy(), "HOME": cwd}
+   return subprocess.run(["sh", "-c", cmd], check=True, input=input, stdout=stdout, user=user, group=user, cwd=cwd, env=env)
 
-function nvidia_disabled {
-   if [[ ! -f /etc/udev/rules.d/no-nvidia.rules ]]; then
-      return 1
-   fi
-}
+def run_in_chroot(cmd, input=None, silent=False):
+   cmd = f"set -e\n{cmd}"
+   if isinstance(input, str):
+      input = input.encode()
+   stdout = subprocess.DEVNULL if silent else None
+   return subprocess.run(["arch-chroot", "/mnt", "sh", "-c", cmd], check=True, input=input, stdout=stdout)
 
-function nvidia_gpu_exists {
-   if ! lspci | grep -q '.* VGA .* NVIDIA .*' && ! pacman -Q nvidia &> /dev/null && ! nvidia_disabled; then
-      return 1
-   fi
-}
+def call_in_chroot(func, *args, **kwargs):
+   call_args = ", ".join(repr(a) for a in args)
+   call_kwargs = ", ".join(f"{k}={repr(v)}" for k, v in kwargs.items())
+   all_args = ", ".join(x for x in [call_args, call_kwargs] if x)
+   code = (
+      f"import sys; ns = {{'__name__': ''}}; "
+      f"exec(sys.stdin.read(), ns); "
+      f"ns['{func.__name__}']({all_args})"
+   )
+   source = read(__file__).encode()
+   subprocess.run(["arch-chroot", "/mnt", sys.executable, "-c", code], input=source, check=True)
 
-function amd_gpu_exists {
-   if ! lspci | grep -q '.* VGA .* AMD .*'; then
-      return 1
-   fi
-}
+def call_as_sudo(func, *args, **kwargs):
+   call_args = ", ".join(repr(a) for a in args)
+   call_kwargs = ", ".join(f"{k}={repr(v)}" for k, v in kwargs.items())
+   all_args = ", ".join(x for x in [call_args, call_kwargs] if x)
+   code = (
+      f"import importlib.util; from importlib.machinery import SourceFileLoader; "
+      f"spec = importlib.util.spec_from_file_location('m', {repr(__file__)}, loader=SourceFileLoader('m', {repr(__file__)})); "
+      f"m = importlib.util.module_from_spec(spec); "
+      f"spec.loader.exec_module(m); "
+      f"m.{func.__name__}({all_args})"
+   )
+   sudo_args = ["--askpass"] if not in_tty() else []
+   subprocess.run(["sudo", *sudo_args, sys.executable, "-c", code], check=True)
 
-function amd_cpu_exists {
-   if ! cat /proc/cpuinfo | grep -q "AuthenticAMD"; then
-      return 1
-   fi
-}
+def command_succeeds(cmd):
+   return subprocess.run(["sh", "-c", cmd], capture_output=True).returncode == 0
 
-function intel_cpu_exists {
-   if ! cat /proc/cpuinfo | grep -q "GenuineIntel"; then
-      return 1
-   fi
-}
+def command_exists(cmd):
+   return shutil.which(cmd) is not None
 
-function backlight_exists {
-   if [[ -z "$(ls -A /sys/class/backlight)" ]]; then
-      return 1
-   fi
-}
+def package_exists(package):
+   return command_succeeds(f"pacman -Q {package}")
 
-function github_repo_exists {
-   local path=$1
-   local token=$2
-   local headers=""
-   if [[ -n $token ]]; then
-      headers="Authorization: Bearer $token"
-   fi
-   if curl -s -H "$headers" $(github_api_url "$path") | grep -q "Not Found"; then
-      return 1
-   fi
-}
+def enable_service(name, start=False, user=None):
+   user = f"""--user --machine="{user}@" """ if user else ""
+   now = "--now" if start and not in_chroot() else ""
+   run(f"systemctl {user} enable {now} {name}")
 
-function github_repo_url {
-   local repo=$1
-   local token=$2
-   if [[ -n $token ]]; then
-      token="$token@"
-   fi
-   echo "https://${token}github.com/$repo.git"
-}
+def disable_service(name, mask=False):
+   cmd = "mask" if mask else "disable"
+   run(f"systemctl {cmd} {name}")
 
-function github_repo_archive_url {
-   local repo=$1
-   local branch=$2
-   echo "https://github.com/$repo/archive/refs/heads/$branch.tar.gz"
-}
+def visudo(text, append=False, remove=False):
+   if not text:
+      return
+   if append and remove:
+      raise Exception("append and remove are exclusive")
+   if remove:
+      pattern = re.escape(text)
+      lines = read("/etc/sudoers").splitlines()
+      lines = [line for line in lines if not re.search(pattern, line)]
+   else:
+      lines = text.lstrip("\n").splitlines()
+   lines = [line.strip() for line in lines]
+   text = "\n".join(lines).rstrip("\n") + "\n"
+   cmd = f"EDITOR='tee{" --append" if append else ""}' visudo"
+   run(cmd, input=text, silent=True)
 
-function github_repo_file_url {
-   local repo=$1
-   local path=$2
-   echo "https://raw.githubusercontent.com/$repo/master/$path"
-}
+def is_root():
+   return os.geteuid() == 0
 
-function github_api_url {
-   local repo=$1
-   echo "https://api.github.com/repos/$repo"
-}
+def in_chroot():
+   root = os.stat("/")
+   init = os.stat("/proc/1/root/.")
+   return (root.st_dev, root.st_ino) != (init.st_dev, init.st_ino)
 
-if [[ $1 == "graphics" ]]; then
-   graphics="$2"
-elif [[ $2 == "--reinstall" ]]; then
-   mode="reinstall"
-fi
+def in_tty():
+   return not os.environ.get("DISPLAY") and not os.environ.get("WAYLAND_DISPLAY")
 
-case "$1" in
-   system)   setup_system; exit;;
-   packages) as_sudo setup_packages "$(whoami)" "$mode";;       # reinstall|
-   firmware) as_sudo setup_firmware;;
-   graphics) as_sudo setup_graphics "$(whoami)" "$graphics";;   # integrated|nvidia
-esac
+def nvidia_disabled():
+   return Path("/etc/udev/rules.d/no-nvidia.rules").exists()
 
-play-sound warcraft-jobs-done
+def nvidia_gpu_exists():
+   lspci = run_stdout("lspci")
+   return bool(re.search(r"VGA.*NVIDIA", lspci)) or nvidia_disabled()
+
+def amd_gpu_exists():
+   lspci = run_stdout("lspci")
+   return bool(re.search(r"VGA.*AMD", lspci))
+
+def amd_cpu_exists():
+   return "AuthenticAMD" in read("/proc/cpuinfo")
+
+def intel_cpu_exists():
+   return "GenuineIntel" in read("/proc/cpuinfo")
+
+def backlight_exists():
+   path = Path("/sys/class/backlight")
+   return path.exists() and any(path.iterdir())
+
+def prompt(message, *, secret=False, default=""):
+   hint = f" [{default}]" if default else ""
+   while True:
+      if secret:
+         value = getpass.getpass(f"{message}: ")
+      else:
+         value = input(f"{message}{hint}: ").strip() or default
+      if value and " " not in value:
+         return value
+
+def whoami():
+   username = os.getlogin()
+   answer = ""
+   while answer not in ("y", "yes"):
+      answer = prompt(f"Running as {username}, continue?", default="yes")
+   return username
+
+def fetch_url(url):
+   with urllib.request.urlopen(url) as resp:
+      return resp.read()
+
+def extract_tarball(url, path):
+   data = fetch_url(url)
+   run(f"mkdir -p '{path}'")
+   run(f"tar xz -C '{path}' --strip-components=1", input=data)
+
+def script_up_to_date(repo):
+   url = github_repo_file_url(repo, "scripts/setup")
+   remote = fetch_url(url)
+   remote = re.sub(rb"\s+", b" ", remote).strip()
+   local = Path(__file__).read_bytes()
+   local = re.sub(rb"\s+", b" ", local).strip()
+   return local == remote
+
+def github_repo_exists(repo):
+   try:
+      url = github_api_url(repo)
+      with urllib.request.urlopen(url) as resp:
+         return json.loads(resp.read()).get("message") != "Not Found"
+   except:
+      return False
+
+def github_repo_url(repo):
+   return f"https://github.com/{repo}.git"
+
+def github_repo_file_url(repo, path):
+   return f"https://raw.githubusercontent.com/{repo}/master/{path}"
+
+def github_repo_archive_url(repo, branch):
+   return f"https://github.com/{repo}/archive/refs/heads/{branch}.tar.gz"
+
+def github_api_url(repo):
+   return f"https://api.github.com/repos/{repo}"
+
+@contextmanager
+def log(log_path):
+   with open(log_path, "w") as log:
+      r, w = os.pipe()
+      stdout_fd = os.dup(1)
+      stderr_fd = os.dup(2)
+      os.dup2(w, 1)
+      os.dup2(w, 2)
+      os.close(w)
+
+      def reader():
+         while True:
+            data = os.read(r, 4096)
+            if not data:
+               break
+            os.write(stdout_fd, data)
+            log.write(data.decode(errors="replace"))
+            log.flush()
+         os.close(r)
+
+      t = threading.Thread(target=reader, daemon=True)
+      t.start()
+
+      sys_stdout = sys.stdout
+      sys_stderr = sys.stderr
+      sys.stdout = open(1, "w", buffering=1, closefd=False)
+      sys.stderr = open(2, "w", buffering=1, closefd=False)
+
+      try:
+         yield
+      finally:
+         sys.stdout.close()
+         sys.stderr.close()
+         sys.stdout = sys_stdout
+         sys.stderr = sys_stderr
+         os.dup2(stdout_fd, 1)
+         os.dup2(stderr_fd, 2)
+         t.join()
+         os.close(stdout_fd)
+         os.close(stderr_fd)
+
+if __name__ == "__main__":
+   main()
