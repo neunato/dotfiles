@@ -155,7 +155,6 @@ def setup_system():
       """)
 
       call_in_chroot(setup_packages, username=username)
-      run_in_chroot(f"rm {home}/.bash_logout")
 
       run("cp /tmp/arch_setup.log /mnt/var/tmp/arch_setup.log")
 
