@@ -292,6 +292,19 @@ def setup_packages(username, reinstall=False, skip_install=False, graphics=None)
       HandleLidSwitch=ignore
    """)
 
+   write_as(username, f"/home/{username}/.config/systemd/user/startup-sound.service", f"""
+      [Unit]
+      After=pipewire-pulse.service
+
+      [Service]
+      Type=oneshot
+      KillMode=process
+      ExecStart=/home/{username}/scripts/play-sound windows-xp-logon
+
+      [Install]
+      WantedBy=graphical-session.target
+   """)
+
    # udev
    write("/etc/udev/rules.d/no-mouse-wakeup.rules",
       'ACTION=="add", SUBSYSTEM=="usb", ATTRS{idVendor}=="046d", ATTRS{idProduct}=="c547", ATTR{power/wakeup}="disabled"'
@@ -536,6 +549,7 @@ def setup_packages(username, reinstall=False, skip_install=False, graphics=None)
    # services
    enable_service("pipewire-pulse", user=username, start=True)
    enable_service("ssh-agent", user=username, start=True)
+   enable_service("startup-sound", user=username)
    disable_service("systemd-networkd-wait-online", mask=True)
    disable_service("systemd-backlight@backlight:intel_backlight", mask=True)
    enable_service("systemd-networkd", start=True)
@@ -557,7 +571,7 @@ def setup_packages(username, reinstall=False, skip_install=False, graphics=None)
       enable_service("nvidia-resume")
 
    # default applications
-   run_as(username, f"echo '' | tee /home/{username}/.config/mimeapps.list > /dev/null")
+   write_as(username, f"/home/{username}/.config/mimeapps.list", "")
    run_as(username, "xdg-mime default dev.zed.Zed.desktop        text/plain")
    run_as(username, "xdg-mime default foot.desktop               x-scheme-handler/terminal")
    run_as(username, "xdg-mime default org.gnome.Nautilus.desktop inode/directory")
@@ -637,6 +651,12 @@ def write(path, text):
       lines = text.lstrip("\n").splitlines()
       text = "\n".join(line.strip() for line in lines).rstrip("\n") + "\n"
    Path(path).write_text(text)
+
+def write_as(username, path, text):
+   if text != "":
+      lines = text.lstrip("\n").splitlines()
+      text = "\n".join(line.strip() for line in lines).rstrip("\n") + "\n"
+   run_as(username, f"tee {path}", input=text, silent=True)
 
 def run(cmd, input=None, silent=False):
    cmd = f"set -e\n{cmd}"
