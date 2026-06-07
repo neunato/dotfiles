@@ -456,7 +456,7 @@ def setup_packages(username, reinstall=False, skip_install=False, graphics=None)
 
       # virtualisation, emulation
       arch_packages += ["libvirt"]
-      arch_packages += ["qemu-base"]
+      arch_packages += ["qemu-full"]
       arch_packages += ["virt-manager"]
       arch_packages += ["dnsmasq"]
       arch_packages += ["iptables-nft"]
