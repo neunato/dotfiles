@@ -226,6 +226,12 @@ window-rule {
    }
 }
 
+window-rule {
+   match app-id="Mesen" is-focused=true
+
+   allow-tearing true
+}
+
 binds {
    Mod+Left                      cooldown-ms=50 { focus-column-left; }
    Mod+A                         cooldown-ms=50 { focus-column-left; }

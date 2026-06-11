@@ -369,7 +369,7 @@ def setup_packages(username, reinstall=False, skip_install=False, graphics=None)
          user_packages += ["backlight_control"]
 
       # wayland
-      arch_packages += ["niri"]
+      user_packages += ["niri-tearing-git"]
       arch_packages += ["xwayland-satellite"]
       user_packages += ["yambar-git"]
       deps_packages += ["xcb-util-errors", "libmpdclient"]
