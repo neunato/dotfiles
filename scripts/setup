@@ -386,6 +386,7 @@ def setup_packages(username, reinstall=False, skip_install=False, graphics=None)
 
       # utilities
       arch_packages += ["dash"]
+      arch_packages += ["fish"]
       arch_packages += ["nano"]
       arch_packages += ["bat"]
       arch_packages += ["zip"]
@@ -534,6 +535,7 @@ def setup_packages(username, reinstall=False, skip_install=False, graphics=None)
    """)
 
    run_as(username, f"dbus-launch --exit-with-session /home/{username}/.config/dconf/gsettings")
+   run_as(username, "fish -c fish_update_completions")
 
    run("sed -i 's/#unix_sock_group/unix_sock_group/g'                  /etc/libvirt/libvirtd.conf")
    run("sed -i 's/#unix_sock_rw_perms/unix_sock_rw_perms/g'            /etc/libvirt/libvirtd.conf")
