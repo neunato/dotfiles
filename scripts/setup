@@ -386,7 +386,6 @@ def setup_packages(username, reinstall=False, skip_install=False, graphics=None)
 
       # utilities
       arch_packages += ["dash"]
-      arch_packages += ["zsh"]
       arch_packages += ["nano"]
       arch_packages += ["bat"]
       arch_packages += ["zip"]
