@@ -1,5 +1,5 @@
 * {
-   bg: #11111bed;                  // https://catppuccin.com/palette - Mocha Crust
+   bg: #11111bd2;                  // https://catppuccin.com/palette - Mocha Crust
    fg: #babbf1;                    // https://catppuccin.com/palette - Frappe Lavender
    fg-selected: #ea76cb;           // https://catppuccin.com/palette - Latte Pink
    fg-search: #949cbb;             // https://catppuccin.com/palette - Frappe Overlay 2

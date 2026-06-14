@@ -159,6 +159,15 @@ layer-rule {
     place-within-backdrop true
 }
 
+layer-rule {
+   match layer="overlay"
+
+   background-effect {
+      blur true
+      xray false
+   }
+}
+
 window-rule {
    draw-border-with-background false
    geometry-corner-radius 12
@@ -184,7 +193,12 @@ window-rule {
    match is-floating=true
    exclude is-focused=true
 
-   opacity 0.85
+   background-effect {
+      blur true
+      xray true
+   }
+
+   opacity 0.8
 }
 
 window-rule {

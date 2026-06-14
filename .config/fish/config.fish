@@ -10,7 +10,7 @@ set -gx EDITOR /usr/bin/zeditor
 
 abbr -a c clear
 abbr -a ls ls -lah --group-directories-first
-abbr -a sudo sudo -s
+abbr -a sudo sudo -s --askpass
 abbr -a su su -s /usr/bin/fish
 
 function fish_user_key_bindings
