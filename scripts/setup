@@ -292,6 +292,7 @@ def setup_packages(username, reinstall=False, skip_install=False, graphics=None)
       HandleLidSwitch=ignore
    """)
 
+   run_as(username, f"mkdir -p /home/{username}/.config/systemd/user")
    write_as(username, f"/home/{username}/.config/systemd/user/startup-sound.service", f"""
       [Unit]
       After=pipewire-pulse.service
