@@ -792,7 +792,7 @@ def prompt(message, *, secret=False, default=""):
          return value
 
 def whoami():
-   username = os.getlogin()
+   username = run_stdout("whoami").strip()
    answer = ""
    while answer not in ("y", "yes"):
       answer = prompt(f"Running as {username}, continue?", default="yes")
