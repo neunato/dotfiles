@@ -3,7 +3,6 @@ font_13: &font_13 ${font_family}:pixelsize=${font_size_13}
 font_14: &font_14 ${font_family}:pixelsize=${font_size_14}
 font_15: &font_15 ${font_family}:pixelsize=${font_size_15}
 font_14_bold: &font_14_bold ${font_family}:pixelsize=${font_size_14}:weight=bold
-underline: &underline { deco: { underline: { size: 1, color: "${color_main}" } } }
 
 bar:
   monitor: ${output}
@@ -161,15 +160,15 @@ bar:
 
     - script:
         path: ~/scripts/yambar-vpn
-        font: *font_14_bold
+        font: *font_14
         content:
           map:
             on-click: vpn
             conditions:
               connected:
-                string: { text: VPN, foreground: "${color_main_bright}", <<: *underline }
+                string: { text: "|VPN|", foreground: "${color_main_bright}" }
               ~connected:
-                string: { text: VPN }
+                string: { text: " VPN ", foreground: "${color_main_bright}" }
 
     - label:
         font: *font_13
@@ -178,7 +177,7 @@ bar:
             on-click:
               left: rofi-power
               right: sh -c "ROFI_RETV=1 rofi-power 'in 60 minutes'"
-            text: 
+            text: "  "
 
     - clock:
         time-format: "%d.%m.%Y. %H:%M "
@@ -186,4 +185,4 @@ bar:
         content:
           - string:
               on-click: toggle "foot --app-id=calendar khal interactive"
-              text: "{time}"
+              text: " {time}"
