@@ -34,16 +34,17 @@ function fish_user_key_bindings
    bind alt-s down-or-search
    bind alt-a backward-char
    bind alt-d forward-char
-   bind ctrl-left backward-token
-   bind ctrl-right forward-token
+   bind ctrl-left backward-bigword
+   bind ctrl-right forward-bigword
    bind alt-left prevd-or-backward-word
    bind alt-right nextd-or-forward-word
    bind home beginning-of-line
    bind end end-of-line
    bind backspace backward-delete-char
    bind shift-backspace backward-delete-char
-   bind ctrl-backspace backward-kill-token
+   bind ctrl-backspace backward-kill-bigword
    bind alt-backspace backward-kill-word
+   bind ctrl-shift-backspace backward-kill-token
    bind delete history-delete or kill-word
    bind enter execute
    bind ctrl-enter execute
@@ -55,7 +56,7 @@ function fish_user_key_bindings
    bind ctrl-z undo
    bind ctrl-y redo
    bind ctrl-shift-c clear-commandline
-   bind ctrl-l clear-screen
+   bind ctrl-l 'status test-terminal-feature scroll-content-up && commandline -f scrollback-push' clear-screen
    bind f1 __fish_man_page
 end
 
