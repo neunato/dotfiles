@@ -137,8 +137,8 @@ layout {
 
    border {
       width 2
-      active-color "#b7bdf8"             // https://catppuccin.com/palette - Macchiato Lavender
-      inactive-color "#5b6078"           // https://catppuccin.com/palette - Macchiato Surface 2
+      active-color "#dce0e8"             // https://catppuccin.com/palette - Latte Crust
+      inactive-color "#11111b"           // https://catppuccin.com/palette - Mocha Crust
       urgent-color "#ed8796"             // https://catppuccin.com/palette - Macchiato Red
    }
    insert-hint {
