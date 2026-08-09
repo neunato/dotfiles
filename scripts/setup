@@ -435,6 +435,7 @@ def setup_packages(username, reinstall=False, skip_install=False, graphics=None)
       arch_packages += ["meson"]
       arch_packages += ["docker"]
       arch_packages += ["docker-compose"]
+      user_packages += ["claude-code"]
       arch_packages += ["github-cli"]
       arch_packages += ["aws-cli"]
 
