@@ -6,11 +6,16 @@ set -g fish_handle_reflow 0
 set -g fish_greeting ""
 set -g fish_prompt_pwd_dir_length 0
 
-set -gx EDITOR /usr/bin/zeditor
+if set -q WAYLAND_DISPLAY
+   set -gx EDITOR /usr/bin/zeditor
+   abbr -a sudo sudo -s --askpass
+else
+   set -gx EDITOR /usr/bin/nano
+   abbr -a sudo sudo -s
+end
 
 abbr -a c clear
 abbr -a ls ls -lah --group-directories-first
-abbr -a sudo sudo -s --askpass
 abbr -a su su -s /usr/bin/fish
 
 function fish_user_key_bindings
