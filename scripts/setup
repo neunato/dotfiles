@@ -291,18 +291,6 @@ def setup_packages(username, reinstall=False, skip_install=False, graphics=None)
    """)
 
    run_as(username, f"mkdir -p /home/{username}/.config/systemd/user")
-   write_as(username, f"/home/{username}/.config/systemd/user/startup-sound.service", f"""
-      [Unit]
-      After=pipewire-pulse.service
-
-      [Service]
-      Type=oneshot
-      KillMode=process
-      ExecStart=/home/{username}/scripts/play-sound windows-xp-logon
-
-      [Install]
-      WantedBy=graphical-session.target
-   """)
 
    # udev
    write("/etc/udev/rules.d/no-mouse-wakeup.rules",
@@ -551,7 +539,6 @@ def setup_packages(username, reinstall=False, skip_install=False, graphics=None)
    # services
    enable_service("pipewire-pulse", user=username, start=True)
    enable_service("ssh-agent", user=username, start=True)
-   enable_service("startup-sound", user=username)
    disable_service("systemd-networkd-wait-online", mask=True)
    disable_service("systemd-backlight@backlight:intel_backlight", mask=True)
    enable_service("systemd-networkd", start=True)
@@ -613,6 +600,9 @@ def setup_packages(username, reinstall=False, skip_install=False, graphics=None)
    run(f"sed -i 's/^GRUB_CMDLINE_LINUX_DEFAULT=.*/GRUB_CMDLINE_LINUX_DEFAULT=\"{cmdline}\"/' /etc/default/grub")
    run("grub-mkconfig -o /boot/grub/grub.cfg")
    run("sed -i 's/^\\(\\s*\\)echo\\b/\\1#echo/g' /boot/grub/grub.cfg")
+
+   write("/etc/modules-load.d/snd_usb_audio.conf", "snd_usb_audio")
+
 
 def setup_firmware():
    run("pacman -S --needed --noconfirm fwupd")
