@@ -3,12 +3,16 @@
 # yambar-toggle              - toggle bar on all outputs
 # yambar-toggle --refresh    - reflect current state on all outputs
 
+niri_config="$XDG_CONFIG_HOME/niri/overrides.kdl"
+
 if [ "$1" = "--refresh" ] && [ -f /tmp/yambar-off ]; then
    exit
 fi
 
 if [ "$1" != "--refresh" ] && [ ! -f /tmp/yambar-off ]; then
-   sed -i "s/ bottom/ \/\/ bottom/g" ~/.config/niri/config.kdl
+   if ! grep -q 'layout { struts { bottom 0; }; }' "$niri_config"; then
+      echo 'layout { struts { bottom 0; }; }' >> "$niri_config"
+   fi
    pkill -x yambar > /dev/null 2>&1
    touch /tmp/yambar-off
    exit
@@ -18,7 +22,7 @@ if [ "$1" != "--refresh" ] && [ -f /tmp/yambar-off ]; then
    rm /tmp/yambar-off
 fi
 
-sed -i "s/\/\/ bottom/\bottom/g" ~/.config/niri/config.kdl
+sed -i '/^layout { struts { bottom 0; }; }$/d' "$niri_config"
 
 # spawn yambar on all outputs
 niri msg --json outputs | jq -c -r '.[] | select(.current_mode) | "\(.name) \(.logical.scale)"' > /tmp/yambar-outputs
